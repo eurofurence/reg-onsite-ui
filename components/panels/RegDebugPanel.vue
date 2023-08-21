@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from "vue";
+import { reactive, computed } from "vue";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import Textarea from "primevue/textarea";

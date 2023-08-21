@@ -19,7 +19,6 @@
         v-model:filters="filters"
         lazy
         paginator
-        @row-unselect="$emit('unselect', $event)"
         @page="$emit('page', $event)"
         @sort="$emit('sort', $event)"
         @filter="$emit('filter', $event)"
@@ -35,23 +34,28 @@
 
         <template #empty>
             <div v-if="!hasMinimalFilter(filters)">
-                <Message severity="info" :closable="false">
-                    Please enter search criteria!
-                    <ul>
+                <Message severity="info" :pt="{ icon: { class: 'w-5rem' } }" class="search-help-box" :closable="false">
+                    <div class="search-help-header">Please enter search criteria!</div>
+                    <ul class="search-help-list">
                         <li v-if="globalSearchColumns.includes('badge_id')">Search for 'Badge ID' with or without the checksum</li>
                         <li v-if="getGlobalFilterNameItems().length > 0">
                             Search for
                             {{
                                 getGlobalFilterNameItems()
                                     .map((item) => `'${item.label}'`)
-                                    .join(",")
+                                    .join(", ")
                             }}
                             in an case-insensitive way with least two characters
                         </li>
                         <li v-if="globalSearchColumns.includes('nickname')">
-                            Search for 'Nickname' entries containing only numeric values via the column search field
+                            Search for 'Nickname' entries containing only numeric values via the search field of the 'Nickname' column
                         </li>
                         <li v-if="globalSearchColumns.includes('birthday')">Search for 'Birthday' using the yyyy-mm-dd format</li>
+                        <li v-if="searchOptions.autoSelect">
+                            If the search returns a single result
+                            <span v-if="globalSearchColumns.includes('badge_id')">and the global filter is not a number</span>, the search result will
+                            automatically be selected. The automatic result selection will not select the same attendee two times in a row
+                        </li>
                     </ul>
                 </Message>
             </div>
@@ -292,7 +296,7 @@
 </template>
 
 <script setup>
-import { ref, toRef, watch } from "vue";
+import { toRef } from "vue";
 import { FilterMatchMode } from "primevue/api";
 import { usePrimeVue } from "primevue/config";
 
@@ -346,16 +350,6 @@ function getShowFilterMatchMenu(dataType) {
     return false; // !(['enum', 'date'].includes(dataType));
 }
 
-const globalInput = ref(null);
-
-function focusGlobalInput() {
-    const globalInputElement = globalInput.value?.$el || null;
-    if (globalInputElement === null) {
-        return;
-    }
-    return globalInputElement.focus();
-}
-
 // eslint-disable-next-line no-undef
 const modelValue = defineModel();
 // eslint-disable-next-line no-undef
@@ -373,8 +367,7 @@ const globalSearchColumns = defineModel("globalSearchColumns");
 // eslint-disable-next-line no-undef
 const sortOrder = defineModel("sortOrder");
 
-defineExpose({ focusGlobalInput });
-defineEmits(["checkin", "unselect", "sort", "page", "filter"]);
+defineEmits(["checkin", "sort", "page", "filter"]);
 const props = defineProps(["searchOptions", "displayRowsPerPage"]);
 </script>
 
@@ -399,5 +392,23 @@ const props = defineProps(["searchOptions", "displayRowsPerPage"]);
 .p-column-filter-row .p-column-filter-clear-button {
     background: var(--red-500);
     color: var(--surface-a);
+}
+
+.search-help-box {
+    max-width: 80vw;
+}
+
+.search-help-header {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.search-help-list {
+    font-size: 1rem;
+}
+
+.search-help-list > li {
+    white-space: normal;
+    font-size: 1.5rem;
 }
 </style>

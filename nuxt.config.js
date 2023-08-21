@@ -1,22 +1,26 @@
 // eslint-disable-next-line no-undef
-const env = process.env.DEPLOY_ENV;
+const deploy_env = process.env.DEPLOY_ENV;
 // eslint-disable-next-line no-undef
 const devBaseFolder = process.env.DEV_BASE_FOLDER;
 // eslint-disable-next-line no-undef
+const devHost = process.env.DEV_HOST;
+// eslint-disable-next-line no-undef
 const prodBaseFolder = process.env.PROD_BASE_FOLDER;
+// eslint-disable-next-line no-undef
+const prodHost = process.env.PROD_HOST;
 
 const pathConfig = {
     dev: {
         baseUrl: `/${devBaseFolder}/onsite/`,
-        cdnUrl: `https://regtest.eurofurence.org/${devBaseFolder}/onsite/`,
-        apiBaseUrl: `https://regtest.eurofurence.org/${devBaseFolder}`,
+        cdnUrl: `https://${devHost}/${devBaseFolder}/onsite/`,
+        apiBaseUrl: `https://${devHost}/${devBaseFolder}`,
     },
     prod: {
         baseUrl: `/${prodBaseFolder}/onsite/`,
-        cdnUrl: `https://reg.eurofurence.org/${prodBaseFolder}/onsite/`,
-        apiBaseUrl: `https://reg.eurofurence.org/${prodBaseFolder}`,
+        cdnUrl: `https://${prodHost}/${prodBaseFolder}/onsite/`,
+        apiBaseUrl: `https://${prodHost}/${prodBaseFolder}`,
     },
-}[env];
+}[deploy_env];
 
 // eslint-disable-next-line no-undef
 export default defineNuxtConfig({
@@ -40,6 +44,7 @@ export default defineNuxtConfig({
     ssr: false,
     runtimeConfig: {
         public: {
+            DEPLOY_ENV: deploy_env,
             API_BASE_URL: pathConfig.apiBaseUrl,
         },
     },

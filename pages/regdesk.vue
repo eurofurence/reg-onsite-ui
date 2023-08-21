@@ -2,7 +2,7 @@
 <template>
     <OnsitePageBase
         :title="`Registration Desk ${sandboxMode ? '- SANDBOX MODE' : ''}`"
-        help="Use 'Escape' to reset filters and exit the checkin dialog."
+        help="Use 'Escape' to reset filters and exit the checkin dialog. Depending on the query mode, pressing 'Enter' will either trigger the manual search or select an attendee if there is just a single search result."
     >
         <StatisticsDialog
             v-if="showStatistics"
@@ -14,7 +14,7 @@
         <div v-if="searchOptions.displayType === 'dialog'">
             <Dialog
                 :visible="attendeeInfoSelected !== null"
-                @update:visible="onDialogClose"
+                @update:visible="attendeeInfoSelected = null"
                 modal
                 :dismissableMask="true"
                 :closeOnEscape="false"
@@ -40,10 +40,8 @@
             v-model:globalSearchColumns="globalSearchColumns"
             :searchOptions="searchOptions"
             :displayRowsPerPage="searchOptions.displayRowsPerPage"
-            @refresh="doRefresh"
             @checkin="doCheckin"
             @page="onPage"
-            @unselect="onTableUnSelect"
             :canResetFilter="canResetFilter(filters, storedFilters)"
         >
             <div class="flex justify-content-end gap-1">
@@ -63,7 +61,7 @@
             </div>
             <div class="flex justify-content-end gap-1">
                 <div v-if="searchOptions.queryMode === 'preload'" class="flex align-items-end gap-1">
-                    <small v-if="getPreloadText() !== null">
+                    <small v-if="getPreloadText() !== null" class="pr-2">
                         {{ getPreloadText() }}
                     </small>
                     <Button icon="pi pi-refresh" v-tooltip.bottom="'Refresh preloaded data'" @click="doRefresh" />
@@ -114,7 +112,6 @@ import { getAllAttendeesForFilter, getAllAttendees } from "@/composables/searchA
 import { cachedGetAllAttendeesForFilter } from "@/composables/searchCache";
 import { filterAttendees, hasMinimalFilter } from "@/composables/filterAttendees";
 import { useFilter, resetFilters, canResetFilter } from "@/composables/useFilters";
-import { confirmDeselect } from "@/composables/confirmDeselection";
 import { scheduleRegularTask } from "@/composables/scheduleRegularTask";
 
 import OnsitePageBase from "@/components/OnsitePageBase.vue";
@@ -131,6 +128,20 @@ const refreshData = ref(true);
 
 const toast = useToast();
 const confirm = useConfirm();
+
+//////////////////////////////////////////////////////
+// Input Focus
+//////////////////////////////////////////////////////
+
+const globalInput = ref(null);
+
+function focusGlobalInput() {
+    const globalInputElement = globalInput.value?.$el || null;
+    if (globalInputElement === null) {
+        return;
+    }
+    return globalInputElement.focus();
+}
 
 //////////////////////////////////////////////////////
 // Loading state
@@ -174,18 +185,47 @@ watch(
 // Selection Tracking
 //////////////////////////////////////////////////////
 
-const attendeeInfoSelected = ref(null);
+const attendeeInfoSelectedInternal = ref(null);
+var attendeeInfoSelectedPending = false;
+var ignoreEscapeUntil = 0;
+var ignoreEnterUntil = 0;
 
-globalState.dirtyTracker.isDirtyState = computed({
-    get: () => attendeeInfoSelected.value && attendeeInfoSelected.value.status != "checked in",
+const attendeeInfoSelected = computed({
+    get: () => attendeeInfoSelectedInternal.value,
+    set: (value) => {
+        if (attendeeInfoSelectedInternal.value === null) {
+            // Previous state was unselected, so we can directly set
+            attendeeInfoSelectedInternal.value = value;
+        } else if (attendeeInfoSelectedInternal.value?.status === "checked in") {
+            // Previous state was properly checked in, so no further confirmation required
+            attendeeInfoSelectedInternal.value = value;
+        } else if (attendeeInfoSelectedPending === false) {
+            attendeeInfoSelectedPending = true;
+            confirm.require({
+                group: "confirm",
+                message: "The attendee was not checked in! Do you want to continue without checking in?",
+                header: "Confirm",
+                icon: "pi pi-question-circle",
+                onHide: () => {
+                    ignoreEscapeUntil = Date.now() + 50;
+                    attendeeInfoSelectedPending = false;
+                },
+                accept: () => {
+                    ignoreEnterUntil = Date.now() + 50;
+                    attendeeInfoSelectedPending = false;
+                    attendeeInfoSelectedInternal.value = value;
+                },
+                reject: () => {
+                    attendeeInfoSelectedPending = false;
+                },
+            });
+        }
+    },
 });
 
-const activeConfirm = ref(false);
-
-function doConfirmUnSelect() {
-    confirmDeselect(confirm, attendeeInfoSelected, activeConfirm);
-    activeConfirm.value = false;
-}
+globalState.dirtyTracker.isDirtyState = computed({
+    get: () => attendeeInfoSelected.value && attendeeInfoSelected.value.status !== "checked in",
+});
 
 //////////////////////////////////////////////////////
 // Filter state
@@ -261,7 +301,7 @@ scheduleRegularTask(() => updatePreloadData("Updating"), 1000 * 60 * 5, 1000 * 6
 watch(
     () => attendeeTable.value,
     () => {
-        attendeeTable.value?.focusGlobalInput();
+        focusGlobalInput();
     },
 );
 
@@ -399,28 +439,6 @@ const totalRecords = computed({
 });
 
 //////////////////////////////////////////////////////
-// Attendee Filtering
-//////////////////////////////////////////////////////
-
-const lastAutoSelect = ref(null);
-
-async function onTotalRecordsChange() {
-    // Auto-select logic
-    if (searchOptions.value.autoSelect !== true) {
-        return;
-    }
-    if (filteredList.value.length !== 1) {
-        return;
-    }
-    if (filteredList.value[0].id === lastAutoSelect.value) {
-        return;
-    }
-    attendeeInfoSelected.value = filteredList.value[0];
-    lastAutoSelect.value = attendeeInfoSelected.value.id;
-}
-watch(() => totalRecords.value, onTotalRecordsChange);
-
-//////////////////////////////////////////////////////
 // Attendee Sorting
 //////////////////////////////////////////////////////
 
@@ -460,35 +478,102 @@ watch(() => pagedList.value.length, resetPageIfNeeded);
 watch(() => sortedList.value.length, resetPageIfNeeded);
 
 //////////////////////////////////////////////////////
-// Dialog Status Tracking
+// Attendee Auto-Selection
 //////////////////////////////////////////////////////
 
-function onDialogClose() {
-    doConfirmUnSelect();
+const lastAutoSelect = ref(null);
+
+async function onResultChange() {
+    // Auto-select logic
+    if (searchOptions.value.autoSelect !== true) {
+        return;
+    }
+    if (filteredList.value.length !== 1) {
+        return;
+    }
+    if (filteredList.value[0].id === lastAutoSelect.value) {
+        return;
+    }
+    if (filters.value.global.value && globalSearchColumns.value.includes("badge_id") && !isNaN(Number(filters.value.global.value))) {
+        return;
+    }
+    if (filters.value.badge_id.value && !isNaN(Number(filters.value.badge_id.value))) {
+        return;
+    }
+    attendeeInfoSelected.value = filteredList.value[0];
+    lastAutoSelect.value = attendeeInfoSelected.value.id;
+}
+watch(() => filteredList.value, onResultChange);
+
+var pendingCheckin = false;
+
+async function onEnter(event) {
+    if (Date.now() < ignoreEnterUntil) {
+        // Escape cooldown
+        event.preventDefault();
+        ignoreEnterUntil = 0;
+        return true;
+    }
+    if (searchOptions.value.queryMode === "manual") {
+        // Manual search trigger
+        await doRefresh();
+        return;
+    } else if (filteredList.value.length === 1 && attendeeInfoSelected.value?.id_number !== filteredList.value[0]?.id_number) {
+        // Select single entries
+        attendeeInfoSelected.value = filteredList.value[0];
+        return;
+    } else if (attendeeInfoSelectedPending) {
+        // Enter on attendee deselection dialog
+        return;
+    } else if (pendingCheckin) {
+        return;
+    } else if (attendeeInfoSelected.value !== null) {
+        // Checkin logic
+        event.preventDefault();
+        pendingCheckin = true;
+        confirm.require({
+            group: "confirm",
+            message: "Do you want to check-in the selected attendee?",
+            header: "Confirm",
+            icon: "pi pi-question-circle",
+            defaultFocus: "accept",
+            onHide: () => {
+                ignoreEscapeUntil = Date.now() + 50;
+                pendingCheckin = false;
+            },
+            accept: () => {
+                doCheckin(attendeeInfoSelected.value.id_number);
+                ignoreEnterUntil = Date.now() + 50;
+                pendingCheckin = false;
+            },
+            reject: () => {
+                pendingCheckin = false;
+            },
+        });
+    }
 }
 
-function onTableUnSelect(event) {
-    // User deselected row on the table, attendeeInfoSelected is already null
-    attendeeInfoSelected.value = event.data; // Restore selection from event data
-    doConfirmUnSelect(); // Deselect if user confirms
-}
+setupKeyEvents("keydown", (key) => key === "enter", onEnter);
 
 //////////////////////////////////////////////////////
 // Keyboard Shortcuts
 //////////////////////////////////////////////////////
 
-function onEscape() {
-    if (activeConfirm.value === true) {
-        // Confirmation dialog is still open - do nothing
-        return;
-    } else if (attendeeInfoSelected.value !== null) {
+function onEscape(event) {
+    if (Date.now() < ignoreEscapeUntil) {
+        // Escape cooldown
+        ignoreEscapeUntil = 0;
+        return true;
+    }
+    if (attendeeInfoSelected.value !== null) {
         // Attendee is selected
-        doConfirmUnSelect();
+        attendeeInfoSelected.value = null;
     } else {
         // Reset filters
         resetFilters(filters.value, storedFilters.value);
-        attendeeTable.value?.focusGlobalInput();
+        focusGlobalInput();
     }
+    event.preventDefault();
 }
 
 setupKeyEvents("keydown", (key) => key === "escape", onEscape);
@@ -497,7 +582,9 @@ setupKeyEvents("keydown", (key) => key === "escape", onEscape);
 // Checkin Function
 //////////////////////////////////////////////////////
 
-const sandboxMode = ref(true);
+// eslint-disable-next-line no-undef
+const config = useRuntimeConfig();
+const sandboxMode = ref(config.public.DEPLOY_ENV === "dev");
 
 async function doCheckin(regId) {
     function updateState() {

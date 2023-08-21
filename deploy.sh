@@ -8,5 +8,5 @@ VERSION="$(git rev-parse --short HEAD)"
 
 echo "export const version = \"$VERSION\";" > buildConfig.js
 yarn generate
-tar -hczvf onsite.tar.gz dist
-scp onsite.tar.gz "${DEV_DEPLOY_USER}@${DEV_DEPLOY_HOST}:/home/regtest/projects/onsite/onsite.tar.gz"
+tar -hczvf onsite.${DEPLOY_ENV}.tar.gz dist
+#scp onsite.${DEPLOY_ENV}.tar.gz "${DEV_DEPLOY_USER}@${DEV_DEPLOY_HOST}:/home/regtest/projects/onsite/onsite.tar.gz"

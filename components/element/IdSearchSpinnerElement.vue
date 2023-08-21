@@ -4,7 +4,7 @@
             <Message :closable="false" severity="info" v-if="errorMessage == ''">
                 Searching for registration number "{{ props.modelValue }}"
             </Message>
-            <ProgressBar mode="indeterminate"></ProgressBar>
+            <ProgressBar mode="indeterminate">Loading...</ProgressBar>
         </div>
         <div v-else>
             <Message :closable="false" severity="info" v-if="errorMessage == ''">{{ defaultMessage }}</Message>

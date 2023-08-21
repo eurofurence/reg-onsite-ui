@@ -55,5 +55,9 @@ function toggleDebug() {
     debugFlag.value = !debugFlag.value;
 }
 
-setupKeyEvents("keyup", (key) => key === "q", toggleDebug, true);
+// eslint-disable-next-line no-undef
+const config = useRuntimeConfig();
+if (config.public.DEPLOY_ENV === "dev") {
+    setupKeyEvents("keyup", (key) => key === "q", toggleDebug, true);
+}
 </script>
