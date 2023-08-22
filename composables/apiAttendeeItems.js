@@ -4,9 +4,13 @@ import { handleLogout } from "@/composables/handleLogout";
 
 const service = "Attendee Items Service";
 
-export const defaultItemsInfo = {
+const defaultItemsInfo = {
     issuedItems: [],
 };
+
+export function getDefaultItemsInfo() {
+    return JSON.parse(JSON.stringify(defaultItemsInfo));
+}
 
 export async function apiGetAttendeeItems(regId) {
     const response = await getApi(`attsrv/api/rest/v1/attendees/${regId}/additional-info/sponsordesk`);
@@ -20,7 +24,7 @@ export async function getAttendeeItems(globalState, toast, regId) {
         if (response.ok) {
             return data;
         } else if (response.status === 404) {
-            return defaultItemsInfo;
+            return getDefaultItemsInfo();
         } else if (response.status === 401) {
             onError(toast, service, data, response.status);
             handleLogout(globalState);

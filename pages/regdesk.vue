@@ -2,7 +2,7 @@
 <template>
     <OnsitePageBase
         :title="`Registration Desk ${sandboxMode ? '- SANDBOX MODE' : ''}`"
-        help="Use 'Escape' to reset filters and exit the checkin dialog. Depending on the query mode, pressing 'Enter' will either trigger the manual search or select an attendee if there is just a single search result."
+        help="Use 'Escape' to reset filters and exit the checkin dialog. Depending on the query mode, pressing 'Enter' will either trigger the manual search or select an attendee if there is just a single search result. Press Alt+<Number> to select the nth element of the current search page."
     >
         <StatisticsDialog
             v-if="showStatistics"
@@ -577,6 +577,16 @@ function onEscape(event) {
 }
 
 setupKeyEvents("keydown", (key) => key === "escape", onEscape);
+
+function onResultSelect(event) {
+    console.error(event);
+    const key = Number(event.key) - 1;
+    if (key <= pagedList.value.length) {
+        attendeeInfoSelected.value = pagedList.value[key];
+    }
+}
+
+setupKeyEvents("keyup", (key) => key >= 1 && key <= 9, onResultSelect, true);
 
 //////////////////////////////////////////////////////
 // Checkin Function

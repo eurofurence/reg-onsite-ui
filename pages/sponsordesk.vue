@@ -80,7 +80,7 @@ import { globalState } from "@/components/global";
 
 import OnsitePageBase from "@/components/OnsitePageBase.vue";
 
-import { defaultItemsInfo } from "@/composables/apiAttendeeItems";
+import { getDefaultItemsInfo } from "@/composables/apiAttendeeItems";
 import { useLanyardStyle } from "@/composables/useLanyardStyle";
 import { setupKeyEvents } from "@/composables/setupKeyEvents";
 import { getSingleAttendee } from "@/composables/apiAttendeeSearch";
@@ -126,13 +126,13 @@ watch(
                 searchAttendee(parseInt(route.hash.slice(1)));
             }
         } else {
-            setState(null, defaultItemsInfo);
+            setState(null, getDefaultItemsInfo());
         }
     },
 );
 
 const attendeeInfoApiDict = ref(null);
-const attendeeTrinketsApiDict = ref(defaultItemsInfo);
+const attendeeTrinketsApiDict = ref(getDefaultItemsInfo());
 
 const sponsorValue = useSponsor(attendeeInfoApiDict);
 const rolesList = useRoles(attendeeInfoApiDict);
@@ -165,7 +165,7 @@ async function searchAttendee(regNumber) {
     searchRegNumber.value = null;
     searchingRegNumber.value = regNumber;
     searchErrorMessage.value = "";
-    setState(null, defaultItemsInfo);
+    setState(null, getDefaultItemsInfo());
     // eslint-disable-next-line no-undef
     await navigateTo({ path: route.path, hash: `#${regNumber}` });
     const promiseAttendeeInfo = getSingleAttendee(globalState, toast, regNumber);
@@ -223,7 +223,7 @@ debugState["SponsorDesk"] = reactive({
     },
     state: {
         attendeeInfo: attendeeInfoApiDict,
-        //attendeeTrinketsInfo: attendeeTrinketsInfo,
+        attendeeTrinketsInfo: attendeeTrinketsInfo,
     },
 });
 </script>

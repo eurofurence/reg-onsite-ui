@@ -15,7 +15,7 @@
 
 <script setup>
 import { getFieldCSS, getFieldLabelCSS, getFieldTextCSS } from "@/components/fields/fields";
-import { configSponsorItems } from "@/ef.config";
+import { configSponsorItems, configRegdeskSponsorItems } from "@/ef.config";
 import SelectButton from "primevue/selectbutton";
 
 function getPanelTheme() {
