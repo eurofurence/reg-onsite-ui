@@ -30,19 +30,19 @@ export const configColumnItems = [
     {
         column: "nickname",
         label: "Nickname",
-        matchMode: FilterMatchMode.STARTS_WITH,
+        matchMode: FilterMatchMode.CONTAINS,
         isGlobal: true,
     },
     {
         column: "first_name",
         label: "First Name",
-        matchMode: FilterMatchMode.STARTS_WITH,
+        matchMode: FilterMatchMode.CONTAINS,
         isGlobal: true,
     },
     {
         column: "last_name",
         label: "Last Name",
-        matchMode: FilterMatchMode.STARTS_WITH,
+        matchMode: FilterMatchMode.CONTAINS,
         isGlobal: true,
     },
     {

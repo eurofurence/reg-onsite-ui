@@ -3,6 +3,7 @@
         <AutoComplete
             v-model="modelValue"
             @input="filterCallback()"
+            @item-select="filterCallback()"
             class="p-column-filter"
             :placeholder="placeholder"
             :suggestions="suggestions"

@@ -18,7 +18,7 @@
             </div>
         </div>
     </Dialog>
-    <Button class="theme-config-button" icon="pi pi-cog" @click="isThemeConfigVisible = true" v-tooltip.bottom="'Theme Settings'" />
+    <Button outlined class="theme-config-button" icon="pi pi-cog" @click="isThemeConfigVisible = true" v-tooltip.bottom="'Theme Settings'" />
 </template>
 
 <script setup>

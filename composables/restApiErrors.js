@@ -28,6 +28,10 @@ export function onError(toast, serviceName, data, status) {
             message: "Access forbidden!",
             details: () => extractDetails(data),
         },
+        "status.unpaid.dues": {
+            message: "Attendee hasn't fully paid yet!",
+            details: () => extractDetails(data),
+        },
         "status.unchanged.invalid": {
             message: "Status unchanged!",
             details: () => extractDetails(data),

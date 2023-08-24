@@ -40,3 +40,11 @@ function updateModelValue(value) {
 defineProps(["modelValue"]);
 const emit = defineEmits(["update:modelValue"]);
 </script>
+
+<style>
+#dues-note {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--red-500);
+}
+</style>

@@ -19,11 +19,19 @@
             <div id="loginHeader" class="flex" style="font-size: 1px">
                 <!-- style is required to override default size -->
                 <div style="padding-right: 5px">
-                    <Button class="contact-button" icon="pi pi-question-circle" v-tooltip.bottom="'Help'" :disabled="help === ''" @click="showHelp" />
+                    <Button
+                        outlined
+                        class="contact-button"
+                        icon="pi pi-question-circle"
+                        v-tooltip.bottom="'Help'"
+                        :disabled="help === ''"
+                        @click="showHelp"
+                    />
                 </div>
                 <div style="padding-right: 5px">
                     <a href="https://help.eurofurence.org/legal/imprint">
                         <Button
+                            outlined
                             class="contact-button"
                             icon="pi pi-info-circle"
                             v-tooltip.bottom="'Legal information'"

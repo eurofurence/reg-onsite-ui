@@ -64,11 +64,11 @@
                     <small v-if="getPreloadText() !== null" class="pr-2">
                         {{ getPreloadText() }}
                     </small>
-                    <Button icon="pi pi-refresh" v-tooltip.bottom="'Refresh preloaded data'" @click="doRefresh" />
-                    <Button icon="pi pi-chart-line" v-tooltip.bottom="'Show statistics'" @click="showStatistics = true" />
+                    <Button outlined icon="pi pi-refresh" v-tooltip.bottom="'Refresh preloaded data'" @click="doRefresh" />
+                    <Button outlined icon="pi pi-chart-line" v-tooltip.bottom="'Show statistics'" @click="showStatistics = true" />
                 </div>
                 <div v-if="searchOptions.queryMode === 'ondemand'">
-                    <Button icon="pi pi-refresh" v-tooltip.bottom="'Refresh search results'" @click="doRefresh" />
+                    <Button outlined icon="pi pi-refresh" v-tooltip.bottom="'Refresh search results'" @click="doRefresh" />
                 </div>
                 <SearchOptionsDialog v-model:filters="filters" v-model:searchOptions="searchOptions" />
             </div>

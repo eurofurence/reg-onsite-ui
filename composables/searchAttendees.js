@@ -1,6 +1,6 @@
 import { FilterMatchMode } from "primevue/api";
 import { getAttendees } from "@/composables/apiAttendeeSearch";
-import { isValidNameSearch, getBirthdayFilterString } from "@/composables/filterAttendees";
+import { isValidNameFilter, getBirthdayFilterString } from "@/composables/filterAttendees";
 import { configConbookItems, configRegdeskSponsorItems, configRoleItems } from "@/ef.config";
 import { convertListToMap } from "@/composables/convertListToMap";
 import { configCountryItems } from "@/composables/fields/useCountry.js";
@@ -167,12 +167,12 @@ export function getGlobalFilters(filterMeta, globalSearchColumns) {
     }
     var result = [];
     if (enabledGlobalSearchColumns.includes("nickname")) {
-        if (isValidNameSearch(filterMeta.value) && isNaN(Number(filterMeta.value))) {
+        if (isValidNameFilter(filterMeta.value) && isNaN(Number(filterMeta.value))) {
             result.push({ nickname: getMatchString(filterMeta) });
         }
     }
     if (enabledGlobalSearchColumns.includes("first_name") || enabledGlobalSearchColumns.includes("last_name")) {
-        if (isValidNameSearch(filterMeta.value) && isNaN(Number(filterMeta.value))) {
+        if (isValidNameFilter(filterMeta.value) && isNaN(Number(filterMeta.value))) {
             result.push({ name: getMatchString(filterMeta) });
         }
     }

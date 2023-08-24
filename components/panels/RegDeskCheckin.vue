@@ -22,8 +22,16 @@
                         v-tooltip="'Checkin attendee'"
                         label="Checkin"
                         @click="$emit('checkin', modelValue.id)"
-                        :disabled="modelValue.status !== 'paid'"
+                        :disabled="!canCheckin(modelValue)"
                     />
+                    <!--
+                    <Button
+                        v-tooltip="'Try checkin attendee'"
+                        icon="pi pi-exclamation-circle"
+                        @click="$emit('checkin', modelValue.id)"
+                        v-if="!canCheckin(modelValue) && (modelValue.status !== 'checked in')"
+                    />
+-->
                     <Button
                         v-tooltip="'Refresh data'"
                         icon="pi pi-refresh"
@@ -61,6 +69,7 @@ import { useSponsor } from "@/composables/fields/useSponsor";
 import { useConbook } from "@/composables/fields/useConbook";
 import { useRoles } from "@/composables/fields/useRoles";
 import { useDayAttendance } from "@/composables/fields/useDayAttendance";
+import { getAge } from "@/composables/getAge";
 
 import Panel from "primevue/panel";
 import Button from "primevue/button";
@@ -84,6 +93,19 @@ import IdSearchSpinnerElement from "@/components/element/IdSearchSpinnerElement.
 const toast = useToast();
 const searchingRegNumber = ref(null);
 const searchErrorMessage = ref(null);
+
+function canCheckin(attendee) {
+    if (attendee.status !== "paid") {
+        return false;
+    }
+    if (attendee.current_dues > 0) {
+        return false;
+    }
+    if (getAge(attendee.birthday) < 18) {
+        return false;
+    }
+    return true;
+}
 
 async function getCurrentAttendee(regId, force = false) {
     if (refreshData.value === false && !force) {

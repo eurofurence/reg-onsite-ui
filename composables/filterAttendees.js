@@ -1,25 +1,43 @@
 import { FilterMatchMode, FilterService } from "primevue/api";
 
-export function isValidNameSearch(value) {
+function getFilterValue(value) {
+    try {
+        return value.trim();
+    } catch (error) {
+        return value;
+    }
+}
+
+function hasFilterContent(value) {
     if (value === null) {
+        return false;
+    }
+    if (getFilterValue(value) === "") {
+        return false;
+    }
+    return true;
+}
+
+export function isValidNameFilter(value) {
+    if (!hasFilterContent(value)) {
         return false;
     }
     return value.length >= 2;
 }
 
 export function hasMinimalFilter(filterDict) {
-    if (filterDict.badge_id.value !== null) {
+    if (hasFilterContent(filterDict.badge_id.value)) {
         // Specific badge filters are always sufficient
         return true;
     }
-    if (filterDict.global.value && !isNaN(Number(filterDict.global.value))) {
+    if (hasFilterContent(filterDict.global.value) && !isNaN(Number(filterDict.global.value))) {
         // A raw number in the global field is likely just a badge ID and therefore sufficient
         return true;
     }
-    const minSearchFields = ["nickname", "first_name", "last_name", "birthday", "global"];
+    const minFilterFields = ["nickname", "first_name", "last_name", "birthday", "global"];
     // At least two characters in any of the specified filters are required to show the results
-    for (const minSearchField of minSearchFields) {
-        if (isValidNameSearch(filterDict[minSearchField].value)) {
+    for (const minFilterField of minFilterFields) {
+        if (isValidNameFilter(filterDict[minFilterField].value)) {
             return true;
         }
     }
@@ -110,8 +128,9 @@ function filterBirthday(filterMeta, dataFieldValue) {
 }
 
 function defaultFilter(filterMeta, dataFieldValue) {
+    const filterValue = getFilterValue(filterMeta.value);
     const filterConstraint = FilterService.filters[filterMeta.matchMode];
-    return filterConstraint(dataFieldValue, filterMeta.value);
+    return filterConstraint(dataFieldValue, filterValue);
 }
 
 function filterBadgeId(filterMeta, item) {
@@ -144,18 +163,18 @@ function filterColumn(item, filterField, filterMeta) {
     }
 }
 
-function getEffectiveGlobalFilter(filterDict, globalSearchColumns) {
-    if (filterDict.global.value === null || filterDict.global.value === "" || globalSearchColumns === null) {
-        return [filterDict["global"], []];
+function getEffectiveGlobalFilter(filterDict, globalFilterColumns) {
+    if (globalFilterColumns === null || !hasFilterContent(filterDict.global.value)) {
+        return [filterDict.global, []];
     }
-    if (globalSearchColumns.includes("badge_id") && !isNaN(Number(filterDict.global.value))) {
+    if (globalFilterColumns.includes("badge_id") && !isNaN(Number(filterDict.global.value))) {
         const newGlobalFilterMeta = {
-            ...filterDict["global"],
+            ...filterDict.global,
             ...{ matchMode: FilterMatchMode.EQUALS },
         };
         return [newGlobalFilterMeta, ["badge_id"]];
     }
-    return [filterDict["global"], globalSearchColumns];
+    return [filterDict.global, globalFilterColumns];
 }
 
 function splitLastOccurrence(str, substring) {
@@ -165,8 +184,8 @@ function splitLastOccurrence(str, substring) {
     return [before, after];
 }
 
-export function filterAttendees(array, filterDict, globalSearchColumns) {
-    const [globalFilterMeta, appliedGlobalSearchColumns] = getEffectiveGlobalFilter(filterDict, globalSearchColumns);
+export function filterAttendees(array, filterDict, globalFilterColumns) {
+    const [globalFilterMeta, appliedGlobalFilterColumns] = getEffectiveGlobalFilter(filterDict, globalFilterColumns);
 
     function filterAttendee(item) {
         let localMatch = true;
@@ -178,16 +197,16 @@ export function filterAttendees(array, filterDict, globalSearchColumns) {
                 }
             }
         }
-        if (appliedGlobalSearchColumns.length === 0) {
+        if (appliedGlobalFilterColumns.length === 0) {
             return localMatch;
         }
 
         if (
             globalFilterMeta.value.indexOf(" ") >= 0 &&
-            appliedGlobalSearchColumns.includes("first_name") &&
-            appliedGlobalSearchColumns.includes("first_name")
+            appliedGlobalFilterColumns.includes("first_name") &&
+            appliedGlobalFilterColumns.includes("last_name")
         ) {
-            const [globalFirstName, globalLastName] = splitLastOccurrence(globalFilterMeta.value, " ");
+            const [globalFirstName, globalLastName] = splitLastOccurrence(globalFilterMeta.value.trim(), " ");
             const firstNameMatches = filterColumn(item, "first_name", {
                 ...globalFilterMeta,
                 value: globalFirstName,
@@ -201,7 +220,7 @@ export function filterAttendees(array, filterDict, globalSearchColumns) {
             }
         }
 
-        for (const globalFilterField of appliedGlobalSearchColumns) {
+        for (const globalFilterField of appliedGlobalFilterColumns) {
             const globalMatch = filterColumn(item, globalFilterField, globalFilterMeta);
             if (globalMatch) {
                 return localMatch;

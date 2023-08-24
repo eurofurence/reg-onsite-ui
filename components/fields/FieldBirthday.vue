@@ -17,7 +17,7 @@
                 v-bind="$attrs"
             />
         </span>
-        <small id="birthday-help" class="text-right">{{ getBirthdayNote(modelValue) }}</small>
+        <small id="birthday-note" class="text-right">{{ getBirthdayNote(modelValue) }}</small>
     </div>
 </template>
 
@@ -36,3 +36,11 @@ function getBirthdayFieldTextCSS(birthday) {
 // eslint-disable-next-line no-undef
 const modelValue = defineModel();
 </script>
+
+<style>
+#birthday-note {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--red-500);
+}
+</style>
