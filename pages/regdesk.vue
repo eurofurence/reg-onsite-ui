@@ -54,8 +54,8 @@
                 </div>
                 <Button
                     icon="pi pi-filter-slash"
-                    v-tooltip.bottom="'Reset search (globals filters will be unchanged)'"
-                    @click="resetFilters(filters, storedFilters)"
+                    v-tooltip.right="'Reset search (implicit filters will be unchanged)'"
+                    @click="doResetFilters"
                     :disabled="!canResetFilter"
                 />
             </div>
@@ -199,6 +199,7 @@ const attendeeInfoSelected = computed({
         } else if (attendeeInfoSelectedInternal.value?.status === "checked in") {
             // Previous state was properly checked in, so no further confirmation required
             attendeeInfoSelectedInternal.value = value;
+            focusGlobalInput();
         } else if (attendeeInfoSelectedPending === false) {
             attendeeInfoSelectedPending = true;
             confirm.require({
@@ -214,6 +215,7 @@ const attendeeInfoSelected = computed({
                     ignoreEnterUntil = Date.now() + 50;
                     attendeeInfoSelectedPending = false;
                     attendeeInfoSelectedInternal.value = value;
+                    focusGlobalInput();
                 },
                 reject: () => {
                     attendeeInfoSelectedPending = false;
@@ -438,6 +440,13 @@ const totalRecords = computed({
     get: () => filteredList.value.length,
 });
 
+function doResetFilters() {
+    // Reset filters
+    attendeeInfoSelected.value = null;
+    resetFilters(filters.value, storedFilters.value);
+    focusGlobalInput();
+}
+
 //////////////////////////////////////////////////////
 // Attendee Sorting
 //////////////////////////////////////////////////////
@@ -570,8 +579,7 @@ function onEscape(event) {
         attendeeInfoSelected.value = null;
     } else {
         // Reset filters
-        resetFilters(filters.value, storedFilters.value);
-        focusGlobalInput();
+        doResetFilters();
     }
     event.preventDefault();
 }
@@ -579,7 +587,6 @@ function onEscape(event) {
 setupKeyEvents("keydown", (key) => key === "escape", onEscape);
 
 function onResultSelect(event) {
-    console.error(event);
     const key = Number(event.key) - 1;
     if (key <= pagedList.value.length) {
         attendeeInfoSelected.value = pagedList.value[key];

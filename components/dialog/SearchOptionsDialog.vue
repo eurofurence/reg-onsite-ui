@@ -3,19 +3,13 @@
         <TabView>
             <TabPanel header="UI Settings">
                 <div class="flex flex-column gap-2">
-                    <div class="flex flex-column gap-1">
+                    <div class="flex flex-column gap-1 w-20rem">
                         <label for="displayRowsPerPage">Number of results per page</label>
                         <Dropdown id="displayRowsPerPage" v-model="searchOptions.displayRowsPerPage" :options="[1, 2, 5, 10, 20, 50, 100, 10000]" />
                     </div>
                     <div class="flex flex-column gap-1">
-                        <label for="displayType">How the check-in is shown</label>
-                        <SelectButton
-                            id="displayType"
-                            v-model="searchOptions.displayType"
-                            :options="configDisplayTypeItems"
-                            optionLabel="label"
-                            optionValue="value"
-                        />
+                        <label for="autoSelect">Auto-select if there is just one match</label>
+                        <InputSwitch id="autoSelect" v-model="searchOptions.autoSelect" />
                     </div>
                     <div class="flex flex-column gap-1">
                         <label for="filterDisplay">Layout of the filter elements</label>
@@ -28,15 +22,11 @@
                         />
                     </div>
                     <div class="flex flex-column gap-1">
-                        <label for="autoSelect">Auto-select if there is just one match</label>
-                        <InputSwitch id="autoSelect" v-model="searchOptions.autoSelect" />
-                    </div>
-                    <div class="flex flex-column gap-1">
-                        <label for="queryMode">Attendee query settings</label>
+                        <label for="displayType">How the check-in is shown</label>
                         <SelectButton
-                            id="queryMode"
-                            v-model="localQueryMode"
-                            :options="configQueryModeItems"
+                            id="displayType"
+                            v-model="searchOptions.displayType"
+                            :options="configDisplayTypeItems"
                             optionLabel="label"
                             optionValue="value"
                         />
@@ -71,13 +61,13 @@
                 </div>
             </TabPanel>
 
-            <TabPanel header="Global Filter Settings">
+            <TabPanel header="Implicit Filter Settings">
                 <div class="flex flex-column gap-2">
-                    <div class="flex flex-column gap-1">
+                    <div class="flex flex-column gap-1 h-5rem">
                         <label for="country">Country Filter</label>
                         <CountrySearchElement id="country" v-model="filters.country.value" :filterCallback="() => {}" />
                     </div>
-                    <div class="flex flex-column gap-1">
+                    <div class="flex flex-column gap-1 h-5rem">
                         <label for="status">Status Filter</label>
                         <TagSearchElement
                             id="status"
@@ -87,7 +77,7 @@
                             :maxSelectedLabels="5"
                         />
                     </div>
-                    <div class="flex flex-column gap-1">
+                    <div class="flex flex-column gap-1 h-5rem">
                         <label for="roles">Role Filter</label>
                         <TagSearchElement
                             id="roles"
@@ -97,7 +87,7 @@
                             :maxSelectedLabels="5"
                         />
                     </div>
-                    <div class="flex flex-column gap-1">
+                    <div class="flex flex-column gap-1 h-5rem">
                         <label for="sponsor">Sponsor Level Filter</label>
                         <TagSearchElement
                             id="sponsor"
@@ -107,6 +97,13 @@
                             :maxSelectedLabels="5"
                         />
                     </div>
+                </div>
+            </TabPanel>
+
+            <TabPanel header="Advanced Settings">
+                <div class="flex flex-column gap-1">
+                    <label for="queryMode">Attendee query settings</label>
+                    <SelectButton id="queryMode" v-model="localQueryMode" :options="configQueryModeItems" optionLabel="label" optionValue="value" />
                 </div>
             </TabPanel>
         </TabView>

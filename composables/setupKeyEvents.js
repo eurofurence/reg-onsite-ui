@@ -7,8 +7,12 @@ export function setupKeyEvents(eventName, matchKeyFunction, callFunction, withMo
             return;
         }
         const key = event.key;
-        if (matchKeyFunction(key.toLowerCase())) {
-            await callFunction(event);
+        try {
+            if (matchKeyFunction(key.toLowerCase())) {
+                await callFunction(event);
+            }
+        } catch (error) {
+            console.error(event);
         }
     }
     setupEventListener(window, eventName, onKeyEvent);

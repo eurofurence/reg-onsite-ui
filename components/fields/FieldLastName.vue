@@ -1,7 +1,7 @@
 <template>
     <div :class="getFieldCSS()">
         <label for="lastname" :class="getFieldLabelCSS()">Last Name</label>
-        <InputText id="lastname" :class="getFieldTextCSS()" v-model="modelValue" v-bind="$attrs" />
+        <InputText id="lastname" :class="getFieldTextCSS()" class="w-12rem" v-model="modelValue" v-bind="$attrs" />
     </div>
 </template>
 

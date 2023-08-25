@@ -34,30 +34,44 @@
 
         <template #empty>
             <div v-if="!hasMinimalFilter(filters)">
-                <Message severity="info" :pt="{ icon: { class: 'w-5rem' } }" class="search-help-box" :closable="false">
-                    <div class="search-help-header">Please enter search criteria!</div>
-                    <ul class="search-help-list">
-                        <li v-if="globalSearchColumns.includes('badge_id')">Search for 'Badge ID' with or without the checksum</li>
+                <SearchTableMessage severity="info" title="Please enter search criteria!">
+                    <ul>
+                        <li>
+                            Enter some number in the <span v-if="globalSearchColumns.includes('badge_id')">global or</span> 'Badge ID' search field
+                        </li>
+                        <li>
+                            Enter at least two characters in <span v-if="getGlobalFilterNameItems().length > 0">the global or</span> any column search
+                            fields
+                        </li>
+                    </ul>
+                </SearchTableMessage>
+                <SearchTableMessage severity="info" title="Use the 'Global Search' to search for" v-if="globalSearchColumns?.length > 0">
+                    <ul>
+                        <li v-if="globalSearchColumns.includes('badge_id')">'Badge ID' with or without the checksum letter</li>
                         <li v-if="getGlobalFilterNameItems().length > 0">
-                            Search for
                             {{
                                 getGlobalFilterNameItems()
                                     .map((item) => `'${item.label}'`)
                                     .join(", ")
-                            }}
-                            in an case-insensitive way with least two characters
+                            }}<span
+                                v-if="
+                                    getGlobalFilterNameItems().filter((item) => item.column === 'first_name').length > 0 &&
+                                    getGlobalFilterNameItems().filter((item) => item.column === 'last_name').length > 0
+                                "
+                                >, or the 'Full Name'</span
+                            >
+                            that is non-numeric
                         </li>
-                        <li v-if="globalSearchColumns.includes('nickname')">
-                            Search for 'Nickname' entries containing only numeric values via the search field of the 'Nickname' column
-                        </li>
-                        <li v-if="globalSearchColumns.includes('birthday')">Search for 'Birthday' using the yyyy-mm-dd format</li>
-                        <li v-if="searchOptions.autoSelect">
-                            If the search returns a single result
-                            <span v-if="globalSearchColumns.includes('badge_id')">and the global filter is not a number</span>, the search result will
-                            automatically be selected. The automatic result selection will not select the same attendee two times in a row
-                        </li>
+                        <li v-if="globalSearchColumns.includes('birthday')">'Birthday' using the yyyy-mm-dd format and entering at least 'yyyy-'</li>
                     </ul>
-                </Message>
+                </SearchTableMessage>
+                <SearchTableMessage severity="info" title="Auto-Selection of attendees is done when" v-if="searchOptions.autoSelect">
+                    <ul class="search-help-list">
+                        <li>the filtered search result contains only a single attendee,</li>
+                        <li v-if="globalSearchColumns.includes('badge_id')">and the global filter is not a number,</li>
+                        <li>and the user was not previously selected by the Auto-Selection mechanism.</li>
+                    </ul>
+                </SearchTableMessage>
             </div>
             <div v-else-if="hasActiveFilter(filters)">
                 <div v-if="searchOptions.queryMode !== 'manual'">
@@ -72,9 +86,6 @@
                         <pre>{{ getFilterText(filters) }}</pre>
                     </Message>
                 </div>
-            </div>
-            <div v-else-if="modelValue.length > 0">
-                <Message severity="info" :closable="false">No attendees are matching {{ filters }}!</Message>
             </div>
             <div v-else>
                 <Message severity="info" :closable="false">No attendees were retrieved from the database!</Message>
@@ -280,7 +291,7 @@
 
         <Column v-if="searchOptions.activeColumns.includes('checkin')" columnKey="checkin" header="Checkin">
             <template #body="{ data }">
-                <div v-if="data.status === 'paid'">
+                <div v-if="canCheckin(data)">
                     <Button label="Checkin" class="h-2rem w-7rem" :disabled="data.status !== 'paid'" @click="$emit('checkin', data.id)" />
                 </div>
                 <div v-else class="h-2rem w-7rem"></div>
@@ -308,10 +319,13 @@ import { hasActiveFilter, getFilterText } from "@/composables/useFilters";
 import { useRoles } from "@/composables/fields/useRoles";
 import { useSponsor } from "@/composables/fields/useSponsor";
 import { hasMinimalFilter } from "@/composables/filterAttendees";
+import { canCheckin } from "@/composables/canCheckin";
 
 import { configStatusItems, configRoleItems, configRegdeskSponsorItems, configConbookItems, configColumnItems } from "@/ef.config";
 
 import Button from "primevue/button";
+
+import SearchTableMessage from "@/components/element/SearchTableMessage.vue";
 
 import TagElement from "@/components/element/TagElement.vue";
 import BirthdayColumnElement from "@/components/element/table/BirthdayColumnElement.vue";
@@ -392,23 +406,5 @@ const props = defineProps(["searchOptions", "displayRowsPerPage"]);
 .p-column-filter-row .p-column-filter-clear-button {
     background: var(--red-500);
     color: var(--surface-a);
-}
-
-.search-help-box {
-    max-width: 80vw;
-}
-
-.search-help-header {
-    font-size: 2rem;
-    font-weight: bold;
-}
-
-.search-help-list {
-    font-size: 1rem;
-}
-
-.search-help-list > li {
-    white-space: normal;
-    font-size: 1.5rem;
 }
 </style>

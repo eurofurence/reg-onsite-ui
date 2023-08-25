@@ -4,22 +4,6 @@ export const configAdminGroups = ["OE7QZN2RQX9KWML4", "54ZYODX1G2K1M76N"];
 
 export const configDDGroups = ["QE3VMR2LK9X1PW07", "EN3GL42Q072JKZQO"];
 
-export const configThemeCookie = {
-    isDarkMode: false,
-    fontSize: 14,
-    headerSize: 1,
-};
-
-export const configSortOrderCookie = {
-    sortOrder: [],
-};
-
-export const configFilterCookie = {
-    status: null,
-    roles: null,
-    sponsor: null,
-};
-
 export const configColumnItems = [
     {
         column: "badge_id",
@@ -92,7 +76,23 @@ export const configSearchCookie = {
     displayRowsPerPage: 10,
     displayType: "dialog",
     queryMode: "preload",
-    autoSelect: false,
+    autoSelect: true,
+};
+
+export const configThemeCookie = {
+    isDarkMode: false,
+    fontSize: 14,
+    headerSize: 1,
+};
+
+export const configSortOrderCookie = {
+    sortOrder: [],
+};
+
+export const configFilterCookie = {
+    status: ["approved", "partially paid", "paid"],
+    roles: null,
+    sponsor: null,
 };
 
 export const configTShirtItems = [
@@ -355,33 +355,27 @@ export const configRegdeskSponsorItems = [
 
 export const configTinketItems = [
     {
-        value: "conbook",
-        label: "Physical Conbook",
-    },
-    {
         value: "tshirt",
         label: "T-Shirt",
     },
     {
-        value: "goodie1",
-        label: "Sponsor-Goodie A",
+        value: "pin",
+        label: "Pin",
     },
     {
-        value: "goodie2",
-        label: "Super-Sponsor Goodie A",
+        value: "cup",
+        label: "Cup",
     },
     {
-        value: "goodie3",
-        label: "Super-Sponsor Goodie X",
+        value: "scarf",
+        label: "Scarf",
     },
 ];
 
 export const configPackageToItemsMap = {
     tshirt: ["tshirt"],
-    sponsor: ["tshirt", "goodie1"],
-    sponsor2: ["goodie1", "goodie2"],
+    sponsor: ["tshirt", "cup", "pin"],
+    sponsor2: ["tshirt", "scarf", "cup", "pin"],
 };
 
-export const configFlagsToItemsMap = {
-    "!digi-book": ["conbook"],
-};
+export const configFlagsToItemsMap = {};
