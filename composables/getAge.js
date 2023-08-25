@@ -1,5 +1,7 @@
+import { configConStartDate } from "@/ef.config";
+
 export function getAge(birthday) {
-    const years = new Date(new Date() - new Date(birthday)).getFullYear() - 1970;
+    const years = new Date(configConStartDate - new Date(birthday)).getFullYear() - 1970;
     return years;
 }
 
