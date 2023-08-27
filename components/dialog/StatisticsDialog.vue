@@ -3,7 +3,7 @@
         v-model:visible="visible"
         modal
         :dismissableMask="true"
-        :closeOnEscape="false"
+        :closeOnEscape="true"
         :maximizable="true"
         header="Statistics"
         :style="{ width: '80vw' }"

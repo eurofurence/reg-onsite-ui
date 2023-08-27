@@ -28,9 +28,11 @@ import OnsitePageBase from "@/components/OnsitePageBase.vue";
 import { globalState } from "@/components/global";
 
 function getDDFrontDeskLink() {
-    if (window.location.href.includes("test")) {
-        return "https://dealers.test.eurofurence.org/dashboard";
+    // eslint-disable-next-line no-undef
+    const config = useRuntimeConfig();
+    if (config.public.DEPLOY_ENV === "dev") {
+        return "https://dealers.test.eurofurence.org/frontdesk";
     }
-    return "https://dealers.test.eurofurence.org/dashboard";
+    return "https://dealers.eurofurence.org/frontdesk";
 }
 </script>

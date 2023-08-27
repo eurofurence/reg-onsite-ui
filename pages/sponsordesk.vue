@@ -50,6 +50,12 @@
                                     :disabled="!isDirtyAttendeeTrinketsApiDict"
                                 />
                             </template>
+                            <Message severity="error" v-if="attendeeInfoApiDict.status !== 'checked in'">
+                                The attendee is in status
+                                <TagElement :model-value="attendeeInfoApiDict.status" :configItems="configStatusItems" />
+                                <br />
+                                The attendee needs to check in at the registration desk before receiving any items!
+                            </Message>
                             <FieldItems
                                 id="issuedItems"
                                 v-model="attendeeTrinketsInfo.ownedTrinketList"
@@ -75,8 +81,10 @@ import Panel from "primevue/panel";
 import Button from "primevue/button";
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
+import Message from "primevue/message";
 
 import { globalState } from "@/components/global";
+import { configStatusItems } from "@/ef.config";
 
 import OnsitePageBase from "@/components/OnsitePageBase.vue";
 
@@ -91,6 +99,7 @@ import { createTrackedVariable } from "@/composables/createTrackedVariable";
 import { useSponsor } from "@/composables/fields/useSponsor";
 import { useRoles } from "@/composables/fields/useRoles";
 
+import TagElement from "@/components/element/TagElement.vue";
 import IdSearchSpinnerElement from "@/components/element/IdSearchSpinnerElement.vue";
 import CustomFieldsetElement from "@/components/element/CustomFieldsetElement.vue";
 import InputWithKeyPadElement from "@/components/element/InputWithKeyPadElement.vue";

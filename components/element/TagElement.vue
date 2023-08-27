@@ -1,16 +1,14 @@
 <template>
-    <div id="tag">
-        <Tag
-            :value="property?.label"
-            :icon="property?.icon"
-            class="border-solid"
-            :style="{
-                border: '1px var(--text-color)',
-                background: `var(--${property?.color})`,
-                color: 'white',
-            }"
-        />
-    </div>
+    <Tag
+        :value="property?.label"
+        :icon="property?.icon"
+        class="border-solid"
+        :style="{
+            border: '1px var(--text-color)',
+            background: `var(--${property?.color})`,
+            color: 'white',
+        }"
+    />
 </template>
 
 <script setup>

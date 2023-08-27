@@ -455,7 +455,7 @@ const storedSortOrder = useCookieStruct("regdeskSortOrder", configSortOrderCooki
 
 const sortedList = computed({
     get: () => {
-        return sortAttendees(filteredList, storedSortOrder.value.sortOrder);
+        return sortAttendees(filteredList, storedSortOrder.value.sortOrder, configRegdeskSponsorItems);
     },
 });
 
