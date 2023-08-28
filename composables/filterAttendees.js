@@ -69,18 +69,22 @@ function stripCharacterFromRight(inputString, character) {
 
 function parseDateElement(value, placeholder) {
     var doStop = false;
+    var includeDash = false;
     if (value?.includes(placeholder)) {
         value = stripCharacterFromRight(value, placeholder);
         doStop = true;
+    }
+    if (value?.startsWith("0")) {
+        includeDash = true;
     }
     const parsedValue = Number(value);
     if (isNaN(parsedValue) || parsedValue === 0) {
         return [doStop, null];
     }
-    return [doStop, `${parsedValue}`];
+    return [doStop, `${parsedValue}`, includeDash];
 }
 
-export function getBirthdayFilterString(value) {
+export function getBirthdayFilterStringInternal(value) {
     const [year, month, day] = value.split("-");
     var result = null;
 
@@ -93,21 +97,37 @@ export function getBirthdayFilterString(value) {
         return result;
     }
 
-    const [monthStop, monthParsed] = parseDateElement(month, "m");
+    const [monthStop, monthParsed, monthIncludeDash] = parseDateElement(month, "m");
     if (monthParsed === null) {
         return result;
     }
-    result = result + `-${monthParsed}`;
+    result += `-${monthParsed}`;
     if (monthStop) {
+        if (monthIncludeDash) {
+            result += "-";
+        }
         return result;
     }
 
-    const [, dayParsed] = parseDateElement(day, "d");
+    const [, dayParsed, dayIncludeDash] = parseDateElement(day, "d");
     if (dayParsed === null) {
+        if (monthIncludeDash) {
+            result += "-";
+        }
         return result;
     }
-    result = result + `-${dayParsed}`;
+    result += `-${dayParsed}`;
+    if (dayIncludeDash) {
+        result += "-";
+    }
     return result;
+}
+
+export function getBirthdayFilterString(value) {
+    if (value.endsWith("-") || value.endsWith("-0")) {
+        return getBirthdayFilterStringInternal(stripCharacterFromRight(value, "-")) + "-";
+    }
+    return getBirthdayFilterStringInternal(value);
 }
 
 function filterBirthday(filterMeta, dataFieldValue) {
@@ -124,7 +144,7 @@ function filterBirthday(filterMeta, dataFieldValue) {
         return false;
     }
     const filterConstraint = FilterService.filters[filterMeta.matchMode];
-    return filterConstraint(dataFieldValue, birthdayFilter);
+    return filterConstraint(dataFieldValue + "-", birthdayFilter);
 }
 
 function defaultFilter(filterMeta, dataFieldValue) {
