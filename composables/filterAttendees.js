@@ -84,7 +84,7 @@ function parseDateElement(value, placeholder) {
     return [doStop, `${parsedValue}`, includeDash];
 }
 
-export function getBirthdayFilterStringInternal(value) {
+function getBirthdayFilterStringInternal(value) {
     const [year, month, day] = value.split("-");
     var result = null;
 
@@ -124,10 +124,16 @@ export function getBirthdayFilterStringInternal(value) {
 }
 
 export function getBirthdayFilterString(value) {
+    var result = null;
     if (value.endsWith("-") || value.endsWith("-0")) {
-        return getBirthdayFilterStringInternal(stripCharacterFromRight(value, "-")) + "-";
+        result = getBirthdayFilterStringInternal(stripCharacterFromRight(value, "-")) + "-";
+    } else {
+        result = getBirthdayFilterStringInternal(value);
     }
-    return getBirthdayFilterStringInternal(value);
+    if (result) {
+        return result.replace("--", "-");
+    }
+    return result;
 }
 
 function filterBirthday(filterMeta, dataFieldValue) {

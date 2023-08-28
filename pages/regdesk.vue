@@ -280,10 +280,10 @@ async function updatePreloadData(mode) {
     if (searchOptions.value.queryMode === "preload") {
         console.info(`${mode} cache...`);
         if (mode === "Updating") {
-            preloadData.value = await getAllAttendees(globalState, null);
+            preloadData.value = await getAllAttendees(globalState, toast);
         } else {
             await withLoadingAfterSomeTime(async () => {
-                preloadData.value = await getAllAttendees(globalState, null);
+                preloadData.value = await getAllAttendees(globalState, toast);
             });
         }
         searchResult.value = preloadData.value;

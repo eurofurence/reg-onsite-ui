@@ -14,12 +14,22 @@ testBirthday("197y-mm-dd", "197");
 
 testBirthday("2000", "2000");
 testBirthday("2000-", "2000-");
-testBirthday("2000-0", "2000-");
 testBirthday("2000-1", "2000-1");
 testBirthday("2000-1-", "2000-1-");
 testBirthday("2000-1-0", "2000-1-");
 testBirthday("2000-1-1", "2000-1-1");
 testBirthday("2000-1-1-", "2000-1-1-");
+
+testBirthday("2000", "2000");
+testBirthday("2000-", "2000-");
+testBirthday("2000-0", "2000-");
+testBirthday("2000-01", "2000-1-");
+testBirthday("2000-01-", "2000-1-");
+testBirthday("2000-01-0", "2000-1-");
+testBirthday("2000-01-1", "2000-1-1");
+testBirthday("2000-01-1-", "2000-1-1-");
+testBirthday("2000-01-01", "2000-1-1-");
+testBirthday("2000-01-01-", "2000-1-1-");
 
 testBirthday("2005-9", "2005-9");
 testBirthday("2005-09", "2005-9-");
