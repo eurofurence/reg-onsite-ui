@@ -30,7 +30,7 @@
                                 <FieldNickName v-model="attendeeInfoApiDict.nickname" disabled />
                                 <FieldPronouns v-model="attendeeInfoApiDict.pronouns" disabled />
                                 <FieldSpokenLanguages v-model="attendeeInfoApiDict.spoken_languages" disabled />
-                                <FieldSponsorLevel v-model="sponsorValue" disabled />
+                                <FieldSponsorLevel v-model="sponsorValue" disabled :sponsorItems="configSponsorItems" />
                                 <div v-if="rolesList.length">
                                     <FieldRole v-model="rolesList" disabled />
                                 </div>
@@ -84,7 +84,7 @@ import SplitterPanel from "primevue/splitterpanel";
 import Message from "primevue/message";
 
 import { globalState } from "@/components/global";
-import { configStatusItems } from "@/ef.config";
+import { configStatusItems, configSponsorItems } from "@/ef.config";
 
 import OnsitePageBase from "@/components/OnsitePageBase.vue";
 

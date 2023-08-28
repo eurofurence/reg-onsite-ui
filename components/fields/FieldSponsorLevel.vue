@@ -5,7 +5,7 @@
             id="sponsorLevel"
             :class="getFieldTextCSS()"
             v-model="modelValue"
-            :options="props.sponsorItems || configRegdeskSponsorItems"
+            :options="sponsorItems"
             optionValue="value"
             optionLabel="label"
             v-bind="$attrs"
@@ -15,7 +15,7 @@
 
 <script setup>
 import { getFieldCSS, getFieldLabelCSS, getFieldTextCSS } from "@/components/fields/fields";
-import { configSponsorItems, configRegdeskSponsorItems } from "@/ef.config";
+import { configSponsorItems } from "@/ef.config";
 import SelectButton from "primevue/selectbutton";
 
 function getPanelTheme() {
@@ -25,7 +25,7 @@ function getPanelTheme() {
 
 // eslint-disable-next-line no-undef
 const modelValue = defineModel();
-const props = defineProps(["sponsorItems"]);
+defineProps(["sponsorItems"]);
 </script>
 
 <style>
