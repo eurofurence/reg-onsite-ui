@@ -124,7 +124,7 @@ const modelValue = defineModel();
 // eslint-disable-next-line no-undef
 const refreshData = defineModel("refreshData");
 
-const sponsorValue = useSponsor(modelValue);
+const sponsorValue = useSponsor(modelValue, configRegdeskSponsorItems);
 const conbookValue = useConbook(modelValue);
 const rolesList = useRoles(modelValue);
 const attendanceList = useDayAttendance(modelValue);
