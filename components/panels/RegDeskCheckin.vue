@@ -70,6 +70,7 @@ import { useConbook } from "@/composables/fields/useConbook";
 import { useRoles } from "@/composables/fields/useRoles";
 import { useDayAttendance } from "@/composables/fields/useDayAttendance";
 import { canCheckin } from "@/composables/canCheckin";
+import { transformAttendee } from "@/composables/transformAttendee";
 
 import Panel from "primevue/panel";
 import Button from "primevue/button";
@@ -107,7 +108,7 @@ async function getCurrentAttendee(regId, force = false) {
         const result = await getSingleAttendee(globalState, toast, regId);
         if (result !== null) {
             // Update selected attendee information
-            for (const [key, value] of Object.entries(result)) {
+            for (const [key, value] of Object.entries(transformAttendee(result, configRegdeskSponsorItems))) {
                 if (key != "id") {
                     modelValue.value[key] = value;
                 }
