@@ -9,15 +9,17 @@ const prodBaseFolder = process.env.PROD_BASE_FOLDER;
 // eslint-disable-next-line no-undef
 const prodHost = process.env.PROD_HOST;
 
+const parentFolder = "onsite";
+
 const pathConfig = {
     dev: {
-        baseUrl: `/${devBaseFolder}/onsite/`,
-        cdnUrl: `https://${devHost}/${devBaseFolder}/onsite/`,
+        baseUrl: `/${devBaseFolder}/${parentFolder}/`,
+        cdnUrl: `https://${devHost}/${devBaseFolder}/${parentFolder}/`,
         apiBaseUrl: `https://${devHost}/${devBaseFolder}`,
     },
     prod: {
-        baseUrl: `/${prodBaseFolder}/onsite/`,
-        cdnUrl: `https://${prodHost}/${prodBaseFolder}/onsite/`,
+        baseUrl: `/${prodBaseFolder}/${parentFolder}/`,
+        cdnUrl: `https://${prodHost}/${prodBaseFolder}/${parentFolder}/`,
         apiBaseUrl: `https://${prodHost}/${prodBaseFolder}`,
     },
 }[deploy_env];
