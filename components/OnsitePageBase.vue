@@ -2,7 +2,7 @@
     <Toast position="bottom-right" group="global" />
     <ConfirmDialog group="confirm" :breakpoints="getDialogBreakPoints()" />
     <ConfirmDialog group="confirmDeep" :breakpoints="getDialogBreakPoints()" />
-    <LoginPanel :title="title" :help="help" />
+    <LoginPanel :title="title" :help="help" :customize="customize" />
     <div class="pt-1" v-if="globalState.isLoggedIn">
         <slot></slot>
     </div>
@@ -25,5 +25,9 @@ function getDialogBreakPoints() {
     };
 }
 
-defineProps(["title", "help"]);
+defineProps({
+    customize: { default: true },
+    title: String,
+    help: { default: "" },
+});
 </script>

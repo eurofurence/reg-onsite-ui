@@ -18,15 +18,8 @@
         <template #end v-if="!isLoading">
             <div id="loginHeader" class="flex" style="font-size: 1px">
                 <!-- style is required to override default size -->
-                <div style="padding-right: 5px">
-                    <Button
-                        outlined
-                        class="contact-button"
-                        icon="pi pi-question-circle"
-                        v-tooltip.bottom="'Help'"
-                        :disabled="help === ''"
-                        @click="showHelp"
-                    />
+                <div v-if="help !== ''" style="padding-right: 5px">
+                    <Button outlined class="contact-button" icon="pi pi-question-circle" v-tooltip.bottom="'Help'" @click="showHelp" />
                 </div>
                 <div style="padding-right: 5px">
                     <a href="https://help.eurofurence.org/legal/imprint">
@@ -39,7 +32,7 @@
                         />
                     </a>
                 </div>
-                <div style="padding-right: 5px">
+                <div v-if="customize" style="padding-right: 5px">
                     <ThemeSelectionElement />
                 </div>
                 <div v-if="!globalState.isLoggedIn">
@@ -70,7 +63,7 @@ import Toolbar from "primevue/toolbar";
 import ProgressBar from "primevue/progressbar";
 
 import { version } from "@/buildConfig";
-import { configAdminGroups, configDDGroups } from "@/ef.config";
+import { configAdminGroups, configDDGroups, configThemeCookie } from "@/ef.config";
 
 import { globalState } from "@/components/global";
 import ThemeSelectionElement from "@/components/element/ThemeSelectionElement";
@@ -153,9 +146,16 @@ checkUserAccess();
 scheduleRegularTask(checkUserAccessSilent, 1000 * 20, 1000 * 10);
 const emit = defineEmits(["on-logo-click"]);
 const props = defineProps({
-    title: { required: true },
-    help: { default: "" },
+    customize: Boolean,
+    language: Boolean,
+    title: String,
+    help: String,
 });
+
+if (!props.customize) {
+    document.documentElement.style.fontSize = `${configThemeCookie.fontSize}px`;
+    document.documentElement.style.setProperty("--header-size", configThemeCookie.headerSize);
+}
 
 import { debugState } from "@/components/debug";
 debugState["LoginHeader"] = { isLoading: isLoading };
