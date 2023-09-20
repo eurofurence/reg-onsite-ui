@@ -105,66 +105,98 @@ export const configTShirtItems = [
     {
         value: "XS",
         label: "X-Small (Regular)",
+        size: "XS",
+        shape: "Regular",
     },
     {
         value: "wXS",
         label: "X-Small (Contoured)",
+        size: "XS",
+        shape: "Contoured",
     },
     {
         value: "S",
         label: "Small (Regular)",
+        size: "S",
+        shape: "Regular",
     },
     {
         value: "wS",
         label: "Small (Contoured)",
+        size: "S",
+        shape: "Contoured",
     },
     {
         value: "M",
         label: "Medium (Regular)",
+        size: "M",
+        shape: "Regular",
     },
     {
         value: "wM",
         label: "Medium (Contoured)",
+        size: "M",
+        shape: "Contoured",
     },
     {
         value: "L",
         label: "Large (Regular)",
+        size: "L",
+        shape: "Regular",
     },
     {
         value: "wL",
         label: "Large (Contoured)",
+        size: "L",
+        shape: "Contoured",
     },
     {
         value: "XL",
         label: "X-Large (Regular)",
+        size: "XL",
+        shape: "Regular",
     },
     {
         value: "wXL",
         label: "X-Large (Contoured)",
+        size: "XL",
+        shape: "Contoured",
     },
     {
         value: "XXL",
         label: "XX-Large (Regular)",
+        size: "XXL",
+        shape: "Regular",
     },
     {
         value: "wXXL",
         label: "XX-Large (Contoured)",
+        size: "XXL",
+        shape: "Contoured",
     },
     {
         value: "3XL",
         label: "3X-Large (Regular)",
+        size: "3XL",
+        shape: "Regular",
     },
     {
         value: "w3XL",
         label: "3X-Large (Contoured)",
+        size: "3XL",
+        shape: "Contoured",
     },
     {
         value: "4XL",
         label: "4X-Large (Regular)",
+        size: "4XL",
+        shape: "Regular",
     },
     {
         value: "w4XL",
         label: "4X-Large (Contoured)",
+        size: "4XL",
+        shape: "Contoured",
     },
 ];
 
