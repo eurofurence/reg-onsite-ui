@@ -9,7 +9,7 @@ const prodBaseFolder = process.env.PROD_BASE_FOLDER;
 // eslint-disable-next-line no-undef
 const prodHost = process.env.PROD_HOST;
 
-const parentFolder = "onsite";
+const parentFolder = "postcon";
 
 const pathConfig = {
     dev: {
