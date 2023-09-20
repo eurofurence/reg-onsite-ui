@@ -326,13 +326,9 @@ async function doManualQuery() {
     }
     if (searchOptions.value.queryMode === "manual" && checkMinimalFilter()) {
         await withLoadingAfterSomeTime(async () => {
-            searchResult.value = transformResult(await getAllAttendeesForFilter(
-                globalState,
-                toast,
-                filters.value,
-                globalSearchColumns.value,
-                storedSortOrder.value.sortOrder,
-            ));
+            searchResult.value = transformResult(
+                await getAllAttendeesForFilter(globalState, toast, filters.value, globalSearchColumns.value, storedSortOrder.value.sortOrder),
+            );
         });
         if (searchResult.value.length === 0) {
             toast.add({
@@ -381,15 +377,17 @@ async function onDemandSearch(mode) {
         }
         await withLoadingAfterSomeTime(async () => {
             if (checkIfQueryRequired(mode, filterDict, ondemandSearchState)) {
-                searchResult.value = transformResult(await cachedGetAllAttendeesForFilter(
-                    mode,
-                    ondemandQueryCache,
-                    globalState,
-                    toast,
-                    filterDict,
-                    globalSearchColumns.value,
-                    storedSortOrder.value.sortOrder,
-                ));
+                searchResult.value = transformResult(
+                    await cachedGetAllAttendeesForFilter(
+                        mode,
+                        ondemandQueryCache,
+                        globalState,
+                        toast,
+                        filterDict,
+                        globalSearchColumns.value,
+                        storedSortOrder.value.sortOrder,
+                    ),
+                );
                 ondemandSearchState.value = updateSearchState(filterDict);
             }
         });

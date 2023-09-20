@@ -1,7 +1,7 @@
 import { FilterMatchMode, FilterService } from "primevue/api";
 
 function getFilterValue(value) {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
         return value.trim();
     }
     return value;
