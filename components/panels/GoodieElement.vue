@@ -58,8 +58,8 @@
           <template #option="slotProps">
             <div class="flex flex-column">
               {{ slotProps.option }}
-              <div class="w-7rem h-7rem flex align-items-center justify-content-center">
-                <img :src="`/${slotProps.option.toLowerCase()}.svg`" class="w-6rem h-6rem" />
+              <div class="flex align-items-center justify-content-center" style="width: 7.4rem; height: 7.4rem;">
+                <img :src="`${config.public.CDN_BASE}${slotProps.option.toLowerCase()}.svg`" class="w-6rem h-6rem" />
               </div>
             </div>
           </template>
@@ -95,6 +95,9 @@ import Dropdown from "primevue/dropdown";
 import Button from "primevue/button";
 import SelectButton from 'primevue/selectbutton';
 import Checkbox from 'primevue/checkbox';
+
+// eslint-disable-next-line no-undef
+const config = useRuntimeConfig();
 
 const saveEnabled = ref(false);
 const toast = useToast();

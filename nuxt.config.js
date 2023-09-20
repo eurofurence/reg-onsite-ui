@@ -48,6 +48,7 @@ export default defineNuxtConfig({
         public: {
             DEPLOY_ENV: deploy_env,
             API_BASE_URL: pathConfig.apiBaseUrl,
+            CDN_BASE: pathConfig.cdnUrl,
         },
     },
     vite: {
