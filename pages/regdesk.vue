@@ -257,6 +257,14 @@ const globalSearchColumns = computed({
 });
 
 //////////////////////////////////////////////////////
+// Attendee Search - Transformation
+//////////////////////////////////////////////////////
+
+function transformResult(value) {
+    return value.map((item) => transformAttendee(item, configRegdeskSponsorItems));
+}
+
+//////////////////////////////////////////////////////
 // Attendee Search - Preload
 //////////////////////////////////////////////////////
 
@@ -280,10 +288,10 @@ async function updatePreloadData(mode) {
     if (searchOptions.value.queryMode === "preload") {
         console.info(`${mode} cache...`);
         if (mode === "Updating") {
-            preloadData.value = await getAllAttendees(globalState, toast);
+            preloadData.value = transformResult(await getAllAttendees(globalState, toast));
         } else {
             await withLoadingAfterSomeTime(async () => {
-                preloadData.value = await getAllAttendees(globalState, toast);
+                preloadData.value = transformResult(await getAllAttendees(globalState, toast));
             });
         }
         searchResult.value = preloadData.value;
@@ -318,13 +326,13 @@ async function doManualQuery() {
     }
     if (searchOptions.value.queryMode === "manual" && checkMinimalFilter()) {
         await withLoadingAfterSomeTime(async () => {
-            searchResult.value = await getAllAttendeesForFilter(
+            searchResult.value = transformResult(await getAllAttendeesForFilter(
                 globalState,
                 toast,
                 filters.value,
                 globalSearchColumns.value,
                 storedSortOrder.value.sortOrder,
-            );
+            ));
         });
         if (searchResult.value.length === 0) {
             toast.add({
@@ -373,7 +381,7 @@ async function onDemandSearch(mode) {
         }
         await withLoadingAfterSomeTime(async () => {
             if (checkIfQueryRequired(mode, filterDict, ondemandSearchState)) {
-                searchResult.value = await cachedGetAllAttendeesForFilter(
+                searchResult.value = transformResult(await cachedGetAllAttendeesForFilter(
                     mode,
                     ondemandQueryCache,
                     globalState,
@@ -381,7 +389,7 @@ async function onDemandSearch(mode) {
                     filterDict,
                     globalSearchColumns.value,
                     storedSortOrder.value.sortOrder,
-                );
+                ));
                 ondemandSearchState.value = updateSearchState(filterDict);
             }
         });
@@ -423,13 +431,12 @@ const filteredList = computed({
         if (attendeeTable.value === null) {
             return [];
         }
-        const transformedResults = searchResult.value.map((item) => transformAttendee(item, configRegdeskSponsorItems));
         if (searchOptions.value.queryMode === "manual") {
-            return transformedResults;
+            return searchResult.value;
         }
         const filterDict = filters.value;
         if (checkMinimalFilter()) {
-            return filterAttendees(transformedResults, filterDict, globalSearchColumns.value);
+            return filterAttendees(searchResult.value, filterDict, globalSearchColumns.value);
         } else {
             return [];
         }

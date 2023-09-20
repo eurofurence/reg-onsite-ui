@@ -1,11 +1,10 @@
 import { FilterMatchMode, FilterService } from "primevue/api";
 
 function getFilterValue(value) {
-    try {
+    if (typeof value === 'string') {
         return value.trim();
-    } catch (error) {
-        return value;
     }
+    return value;
 }
 
 function hasFilterContent(value) {
