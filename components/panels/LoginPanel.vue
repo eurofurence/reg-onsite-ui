@@ -22,6 +22,17 @@
                     <Button outlined class="contact-button" icon="pi pi-question-circle" v-tooltip.bottom="'Help'" @click="showHelp" />
                 </div>
                 <div style="padding-right: 5px">
+                    <a href="https://help.eurofurence.org/legal/privacy">
+                        <Button
+                            outlined
+                            class="contact-button"
+                            icon="pi pi-eye-slash"
+                            v-tooltip.bottom="'Privacy information'"
+                            :severity="globalState.isDirty ? 'secondary' : null"
+                        />
+                    </a>
+                </div>
+                <div style="padding-right: 5px">
                     <a href="https://help.eurofurence.org/legal/imprint">
                         <Button
                             outlined

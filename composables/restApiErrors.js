@@ -21,7 +21,7 @@ export function onError(toast, serviceName, data, status) {
             details: () => null,
         },
         "auth.unauthorized": {
-            message: "Authorization required",
+            message: "Authorization required! Please press the 'Login' button!",
             details: () => extractDetails(data),
         },
         "auth.forbidden": {
@@ -55,7 +55,7 @@ export function onError(toast, serviceName, data, status) {
             severity: "error",
             summary: toastSummary,
             detail: details,
-            life: 5000,
+            life: 10000,
         });
     } else {
         console.error(`${toastSummary}: ${JSON.stringify(details)}`);
