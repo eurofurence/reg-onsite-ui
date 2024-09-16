@@ -1,6 +1,6 @@
 <template>
   <Toast position="bottom-right" group="global" />
-  <div class="flex flex-col h-screen">
+  <div class="flex flex-col h-screen ef-app">
     <div class="p-px">
       <HeaderLoginPanel :title="props.title" :theming="props.theming">
         <template #help v-if="$slots.help">
@@ -34,7 +34,7 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <style>
-.p-skeleton::after {
+.ef-app .p-skeleton::after {
   animation: p-skeleton-animation 5s infinite;
 }
 </style>
