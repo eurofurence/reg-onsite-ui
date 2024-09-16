@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "cp ../environment.regtest.ts app/config/environment.ts && nuxt dev",
+    "docker-test": "docker build -t ef-onsite --build-arg='ENV_NAME=regtest' .",
+    "docker-live": "docker build -t ef-onsite --build-arg='ENV_NAME=reglive' .",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"

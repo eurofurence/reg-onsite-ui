@@ -29,18 +29,12 @@ yarn dev
 
 ## Production
 
-Build the application for production:
+Build the application docker image for test / production:
 
 ```bash
 # yarn
-yarn build
-```
-
-Locally preview production build:
-
-```bash
-# yarn
-yarn preview
+yarn run docker-test
+yarn run docker-live
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.

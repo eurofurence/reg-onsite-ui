@@ -1,5 +1,6 @@
 <template>
   <Toast :group="toastGroup" position="bottom-right" />
+  <ConfirmDialog :group="confirmDialogGroup" />
   <div class="flex flex-col w-screen">
     <PanelRegdeskDebug
       v-model:transformedAttendeeList="rawListRef"
@@ -10,7 +11,8 @@
     <PanelRegdeskWorkArea
       v-model:transformedAttendeeList="pagedListRef"
       v-model:dataOptions="dataOptionsRef"
-      v-model:selectedAttendee="selectedAttendeeRef"
+      v-bind:selectedAttendee="selectedAttendeeRef"
+      @update:selectedAttendee="selectedAttendeeUpdater"
       v-model:autoCompleteData="rawListRef"
       v-model:displayOptions="displayOptionsRef"
       v-model:searchStatus="searchStatusRef"
@@ -43,6 +45,7 @@ import type {
 import { computedPagedResult } from "@/composables/sort_and_filter/computedPagedResult";
 import { computedSortedResult } from "@/composables/sort/computedSortedResult";
 import { computedFilteredResult } from "@/composables/sort_and_filter/computedFilteredResult";
+import { preventUnselectIfNotCheckedIn } from "@/composables/logic/regdesk/preventUnselectIfNotCheckedIn";
 
 import {
   defaultAttendeeDataOptions,
@@ -57,6 +60,7 @@ import { getUpdateAttendeeInListFunction } from "@/composables/logic/regdesk/get
 import { getOnCheckinFunction } from "@/composables/logic/getOnCheckinFunction";
 import { getUndoCheckinFunction } from "@/composables/logic/getUndoCheckinFunction";
 import { getFunctionForDataPreload } from "@/composables/logic/regdesk/getFunctionForDataPreload";
+import type { ConfirmServiceMethods } from "@/types/external";
 
 const toast: ToastServiceMethods = useToast();
 
@@ -82,6 +86,16 @@ const updateAttendee = getUpdateAttendeeInListFunction(
 );
 
 updateAttendeeOnSelection(selectedAttendeeRef, updateAttendee);
+
+const confirm: ConfirmServiceMethods = useConfirm();
+const confirmDialogGroup: string = `confirmDialogGroup${componentId}`;
+const selectedAttendeeUpdater: (
+  newValue: TransformedAttendeeInfo
+) => Promise<void> = preventUnselectIfNotCheckedIn(
+  selectedAttendeeRef,
+  confirm,
+  confirmDialogGroup
+);
 
 const onCheckin: (regNumber: number) => Promise<void> = getOnCheckinFunction(
   updateAttendee,

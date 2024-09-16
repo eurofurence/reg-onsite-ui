@@ -1,6 +1,5 @@
 <template>
   <div>
-    <ConfirmDialog :group="confirmDialogGroup" />
     <Dialog
       v-model:visible="dialogVisibleIfSelectedRef"
       modal
@@ -116,8 +115,6 @@ import type { WritableComputedRef } from "vue";
 import type { ModelRef } from "vue";
 import { recordAttendeeSelections } from "@/composables/logic/regdesk/recordAttendeeSelections";
 import { handleAutoSelection } from "@/composables/logic/regdesk/handleAutoSelection";
-import { preventUnselectIfNotCheckedIn } from "@/composables/logic/regdesk/preventUnselectIfNotCheckedIn";
-import type { ConfirmServiceMethods } from "@/types/external";
 
 function isCheckinDisplayType(location: CheckinDisplayValue): boolean {
   return displayOptionsRef.value.displayCheckinLocation === location;
@@ -176,18 +173,8 @@ handleAutoSelection(
   previousSelectId
 );
 
-const confirm: ConfirmServiceMethods = useConfirm();
 const componentId: string = generateId(useId());
-const confirmDialogGroup: string = `confirmDialogGroup${componentId}`;
 const globaSearchInputId: string = `globaSearchInputId${componentId}`;
-
-preventUnselectIfNotCheckedIn(
-  selectedAttendeeRef,
-  transformedAttendeeListRef,
-  confirm,
-  confirmDialogGroup,
-  () => {}
-);
 
 const selectedAttendeePlaceholerAdapterRef: WritableComputedRef<TransformedAttendeeInfo> =
   computeAttendeePlaceholder(selectedAttendeeRef, true);
