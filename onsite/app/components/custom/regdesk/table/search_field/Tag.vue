@@ -4,6 +4,7 @@
     @change="props.filterCallback()"
     :options="
       getLimitedOptionsFromAutoComplete(
+        modelValue || [],
         props.configItems,
         autoCompleteDataRef,
         props.autoCompleteField

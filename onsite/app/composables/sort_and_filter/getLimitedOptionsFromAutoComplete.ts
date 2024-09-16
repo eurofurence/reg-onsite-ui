@@ -4,6 +4,7 @@ export function getLimitedOptionsFromAutoComplete<
   Type extends LabeledValue<ValueType>,
   ValueType
 >(
+  selectedOptions: ValueType[],
   configItems: Type[],
   autoCompleteData: TransformedAttendeeInfo[] | undefined,
   fieldName: keyof TransformedAttendeeInfo | undefined
@@ -17,8 +18,10 @@ export function getLimitedOptionsFromAutoComplete<
     )
   );
   if (mappedValues.length > 0) {
-    return configItems.filter((item: Type) =>
-      mappedValues.includes(item.value)
+    return configItems.filter(
+      (item: Type) =>
+        mappedValues.includes(item.value) ||
+        selectedOptions.includes(item.value)
     );
   }
   return configItems;

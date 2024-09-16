@@ -223,7 +223,7 @@ const filterMetadata: DataTableFilterMetaData = {
 };
 const filterListMetadata: DataTableFilterMetaData = {
   value: [],
-  matchMode: FilterMatchMode.CONTAINS,
+  matchMode: FilterMatchMode.IN,
 };
 
 export const defaultAttendeeDataOptions: AttendeeDataOptions = {
@@ -237,7 +237,7 @@ export const defaultAttendeeDataOptions: AttendeeDataOptions = {
     birthday: filterMetadata,
     status: {
       value: [Status.approved, Status.partially_paid, Status.paid],
-      matchMode: FilterMatchMode.CONTAINS,
+      matchMode: FilterMatchMode.IN,
     },
     transConbookChoice: filterListMetadata,
     transSponsorChoice: filterListMetadata,

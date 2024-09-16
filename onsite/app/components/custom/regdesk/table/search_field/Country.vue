@@ -4,6 +4,7 @@
     @change="filterCallback()"
     :options="
       getLimitedOptionsFromAutoComplete(
+        modelValue || [],
         setupCountries,
         autoCompleteDataRef,
         'country'
