@@ -97,7 +97,7 @@ export const setupColumnDefinitionList: ColumnDefinition[] = [
   },
   {
     fieldName: "nickname",
-    label: "Nickame",
+    label: "Nickname",
     maxLength: 40,
     filterComponentType: "standard",
     fieldCanBeUsedByGlobalSearch: true,

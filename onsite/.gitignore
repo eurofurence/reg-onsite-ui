@@ -26,3 +26,4 @@ logs
 app/tests/*Real.js
 app/config/environment*.ts
 
+/nginx
