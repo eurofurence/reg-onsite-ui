@@ -9,7 +9,7 @@ export function preventUnselectIfNotCheckedIn(
 ): (newValue: TransformedAttendeeInfo | null) => void {
   return (newValue: TransformedAttendeeInfo | null): void => {
     // Nothing to protect
-    if (!selectedAttendeeRef.value) {
+    if (!selectedAttendeeRef.value || selectedAttendeeRef.value.id === null) {
       selectedAttendeeRef.value = newValue;
       return;
     }
