@@ -80,6 +80,7 @@ const rawListRef: Ref<TransformedAttendeeInfo[]> = ref([]);
 
 const updateAttendee = getUpdateAttendeeInListFunction(
   rawListRef,
+  selectedAttendeeRef,
   searchStatusRef,
   toast,
   toastGroup
@@ -90,8 +91,8 @@ updateAttendeeOnSelection(selectedAttendeeRef, updateAttendee);
 const confirm: ConfirmServiceMethods = useConfirm();
 const confirmDialogGroup: string = `confirmDialogGroup${componentId}`;
 const selectedAttendeeUpdater: (
-  newValue: TransformedAttendeeInfo
-) => Promise<void> = preventUnselectIfNotCheckedIn(
+  newValue: TransformedAttendeeInfo | null
+) => void = preventUnselectIfNotCheckedIn(
   selectedAttendeeRef,
   confirm,
   confirmDialogGroup

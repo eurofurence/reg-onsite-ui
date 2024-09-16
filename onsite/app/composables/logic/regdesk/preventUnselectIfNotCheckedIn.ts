@@ -6,8 +6,8 @@ export function preventUnselectIfNotCheckedIn(
   selectedAttendeeRef: Ref<TransformedAttendeeInfo | null>,
   confirm: ConfirmServiceMethods,
   confirmGroup: string
-): (newValue: TransformedAttendeeInfo) => Promise<void> {
-  return async (newValue: TransformedAttendeeInfo): Promise<void> => {
+): (newValue: TransformedAttendeeInfo | null) => void {
+  return (newValue: TransformedAttendeeInfo | null): void => {
     // Nothing to protect
     if (!selectedAttendeeRef.value) {
       selectedAttendeeRef.value = newValue;
