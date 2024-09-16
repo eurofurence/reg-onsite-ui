@@ -1,11 +1,2 @@
-*.log
-*.tar.gz
-.nuxt
-.output
-dist
 env
-nenv
-node_modules
-notes.txt
-nuxt.d.ts
-test
+

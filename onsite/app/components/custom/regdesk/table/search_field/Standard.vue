@@ -1,0 +1,70 @@
+<template>
+  <div v-if="(autoCompleteDataRef?.length || -1) > 0">
+    <AutoComplete
+      v-model="modelValueRef"
+      @input="props.filterCallback()"
+      @item-select="props.filterCallback()"
+      class="search-column-filter"
+      :placeholder="props.placeholder"
+      :suggestions="suggestionsRef"
+      @complete="doComplete"
+    />
+  </div>
+  <div v-else>
+    <InputText
+      v-model="modelValueRef"
+      @input="props.filterCallback()"
+      class="search-column-filter"
+      :placeholder="placeholder"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import type {
+  SearchElementProps,
+  TransformedAttendeeInfo,
+} from "@/types/internal";
+import type { AutoCompleteCompleteEvent } from "primevue/autocomplete";
+import type { ModelRef } from "vue";
+
+const suggestionsRef: Ref<string[]> = ref<string[]>([]);
+
+const computedAutoCompleteDataRef: ComputedRef<[string, string][]> = computed<
+  [string, string][]
+>(() => {
+  const autoCompleteField: keyof TransformedAttendeeInfo | null =
+    props.autoCompleteField;
+  if (autoCompleteField === null || !autoCompleteDataRef.value) {
+    return [];
+  }
+  const autoCompleteData: string[] = <string[]>(
+    autoCompleteDataRef.value
+      .map((item: TransformedAttendeeInfo) => item[autoCompleteField])
+      .filter((value: any) => value != null)
+  );
+  return autoCompleteData.map((entry: string) => [entry, entry?.toLowerCase()]);
+});
+
+async function doComplete(event: AutoCompleteCompleteEvent): Promise<void> {
+  const query: string = event.query.toLowerCase();
+  suggestionsRef.value = computedAutoCompleteDataRef.value
+    .filter(([_showEntry, searchEntry]: [string, string]) =>
+      searchEntry.startsWith(query)
+    )
+    .map(([showEntry, _searchEntry]: [string, string]) => showEntry);
+}
+
+interface Props extends SearchElementProps {
+  placeholder: string;
+  autoCompleteField: keyof TransformedAttendeeInfo | null;
+}
+const props: Props = defineProps<Props>();
+const modelValueRef: ModelRef<string | null> = defineModel<string | null>({
+  required: true,
+});
+const autoCompleteDataRef: ModelRef<TransformedAttendeeInfo[] | undefined> =
+  defineModel<TransformedAttendeeInfo[]>("autoCompleteData", {
+    required: true,
+  });
+</script>
