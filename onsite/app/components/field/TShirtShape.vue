@@ -5,20 +5,20 @@
       :id="componentId"
       v-model="modelValue"
       :options="['Regular', 'Contoured']"
-      :unselectable="true"
+      :allowEmpty="false"
     >
       <template #option="slotProps">
         <div class="flex flex-col">
           {{ slotProps.option }}
           <div
-            class="flex align-items-center justify-content-center"
+            class="flex justify-center"
             style="width: 7.4rem; height: 7.4rem"
           >
-            <NuxtImg
+            <img
               :class="invertOnDarkMode()"
-              width="6rem"
               :src="getTShirtShapeImageUrl(slotProps.option)"
-              placeholder
+              :placeholder="slotProps.option"
+              unoptimized
             />
           </div>
         </div>
@@ -35,17 +35,28 @@ import type { ModelRef } from "vue";
 
 function invertOnDarkMode(): string {
   if (isDarkMode.value) {
-    return "invert";
+    return "invert t-shirt-img";
   }
-  return "";
+  return "t-shirt-img";
 }
-document.querySelector("html");
+
+const nuxtConfig = useRuntimeConfig();
+
 function getTShirtShapeImageUrl(tshirtShape: TShirtShapeValue): string {
   const shapeFilePath = `${tshirtShape.toLowerCase()}`;
-  return `/tshirt/${shapeFilePath}.svg`;
+  const baseUrl = nuxtConfig.app.baseURL;
+  return `${baseUrl}/tshirt/${shapeFilePath}.svg`;
 }
+
 const modelValue: ModelRef<TShirtShapeValue | undefined> = defineModel<
   TShirtShapeValue | undefined
 >({ required: true });
+
 const componentId: string = generateId(useId());
 </script>
+
+<style>
+.t-shirt-img {
+  width: 6.5rem;
+}
+</style>

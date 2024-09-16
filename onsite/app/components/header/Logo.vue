@@ -9,6 +9,7 @@
         showDelay: 2000,
         hideDelay: 300,
       }"
+      unoptimized
     />
     <span class="header-title">{{ props.title }}</span>
   </div>

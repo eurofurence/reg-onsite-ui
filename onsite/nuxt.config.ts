@@ -21,7 +21,7 @@ export default defineNuxtConfig({
       enabled: true,
     },
   },
-  modules: ["@primevue/nuxt-module", "@nuxtjs/tailwindcss", "@nuxt/image"],
+  modules: ["@primevue/nuxt-module", "@nuxtjs/tailwindcss"],
   build: {
     transpile: ["primevue"],
   },
