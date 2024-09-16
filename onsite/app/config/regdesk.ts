@@ -63,7 +63,7 @@ export const setupCheckinDisplay: LabeledValue<CheckinDisplayValue>[] = [
   },
   {
     value: CheckinDisplay.below,
-    label: "Under Search Results",
+    label: "Below Search Results",
   },
 ];
 
