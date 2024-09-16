@@ -90,7 +90,7 @@ export const setupColumnDefinitionList: ColumnDefinition[] = [
     maxLength: 40,
     filterComponentType: "standard",
     fieldCanBeUsedByGlobalSearch: true,
-    filterType: FilterCmpType.number,
+    filterType: FilterCmpType.ci_str_vs_str,
     filterSufficientForQuery: true,
     sortEnabled: true,
     showFilterMenu: false,

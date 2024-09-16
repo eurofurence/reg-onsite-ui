@@ -77,8 +77,8 @@ export function getFieldGetters(): Record<
 > {
   return {
     id: getAttendeeNumberFun("id"),
-    transId: getAttendeeNumberFun("transId"),
-    badge_id: getAttendeeNumberFun("badge_id"),
+    transId: getAttendeeStringFun("transId"),
+    badge_id: getAttendeeStringFun("badge_id"),
     transAge: getAttendeeNumberFun("transAge"),
     country: getAttendeeCountry,
     transCountryName: getAttendeeCountry,
