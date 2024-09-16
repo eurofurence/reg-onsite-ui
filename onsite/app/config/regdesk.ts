@@ -2,7 +2,7 @@ import { FilterMatchMode } from "@primevue/core/api";
 import { setupConBookChoices } from "@/config/setupConBookChoices";
 import { setupConRoles } from "@/config/setupConRoles";
 import { setupSponsorLevels } from "@/config/setupSponsorLevels";
-import { setupStatus } from "@/config/setupStatus";
+import { setupStatus, Status } from "@/config/setupStatus";
 import {
   AttendeeQueryStrategy,
   CheckinDisplay,
@@ -235,7 +235,10 @@ export const defaultAttendeeDataOptions: AttendeeDataOptions = {
     last_name: filterMetadata,
     country: filterListMetadata,
     birthday: filterMetadata,
-    status: filterListMetadata,
+    status: {
+      value: [Status.approved, Status.partially_paid, Status.paid],
+      matchMode: FilterMatchMode.CONTAINS,
+    },
     transConbookChoice: filterListMetadata,
     transSponsorChoice: filterListMetadata,
     transConRole: filterListMetadata,
