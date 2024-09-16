@@ -54,10 +54,9 @@ interface Props extends SearchElementProps {
   autoCompleteField?: keyof TransformedAttendeeInfo;
 }
 const props: Props = defineProps<Props>();
-const modelValue: ModelRef<OptionalColoredIconLabeledValue<string>[] | null> =
-  defineModel<OptionalColoredIconLabeledValue<string>[] | null>({
-    required: true,
-  });
+const modelValue: ModelRef<string[] | null> = defineModel<string[] | null>({
+  required: true,
+});
 const autoCompleteDataRef: ModelRef<TransformedAttendeeInfo[] | undefined> =
   defineModel<TransformedAttendeeInfo[] | undefined>("autoCompleteData");
 </script>
