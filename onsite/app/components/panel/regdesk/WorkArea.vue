@@ -123,9 +123,8 @@ import {
   keyboardService,
 } from "@/composables/services/keyboardService";
 import { defaultAttendeeDataOptions } from "@/config/regdesk";
-import { deepCopy } from "~/composables/state/deepCopy";
-import type { Config } from "tailwindcss";
-import type { ConfirmServiceMethods } from "~/types/external";
+import { deepCopy } from "@/composables/state/deepCopy";
+import type { ConfirmServiceMethods } from "@/types/external";
 
 function isCheckinDisplayType(location: CheckinDisplayValue): boolean {
   return displayOptionsRef.value.displayCheckinLocation === location;

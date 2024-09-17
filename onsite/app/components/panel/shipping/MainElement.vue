@@ -66,7 +66,7 @@ import type {
 } from "@/types/external";
 import { Severity, type TransformedAttendeeInfo } from "@/types/internal";
 import type { ToastServiceMethods } from "primevue/toastservice";
-import { keyboardService, ShortcutScope } from "~/composables/services/keyboardService";
+import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
 
 const toast: ToastServiceMethods = useToast();
 

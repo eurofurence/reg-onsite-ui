@@ -71,7 +71,7 @@ import {
 } from "@/types/internal";
 import type { ToastServiceMethods } from "primevue/toastservice";
 import type { AbstractTrinketValue } from "@/setupEFIteration";
-import { keyboardService, ShortcutScope } from "~/composables/services/keyboardService";
+import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
 
 keyboardService.pushScope(ShortcutScope.regdesk);
 

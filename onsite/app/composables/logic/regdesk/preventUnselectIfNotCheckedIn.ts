@@ -1,5 +1,5 @@
 import type { TransformedAttendeeInfo } from "@/types/internal";
-import { Status } from "~/config/setupStatus";
+import { Status } from "@/config/setupStatus";
 import type { ConfirmServiceMethods } from "@/types/external";
 import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
 

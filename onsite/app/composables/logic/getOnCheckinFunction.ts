@@ -2,7 +2,11 @@ import type { ToastServiceMethods } from "primevue/toastservice";
 import Status from "@/components/field/Status.vue";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { attendeeService } from "@/composables/services/attendeeService";
-import { Severity, type TransformedAttendeeInfo } from "@/types/internal";
+import {
+  Severity,
+  type AttendeeTableDisplayOptions,
+  type TransformedAttendeeInfo,
+} from "@/types/internal";
 
 export function getOnCheckinFunction(
   updateAttendee: (

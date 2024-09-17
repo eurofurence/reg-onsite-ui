@@ -61,7 +61,10 @@ import { getOnCheckinFunction } from "@/composables/logic/getOnCheckinFunction";
 import { getUndoCheckinFunction } from "@/composables/logic/getUndoCheckinFunction";
 import { getFunctionForDataPreload } from "@/composables/logic/regdesk/getFunctionForDataPreload";
 import type { ConfirmServiceMethods } from "@/types/external";
-import { keyboardService, ShortcutScope } from "~/composables/services/keyboardService";
+import {
+  keyboardService,
+  ShortcutScope,
+} from "@/composables/services/keyboardService";
 
 const toast: ToastServiceMethods = useToast();
 
