@@ -247,6 +247,14 @@ export function getFilterFunctorContainerList<
       fieldResolvers: fieldGet,
       columnDefintion: columnDefintion,
     };
+    // Add full name filter if both first and last name are selected
+    if (
+      fieldName == "transFullName" &&
+      globalFilterColumns.includes("first_name") &&
+      globalFilterColumns.includes("last_name")
+    ) {
+      addCIValueFilter(params, fieldName, true, filter.global);
+    }
     // Add standard filters
     if (cmpType === FilterCmpType.number) {
       // Normal string vs string comparison within one field

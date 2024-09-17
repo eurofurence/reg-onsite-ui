@@ -262,7 +262,8 @@ export type FilterFieldValue =
   | "status"
   | "transConbookChoice"
   | "transSponsorChoice"
-  | "transConRole";
+  | "transConRole"
+  | "transFullName";
 
 export type AllFilterFieldValues = "global" | FilterFieldValue;
 
