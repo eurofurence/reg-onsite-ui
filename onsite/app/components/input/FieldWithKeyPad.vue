@@ -44,15 +44,6 @@ import type { SeverityValue } from "@/types/internal";
 
 var resetOnNextNumber: Ref<boolean> = ref<boolean>(true);
 
-function getInputElement(): HTMLInputElement {
-  const inputElement: HTMLElement | null =
-    document.getElementById(inputElementId);
-  if (inputElement === null) {
-    throw new Error("Input element not found!");
-  }
-  return <HTMLInputElement>inputElement;
-}
-
 async function focusRegNumberInputAndHandleReset(): Promise<void> {
   if (resetOnNextNumber.value) {
     resetOnNextNumber.value = false;
@@ -62,7 +53,7 @@ async function focusRegNumberInputAndHandleReset(): Promise<void> {
 }
 
 async function focusRegNumberInput(): Promise<void> {
-  const inputElement: HTMLInputElement = getInputElement();
+  const inputElement: HTMLInputElement = getInputElement(inputElementId);
   inputElement.focus();
   inputElement.setSelectionRange(
     inputElement.value.length,
@@ -71,16 +62,16 @@ async function focusRegNumberInput(): Promise<void> {
 }
 
 async function resetRegNumber(): Promise<void> {
-  getInputElement().blur();
+  getInputElement(inputElementId).blur();
   modelValue.value = null;
   emit("numberSubmit", modelValue.value);
 }
 
 async function onNumberSubmit(): Promise<void> {
   resetOnNextNumber.value = true;
-  getInputElement().blur();
+  getInputElement(inputElementId).blur();
   const number: number | null =
-    Number.parseInt(getInputElement().value) || null;
+    Number.parseInt(getInputElement(inputElementId).value) || null;
   emit("numberSubmit", number);
 }
 
