@@ -201,7 +201,9 @@ async function onEscape(event: KeyboardEvent): Promise<void> {
   if (keyboardService.getCurrentScope() === ShortcutScope.regdesk) {
     focusGlobalFilterInputAndResetFilter();
     event.preventDefault();
-  } else if (keyboardService.getCurrentScope() === ShortcutScope.dialog_checkin) {
+  } else if (
+    keyboardService.getCurrentScope() === ShortcutScope.dialog_checkin
+  ) {
     selectedAttendeeRef.value = null;
   }
 }
@@ -215,23 +217,22 @@ keyboardService.registerShortcuts(
 
 async function onEnter(event: KeyboardEvent): Promise<void> {
   if (keyboardService.getCurrentScope() === ShortcutScope.dialog_checkin) {
-    keyboardService.pushScope(ShortcutScope.confirm_checkin)
+    keyboardService.pushScope(ShortcutScope.confirm_checkin);
     // Ask user for confirmation
     confirm.require({
       group: confirmGroup,
-      message:
-        "Please confirm checkin of attendee!",
+      message: "Please confirm checkin of attendee!",
       header: "Confirm",
       icon: "pi pi-question-circle",
       accept: () => {
-        emit('onCheckin');
+        emit("onCheckin");
         selectedAttendeeRef.value = null;
         focusGlobalFilterInputAndResetFilter();
       },
     });
-    keyboardService.popScope(ShortcutScope.confirm_checkin)
+    keyboardService.popScope(ShortcutScope.confirm_checkin);
     event.preventDefault();
-  };
+  }
 }
 
 keyboardService.registerShortcuts(
@@ -240,7 +241,6 @@ keyboardService.registerShortcuts(
   ShortcutKey.escape,
   onEnter
 );
-
 
 const selectedAttendeePlaceholerAdapterRef: WritableComputedRef<TransformedAttendeeInfo> =
   computeAttendeePlaceholder(selectedAttendeeRef, true);
