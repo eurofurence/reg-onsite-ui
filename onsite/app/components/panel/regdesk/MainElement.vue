@@ -65,6 +65,7 @@ import {
   keyboardService,
   ShortcutScope,
 } from "@/composables/services/keyboardService";
+import { deepCopy } from "@/composables/state/deepCopy";
 
 const toast: ToastServiceMethods = useToast();
 
@@ -105,7 +106,7 @@ const selectedAttendeeUpdater: (
 const onUndoCheckin = getUndoCheckinFunction(updateAttendee, toast, toastGroup);
 
 const dataOptionsRef: Ref<AttendeeDataOptions> = ref(
-  defaultAttendeeDataOptions
+  deepCopy(defaultAttendeeDataOptions)
 );
 
 const doDataPreload: () => Promise<void> = getFunctionForDataPreload(
