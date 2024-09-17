@@ -66,8 +66,11 @@ import type {
 } from "@/types/external";
 import { Severity, type TransformedAttendeeInfo } from "@/types/internal";
 import type { ToastServiceMethods } from "primevue/toastservice";
+import { keyboardService, ShortcutScope } from "~/composables/services/keyboardService";
 
 const toast: ToastServiceMethods = useToast();
+
+keyboardService.pushScope(ShortcutScope.shipping);
 
 const descriptionsRef: Ref<ShippingI18N> = ref<ShippingI18N>(
   getShippingI18N(null)

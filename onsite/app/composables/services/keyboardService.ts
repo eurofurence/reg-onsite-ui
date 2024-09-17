@@ -6,6 +6,7 @@ export const enum ShortcutScope {
   keypad = "keypad",
   items = "items",
   confirm_checkin = "confirm_checkin",
+  confirm_deselect_not_checkin = "confirm_deselect_not_checkin",
   confirm_available_items = "confirm_available_items",
   confirm_if_dirty = "confirm_if_dirty",
   confirm_logout = "confirm_logout",
@@ -15,6 +16,9 @@ export const enum ShortcutScope {
   dialog_theme = "dialog_theme",
   dialog_checkin = "dialog_checkin",
   regdesk = "regdesk",
+  constoredesk = "constore",
+  sponsordesk = "sponsordesk",
+  shipping = "shipping",
 }
 
 export const enum ShortcutEvent {
@@ -61,16 +65,25 @@ function registerShortcuts(
   setupKeyEvents(event, matchFunction, handler, withModifier);
 }
 
-function pushScope(scope: ShortcutScope): void {
+var shortCutScopeStackRef: Ref<ShortcutScope[]> = ref([]);
 
+function pushScope(scope: ShortcutScope): void {
+  shortCutScopeStackRef.value.push(scope);
 }
 
 function popScope(scope: ShortcutScope): void {
-
+  const checkScope: ShortcutScope | undefined = shortCutScopeStackRef.value.pop();
+  if (scope != checkScope) {
+    console.log(`Inconsistent scopes! ${scope}: ${shortCutScopeStackRef.value}`);
+  }
 }
 
 function resetScope(scope: ShortcutScope): void {
+  shortCutScopeStackRef.value = [];
+}
 
+function getCurrentScope(): ShortcutScope | undefined {
+  return shortCutScopeStackRef.value[shortCutScopeStackRef.value.length - 1];
 }
 
 interface KeyboardService {
@@ -78,6 +91,7 @@ interface KeyboardService {
   pushScope: typeof pushScope,
   popScope: typeof popScope,
   resetScope: typeof resetScope,
+  getCurrentScope: typeof getCurrentScope,
 }
 
 export const keyboardService: KeyboardService = {
@@ -85,13 +99,14 @@ export const keyboardService: KeyboardService = {
   pushScope: pushScope,
   popScope: popScope,
   resetScope: resetScope,
+  getCurrentScope: getCurrentScope,
 };
 
 export function watchDialogVisibility(visiblityRef: Ref<boolean>, scope: ShortcutScope): void {
   watch(() => visiblityRef.value, (value: boolean, oldValue: boolean | undefined) => {
     if (value) {
       pushScope(scope);
-    } else {
+    } else if (oldValue !== undefined) {
       popScope(scope);
     }
   }, { immediate: true }

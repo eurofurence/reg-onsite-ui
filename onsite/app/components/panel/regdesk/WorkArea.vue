@@ -5,7 +5,7 @@
       modal
       :dismissableMask="true"
       :closeOnEscape="false"
-      :maximizable="true"
+      :maximizable="false"
       header="Checkin Dialog"
     >
       <div class="flex">
@@ -49,7 +49,7 @@
             <div class="flex gap-1">
               <CustomRegdeskGlobalSearchField
                 v-model="dataOptionsRef"
-                :inputId="globaSearchInputId"
+                :globaSearchInputId="globaSearchInputId"
                 autofocus
               />
               <CustomRegdeskResetFilterButton v-model="dataOptionsRef" />
@@ -115,7 +115,17 @@ import type { WritableComputedRef } from "vue";
 import type { ModelRef } from "vue";
 import { recordAttendeeSelections } from "@/composables/logic/regdesk/recordAttendeeSelections";
 import { handleAutoSelection } from "@/composables/logic/regdesk/handleAutoSelection";
-import { watchDialogVisibility, ShortcutScope } from "@/composables/services/keyboardService";
+import { watchDialogVisibility } from "@/composables/services/keyboardService";
+import {
+  ShortcutEvent,
+  ShortcutKey,
+  ShortcutScope,
+  keyboardService,
+} from "@/composables/services/keyboardService";
+import { defaultAttendeeDataOptions } from "@/config/regdesk";
+import { deepCopy } from "~/composables/state/deepCopy";
+import type { Config } from "tailwindcss";
+import type { ConfirmServiceMethods } from "~/types/external";
 
 function isCheckinDisplayType(location: CheckinDisplayValue): boolean {
   return displayOptionsRef.value.displayCheckinLocation === location;
@@ -132,7 +142,6 @@ const dialogVisibleIfSelectedRef: WritableComputedRef<boolean> = computed({
     }
   },
 });
-watchDialogVisibility(dialogVisibleIfSelectedRef, ShortcutScope.dialog_checkin);
 
 const selectedAttendeeRef: ModelRef<TransformedAttendeeInfo | null> =
   defineModel<TransformedAttendeeInfo | null>("selectedAttendee", {
@@ -176,11 +185,67 @@ handleAutoSelection(
 );
 
 const componentId: string = generateId(useId());
-const globaSearchInputId: string = `globaSearchInputId${componentId}`;
+const globaSearchInputId: string = `globalSearchInputId${componentId}`;
+const confirmGroup: string = `confirmCheckin${componentId}`;
+const confirm: ConfirmServiceMethods = useConfirm();
+
+watchDialogVisibility(dialogVisibleIfSelectedRef, ShortcutScope.dialog_checkin);
+
+function focusGlobalFilterInputAndResetFilter() {
+  const inputElement: HTMLInputElement = getInputElement(globaSearchInputId);
+  inputElement.focus();
+  inputElement.value = "";
+  dataOptionsRef.value.filters = deepCopy(defaultAttendeeDataOptions.filters);
+}
+
+async function onEscape(event: KeyboardEvent): Promise<void> {
+  if (keyboardService.getCurrentScope() === ShortcutScope.regdesk) {
+    focusGlobalFilterInputAndResetFilter();
+    event.preventDefault();
+  } else if (keyboardService.getCurrentScope() === ShortcutScope.dialog_checkin) {
+    selectedAttendeeRef.value = null;
+  }
+}
+
+keyboardService.registerShortcuts(
+  ShortcutScope.regdesk,
+  ShortcutEvent.keydown,
+  ShortcutKey.escape,
+  onEscape
+);
+
+async function onEnter(event: KeyboardEvent): Promise<void> {
+  if (keyboardService.getCurrentScope() === ShortcutScope.dialog_checkin) {
+    keyboardService.pushScope(ShortcutScope.confirm_checkin)
+    // Ask user for confirmation
+    confirm.require({
+      group: confirmGroup,
+      message:
+        "Please confirm checkin of attendee!",
+      header: "Confirm",
+      icon: "pi pi-question-circle",
+      accept: () => {
+        emit('onCheckin');
+        selectedAttendeeRef.value = null;
+        focusGlobalFilterInputAndResetFilter();
+      },
+    });
+    keyboardService.popScope(ShortcutScope.confirm_checkin)
+    event.preventDefault();
+  };
+}
+
+keyboardService.registerShortcuts(
+  ShortcutScope.regdesk,
+  ShortcutEvent.keydown,
+  ShortcutKey.escape,
+  onEnter
+);
+
 
 const selectedAttendeePlaceholerAdapterRef: WritableComputedRef<TransformedAttendeeInfo> =
   computeAttendeePlaceholder(selectedAttendeeRef, true);
-defineEmits([
+const emit = defineEmits([
   "triggerManual",
   "triggerPreload",
   "triggerOndeman",

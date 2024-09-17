@@ -65,6 +65,9 @@ import type { ToastServiceMethods } from "primevue/toastservice";
 import type { WritableComputedRef } from "vue";
 import { handleSingleAttendeeSearch } from "@/composables/search_status/handleSingleAttendeeSearch";
 import { getOnCheckinFunction } from "@/composables/logic/getOnCheckinFunction";
+import { keyboardService, ShortcutScope } from "~/composables/services/keyboardService";
+
+keyboardService.pushScope(ShortcutScope.regdesk);
 
 const toast: ToastServiceMethods = useToast();
 

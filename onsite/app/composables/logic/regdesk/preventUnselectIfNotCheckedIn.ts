@@ -19,7 +19,7 @@ export function preventUnselectIfNotCheckedIn(
       selectedAttendeeRef.value = newValue;
       return;
     }
-    keyboardService.pushScope(ShortcutScope.confirm_checkin)
+    keyboardService.pushScope(ShortcutScope.confirm_deselect_not_checkin)
     // Ask user for confirmation
     confirm.require({
       group: confirmGroup,
@@ -31,7 +31,7 @@ export function preventUnselectIfNotCheckedIn(
         selectedAttendeeRef.value = newValue;
       },
     });
-    keyboardService.popScope(ShortcutScope.confirm_checkin)
+    keyboardService.popScope(ShortcutScope.confirm_deselect_not_checkin)
     return;
   };
 }
