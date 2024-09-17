@@ -61,17 +61,20 @@
           <CustomRegdeskTableSearchFieldBirthday
             v-else-if="columnDefinition?.filterComponentType === 'birthday'"
             v-model="filterModel.value"
+            :columnDefinition="columnDefinition"
             :filterCallback="filterCallback"
           />
           <CustomRegdeskTableSearchFieldCountry
             v-else-if="columnDefinition?.filterComponentType === 'country'"
             v-model="filterModel.value"
+            :columnDefinition="columnDefinition"
             :filterCallback="filterCallback"
             :autoCompleteData="autoCompleteDataRef"
           />
           <CustomRegdeskTableSearchFieldTag
             v-else-if="columnDefinition?.filterComponentType === 'tag'"
             v-model="filterModel.value"
+            :columnDefinition="columnDefinition"
             :filterCallback="filterCallback"
             :configItems="columnDefinition?.configItems || []"
             :autoCompleteData="autoCompleteDataRef"
@@ -80,6 +83,7 @@
           <CustomRegdeskTableSearchFieldStandard
             v-else-if="columnDefinition?.filterComponentType !== undefined"
             v-model="filterModel.value"
+            :columnDefinition="columnDefinition"
             :filterCallback="filterCallback"
             :autoCompleteData="autoCompleteDataRef"
             :autoCompleteField="columnDefinition.fieldName"

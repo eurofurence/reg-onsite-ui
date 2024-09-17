@@ -203,6 +203,7 @@
             <CustomRegdeskTableSearchFieldCountry
               id="country"
               v-model="dataOptionsRef.filters.country.value"
+              :columnDefinition="null"
               :filterCallback="() => {}"
             />
           </div>
@@ -211,6 +212,7 @@
             <CustomRegdeskTableSearchFieldTag
               id="status"
               v-model="dataOptionsRef.filters.status.value"
+              :columnDefinition="null"
               :filterCallback="() => {}"
               :configItems="attendeeDataOptionChoices.filters.status"
             />
@@ -220,6 +222,7 @@
             <CustomRegdeskTableSearchFieldTag
               id="roles"
               v-model="dataOptionsRef.filters.transConRole.value"
+              :columnDefinition="null"
               :filterCallback="() => {}"
               :configItems="attendeeDataOptionChoices.filters.transConRole"
             />
@@ -229,6 +232,7 @@
             <CustomRegdeskTableSearchFieldTag
               id="sponsor"
               v-model="dataOptionsRef.filters.transSponsorChoice.value"
+              :columnDefinition="null"
               :filterCallback="() => {}"
               :configItems="
                 attendeeDataOptionChoices.filters.transSponsorChoice

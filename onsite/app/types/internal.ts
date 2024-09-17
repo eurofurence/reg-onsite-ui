@@ -228,6 +228,7 @@ export interface TransformedAttendeeInfo
 
 export interface SearchElementProps {
   filterCallback: CallableFunction;
+  columnDefinition: ColumnDefinition | null;
 }
 
 export interface ValueGetter<Type extends TransformedAttendeeInfo> {
