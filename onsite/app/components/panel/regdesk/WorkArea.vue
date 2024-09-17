@@ -122,9 +122,8 @@ import {
   ShortcutScope,
   keyboardService,
 } from "@/composables/services/keyboardService";
-import { defaultAttendeeDataOptions } from "@/config/regdesk";
-import { deepCopy } from "@/composables/state/deepCopy";
 import type { ConfirmServiceMethods } from "@/types/external";
+import { doResetFilters } from "@/composables/filter/doResetFilters";
 
 function isCheckinDisplayType(location: CheckinDisplayValue): boolean {
   return displayOptionsRef.value.displayCheckinLocation === location;
@@ -194,7 +193,7 @@ function focusGlobalFilterInputAndResetFilter() {
   const inputElement: HTMLInputElement = getInputElement(globaSearchInputId);
   inputElement.focus();
   inputElement.value = "";
-  dataOptionsRef.value.filters = deepCopy(defaultAttendeeDataOptions.filters);
+  doResetFilters(dataOptionsRef);
 }
 
 async function onEscape(event: KeyboardEvent): Promise<void> {

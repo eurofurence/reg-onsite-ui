@@ -2,26 +2,23 @@
   <Button
     icon="pi pi-filter-slash"
     v-tooltip.right="'Reset search (implicit filters will be unchanged)'"
-    @click="doResetFilters"
-    :disabled="filterIsPristine()"
+    @click="onResetFilters"
+    :disabled="isDisabled"
   />
 </template>
 
 <script setup lang="ts">
-import { defaultAttendeeDataOptions } from "@/config/regdesk";
 import type { ModelRef } from "vue";
 import type { AttendeeDataOptions } from "@/types/internal";
+import { isFilterPristine } from "@/composables/filter/isFilterPristine";
+import { doResetFilters } from "@/composables/filter/doResetFilters";
 
-const referenceFilterStr: string = JSON.stringify(
-  defaultAttendeeDataOptions.filters
-);
-
-function filterIsPristine() {
-  return referenceFilterStr === JSON.stringify(dataOptionsRef.value.filters);
+function onResetFilters() {
+  doResetFilters(dataOptionsRef);
 }
 
-function doResetFilters() {
-  dataOptionsRef.value.filters = JSON.parse(referenceFilterStr);
+function isDisabled() {
+  return isFilterPristine(dataOptionsRef);
 }
 
 const dataOptionsRef: ModelRef<AttendeeDataOptions> =
