@@ -12,6 +12,8 @@ export function getOnCheckinFunction(
   updateAttendee: (
     regNumber: number
   ) => Promise<TransformedAttendeeInfo | null>,
+  selectedAttendeeRef: Ref<TransformedAttendeeInfo | null>,
+  displayOptionsRef: Ref<AttendeeTableDisplayOptions> | null,
   toast: ToastServiceMethods,
   toastGroup: string
 ): (regNumber: number) => Promise<void> {
@@ -29,6 +31,11 @@ export function getOnCheckinFunction(
         summary: `Checked in attendee ${regNumber}`,
         life: 2000,
       });
+      if (displayOptionsRef && displayOptionsRef.value.checkinAutoClose) {
+        setTimeout(() => {
+          selectedAttendeeRef.value = null;
+        }, 250);
+      }
     }
   };
 }

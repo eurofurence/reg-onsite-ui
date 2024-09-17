@@ -102,12 +102,6 @@ const selectedAttendeeUpdater: (
   confirmDialogGroup
 );
 
-const onCheckin: (regNumber: number) => Promise<void> = getOnCheckinFunction(
-  updateAttendee,
-  toast,
-  toastGroup
-);
-
 const onUndoCheckin = getUndoCheckinFunction(updateAttendee, toast, toastGroup);
 
 const dataOptionsRef: Ref<AttendeeDataOptions> = ref(
@@ -132,6 +126,13 @@ const displayOptionsRef: CookieRef<AttendeeTableDisplayOptions> =
 
 keyboardService.pushScope(ShortcutScope.regdesk);
 
+const onCheckin: (regNumber: number) => Promise<void> = getOnCheckinFunction(
+  updateAttendee,
+  selectedAttendeeRef,
+  displayOptionsRef,
+  toast,
+  toastGroup
+);
 
 //////////////////////////////////////////////////////
 // Attendee Filtering

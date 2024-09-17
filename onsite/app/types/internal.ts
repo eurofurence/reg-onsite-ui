@@ -352,6 +352,7 @@ export interface AttendeeTableDisplayOptions {
   displayCheckinLocation: CheckinDisplayValue;
   displayColumns: (keyof TransformedAttendeeInfo)[];
   displayRowsPerPage: number;
+  checkinAutoClose: boolean;
   filterAutoSelect: boolean;
   filterInputDisplay: TableFilterDisplayValue;
   displayRunner: {

@@ -19,12 +19,21 @@
             />
           </div>
           <div class="flex flex-col gap-1">
-            <label for="autoSelect"
-              >Auto-select if there is just one match
+            <label for="autoSelect">
+              Auto-select if there is just one match
             </label>
             <ToggleSwitch
               id="autoSelect"
               v-model="displayOptionsRef.filterAutoSelect"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="autoSelect">
+              Close dialog / deselect attendee when checking in
+            </label>
+            <ToggleSwitch
+              id="autoSelect"
+              v-model="displayOptionsRef.checkinAutoClose"
             />
           </div>
           <div class="flex flex-col gap-1">

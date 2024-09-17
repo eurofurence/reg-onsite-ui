@@ -94,6 +94,8 @@ const toastGroup: string = `quickregdesk${componentId}`;
 
 const onCheckin = getOnCheckinFunction(
   updateCurrentAttendee,
+  transformedAttendeeInfoRef,
+  null,
   toast,
   toastGroup
 );

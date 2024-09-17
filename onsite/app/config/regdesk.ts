@@ -22,6 +22,7 @@ import { deepCopy } from "@/composables/state/deepCopy";
 export const defaultAttendeeTableDisplayOptions: AttendeeTableDisplayOptions = {
   displayRowsPerPage: 10,
   filterAutoSelect: true,
+  checkinAutoClose: true,
   displayRunner: {
     enabled: true,
     location: "top-right",
