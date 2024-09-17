@@ -32,11 +32,13 @@ import type {
 import type { ConfirmServiceMethods } from "@/types/external";
 import { useConfirm } from "primevue/useconfirm";
 import type { ModelRef } from "vue";
+import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
 
 const confirm: ConfirmServiceMethods = useConfirm();
 
 function run() {
   availableItemsRef.value = modelValue.value;
+  keyboardService.pushScope(ShortcutScope.confirm_available_items);
   confirm.require({
     group: availableDialogGroupId,
     header: "Configure Available Items",
@@ -53,8 +55,9 @@ function run() {
     accept: () => {
       modelValue.value = availableItemsRef.value;
     },
-    reject: () => {},
+    reject: () => { },
   });
+  keyboardService.popScope(ShortcutScope.confirm_available_items);
 }
 
 const availableItemsRef: Ref<ConcreteTrinketValue[]> = ref<

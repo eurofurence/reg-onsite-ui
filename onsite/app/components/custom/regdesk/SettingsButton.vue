@@ -23,8 +23,10 @@ import type {
   AttendeeDataOptions,
   AttendeeTableDisplayOptions,
 } from "@/types/internal";
+import { watchDialogVisibility, ShortcutScope } from "@/composables/services/keyboardService";
 
 const dialogVisibleForSettingsRef: Ref<boolean> = ref<boolean>(false);
+watchDialogVisibility(dialogVisibleForSettingsRef, ShortcutScope.dialog_regdesk_settings);
 
 const displayOptionsRef: ModelRef<AttendeeTableDisplayOptions> =
   defineModel<AttendeeTableDisplayOptions>("displayOptions", {

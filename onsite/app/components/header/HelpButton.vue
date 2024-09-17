@@ -21,10 +21,12 @@
 import { getDialogBreakPoints } from "@/config/theme";
 import type { ConfirmServiceMethods } from "@/types/external";
 import { useConfirm } from "primevue/useconfirm";
+import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
 
 const confirm: ConfirmServiceMethods = useConfirm();
 
 function showHelp(): void {
+  keyboardService.pushScope(ShortcutScope.confirmHelp);
   confirm.require({
     group: dialogGroup,
     header: "Help",
@@ -32,6 +34,7 @@ function showHelp(): void {
     rejectClass: "hidden",
     icon: "pi pi-question-circle",
   });
+  keyboardService.popScope(ShortcutScope.confirmHelp);
 }
 
 const componentId: string = generateId(useId());

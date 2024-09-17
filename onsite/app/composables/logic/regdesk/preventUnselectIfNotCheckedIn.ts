@@ -1,6 +1,7 @@
 import type { TransformedAttendeeInfo } from "@/types/internal";
 import { Status } from "~/config/setupStatus";
 import type { ConfirmServiceMethods } from "@/types/external";
+import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
 
 export function preventUnselectIfNotCheckedIn(
   selectedAttendeeRef: Ref<TransformedAttendeeInfo | null>,
@@ -18,6 +19,7 @@ export function preventUnselectIfNotCheckedIn(
       selectedAttendeeRef.value = newValue;
       return;
     }
+    keyboardService.pushScope(ShortcutScope.confirm_checkin)
     // Ask user for confirmation
     confirm.require({
       group: confirmGroup,
@@ -29,6 +31,7 @@ export function preventUnselectIfNotCheckedIn(
         selectedAttendeeRef.value = newValue;
       },
     });
+    keyboardService.popScope(ShortcutScope.confirm_checkin)
     return;
   };
 }

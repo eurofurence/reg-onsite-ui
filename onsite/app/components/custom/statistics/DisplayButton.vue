@@ -30,8 +30,10 @@ import type {
   RawAttendeeFilter,
   TransformedAttendeeInfo,
 } from "@/types/internal";
+import { watchDialogVisibility, ShortcutScope } from "@/composables/services/keyboardService";
 
 const visible: Ref<boolean> = ref<boolean>(false);
+watchDialogVisibility(visible, ShortcutScope.dialog_statistics);
 
 interface Props {
   filters: RawAttendeeFilter;

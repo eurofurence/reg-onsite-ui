@@ -5,6 +5,16 @@ export const enum ShortcutScope {
   debug = "debug",
   keypad = "keypad",
   items = "items",
+  confirm_checkin = "confirm_checkin",
+  confirm_available_items = "confirm_available_items",
+  confirm_if_dirty = "confirm_if_dirty",
+  confirm_logout = "confirm_logout",
+  confirm_show_help = "confirm_show_help",
+  dialog_regdesk_settings = "dialog_regdesk_settings",
+  dialog_statistics = "dialog_statistics",
+  dialog_theme = "dialog_theme",
+  dialog_checkin = "dialog_checkin",
+  regdesk = "regdesk",
 }
 
 export const enum ShortcutEvent {
@@ -51,10 +61,39 @@ function registerShortcuts(
   setupKeyEvents(event, matchFunction, handler, withModifier);
 }
 
+function pushScope(scope: ShortcutScope): void {
+
+}
+
+function popScope(scope: ShortcutScope): void {
+
+}
+
+function resetScope(scope: ShortcutScope): void {
+
+}
+
 interface KeyboardService {
   registerShortcuts: typeof registerShortcuts;
+  pushScope: typeof pushScope,
+  popScope: typeof popScope,
+  resetScope: typeof resetScope,
 }
 
 export const keyboardService: KeyboardService = {
   registerShortcuts: registerShortcuts,
+  pushScope: pushScope,
+  popScope: popScope,
+  resetScope: resetScope,
 };
+
+export function watchDialogVisibility(visiblityRef: Ref<boolean>, scope: ShortcutScope): void {
+  watch(() => visiblityRef.value, (value: boolean, oldValue: boolean | undefined) => {
+    if (value) {
+      pushScope(scope);
+    } else {
+      popScope(scope);
+    }
+  }, { immediate: true }
+  );
+}

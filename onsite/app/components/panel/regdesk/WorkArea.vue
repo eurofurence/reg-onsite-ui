@@ -115,6 +115,7 @@ import type { WritableComputedRef } from "vue";
 import type { ModelRef } from "vue";
 import { recordAttendeeSelections } from "@/composables/logic/regdesk/recordAttendeeSelections";
 import { handleAutoSelection } from "@/composables/logic/regdesk/handleAutoSelection";
+import { watchDialogVisibility, ShortcutScope } from "@/composables/services/keyboardService";
 
 function isCheckinDisplayType(location: CheckinDisplayValue): boolean {
   return displayOptionsRef.value.displayCheckinLocation === location;
@@ -131,6 +132,7 @@ const dialogVisibleIfSelectedRef: WritableComputedRef<boolean> = computed({
     }
   },
 });
+watchDialogVisibility(dialogVisibleIfSelectedRef, ShortcutScope.dialog_checkin);
 
 const selectedAttendeeRef: ModelRef<TransformedAttendeeInfo | null> =
   defineModel<TransformedAttendeeInfo | null>("selectedAttendee", {

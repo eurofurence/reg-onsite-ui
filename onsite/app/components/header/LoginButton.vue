@@ -23,11 +23,13 @@ import { getDialogBreakPoints } from "@/config/theme";
 import type { ConfirmServiceMethods } from "@/types/external";
 import { useConfirm } from "primevue/useconfirm";
 import { Severity } from "@/types/internal";
+import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
 
 const confirm: ConfirmServiceMethods = useConfirm();
 
 function doLogout() {
   // the /logout endpoint should not be used - instead people should get directed at the IDP dashboard for logout
+  keyboardService.pushScope(ShortcutScope.confirm_logout);
   confirm.require({
     group: dialogGroupNotice,
     message:
@@ -42,6 +44,7 @@ function doLogout() {
     },
     reject: () => {},
   });
+  keyboardService.popScope(ShortcutScope.confirm_logout);
 }
 
 interface Props {
