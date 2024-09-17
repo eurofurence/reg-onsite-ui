@@ -220,7 +220,7 @@ export const setupColumnDefinitionList: ColumnDefinition[] = [
 
 const filterMetadata: DataTableFilterMetaData = {
   value: "",
-  matchMode: FilterMatchMode.STARTS_WITH,
+  matchMode: FilterMatchMode.CONTAINS,
 };
 const filterListMetadata: DataTableFilterMetaData = {
   value: [],
@@ -250,6 +250,12 @@ export const defaultAttendeeDataOptions: AttendeeDataOptions = {
   totalRecords: 0,
   cachedRecords: null,
   loading: false,
-  globalFilterFields: ["badge_id", "nickname", "first_name", "last_name"],
+  globalFilterFields: [
+    "badge_id",
+    "nickname",
+    "first_name",
+    "last_name",
+    "birthday",
+  ],
   sortOrder: [],
 };

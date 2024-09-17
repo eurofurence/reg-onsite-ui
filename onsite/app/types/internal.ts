@@ -16,7 +16,7 @@ import type {
 } from "@/config/setupPackages";
 import type { ConRoleApiValue, ConRoleValue } from "@/config/setupConRoles";
 import type { StatusValues } from "@/config/setupStatus";
-import type { ColorsPalette, ColorsPaletteValue } from "@/config/theme";
+import type { ColorsPaletteValue } from "@/config/theme";
 import type {
   AbstractTrinketWithVariantsValue,
   ConcreteTrinketValue,
