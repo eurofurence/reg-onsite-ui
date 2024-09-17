@@ -2,8 +2,8 @@
   <Button
     icon="pi pi-filter-slash"
     v-tooltip.right="'Reset search (implicit filters will be unchanged)'"
-    @click="onResetFilters"
-    :disabled="isDisabled"
+    @click="onResetFilters()"
+    :disabled="isDisabled()"
   />
 </template>
 
