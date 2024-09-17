@@ -27,6 +27,7 @@ import type {
 } from "@/types/internal";
 import type { AutoCompleteCompleteEvent } from "primevue/autocomplete";
 import type { ModelRef } from "vue";
+import { filterComponentRegistry } from "@/composables/state/filterComponentRegistry";
 
 const suggestionsRef: Ref<string[]> = ref<string[]>([]);
 
@@ -67,4 +68,14 @@ const autoCompleteDataRef: ModelRef<TransformedAttendeeInfo[] | undefined> =
   defineModel<TransformedAttendeeInfo[]>("autoCompleteData", {
     required: true,
   });
+const componentId: string | undefined = useId();
+
+onMounted(
+  filterComponentRegistry.onMounted(componentId, props.columnDefinition, () => {
+    modelValueRef.value = "";
+  })
+);
+onBeforeUnmount(
+  filterComponentRegistry.onBeforeUnmount(componentId, props.columnDefinition)
+);
 </script>
