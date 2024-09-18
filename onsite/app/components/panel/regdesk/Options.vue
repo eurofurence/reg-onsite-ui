@@ -192,6 +192,7 @@
               scrollHeight="35rem"
               multiple
             />
+            <small>To enable searching for the full name, please select both first and last name.</small>
           </div>
         </div>
       </TabPanel>
@@ -251,6 +252,7 @@
             :options="attendeeDataOptionChoices.queryMode"
             optionLabel="label"
             optionValue="value"
+            :disabled="true"
           />
         </div>
       </TabPanel>
@@ -291,7 +293,7 @@ interface AttendeeTableDisplayOptionChoices {
 }
 
 const attendeeTableDisplayOptionChoices: AttendeeTableDisplayOptionChoices = {
-  displayRowsPerPage: [1, 2, 5, 10, 20, 50, 100, 1000, 1000],
+  displayRowsPerPage: [1, 2, 5, 10, 20, 50, 100, 1000, 10000],
   filterInputDisplay: setupTableFilterDisplay,
   displayCheckinLocation: setupCheckinDisplay,
   displayColumns: setupColumnDefinitionList,

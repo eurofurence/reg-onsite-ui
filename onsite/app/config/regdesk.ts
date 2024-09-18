@@ -112,7 +112,7 @@ export const setupColumnDefinitionList: ColumnDefinition[] = [
     label: "Full Name",
     maxLength: 40,
     filterComponentType: "standard",
-    fieldCanBeUsedByGlobalSearch: true,
+    fieldCanBeUsedByGlobalSearch: false,
     filterType: FilterCmpType.ci_str_vs_str,
     filterMinLength: 2,
     filterSufficientForQuery: true,
@@ -233,6 +233,12 @@ const filterMetadata: DataTableFilterMetaData = {
   value: "",
   matchMode: FilterMatchMode.CONTAINS,
 };
+
+const filterIdMetadata: DataTableFilterMetaData = {
+  value: "",
+  matchMode: FilterMatchMode.STARTS_WITH,
+};
+
 const filterListMetadata: DataTableFilterMetaData = {
   value: [],
   matchMode: FilterMatchMode.IN,
@@ -241,7 +247,7 @@ const filterListMetadata: DataTableFilterMetaData = {
 export const defaultAttendeeDataOptions: AttendeeDataOptions = {
   filters: deepCopy({
     global: filterMetadata,
-    badge_id: filterMetadata,
+    badge_id: filterIdMetadata,
     nickname: filterMetadata,
     first_name: filterMetadata,
     last_name: filterMetadata,
