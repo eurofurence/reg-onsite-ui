@@ -44,7 +44,11 @@ const computedAutoCompleteDataRef: ComputedRef<[string, string][]> = computed<
       .map((item: TransformedAttendeeInfo) => item[autoCompleteField])
       .filter((value: any) => value != null)
   );
-  return autoCompleteData.map((entry: string) => [entry, entry?.toLowerCase()]);
+  var uniqueAutoCompleteData: Map<string, string> = new Map<string, string>();
+  autoCompleteData.forEach((entry: string) => {
+    uniqueAutoCompleteData.set(entry, entry?.toLowerCase() || entry);
+  });
+  return Array.from(uniqueAutoCompleteData.entries());
 });
 
 async function doComplete(event: AutoCompleteCompleteEvent): Promise<void> {
