@@ -6,6 +6,7 @@ const emptySponsorDeskAddInfo: ApiSponsorDeskAddInfo = {
   pastItems: [],
   reservedItems: [],
 };
+
 export function getEmptySponsorDeskAddInfo(): ApiSponsorDeskAddInfo {
   return deepCopy<ApiSponsorDeskAddInfo>(emptySponsorDeskAddInfo);
 }

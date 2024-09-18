@@ -11,6 +11,7 @@ import type {
   ApiSponsorDeskAddInfo,
 } from "@/types/external";
 import type { FetchResultPromise } from "@/types/internal";
+import { getEmptySponsorDeskAddInfo } from "@/composables/items/getEmptySponsorDeskAddInfo";
 
 export async function fetchAllSponsorDeskAddInfo(): FetchResultPromise<ApiAllSponsorDeskAddInfoRaw> {
   const response: Response = await getApi(
@@ -37,7 +38,11 @@ export async function getAllSponsorDeskAddInfos(
     >();
     getRecordEntries(result.values).forEach(
       ([key, value]: [string, string]) => {
-        sponsorMap.set(Number.parseInt(key), JSON.parse(value));
+        const attendeeSponsorData = {
+          ...getEmptySponsorDeskAddInfo(),
+          ...JSON.parse(value),
+        }
+        sponsorMap.set(Number.parseInt(key), attendeeSponsorData);
       }
     );
     return {
