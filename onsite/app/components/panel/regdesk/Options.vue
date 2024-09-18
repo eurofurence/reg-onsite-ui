@@ -85,9 +85,9 @@
             <Slider
               id="labelRunnerSize"
               v-model="displayOptionsRef.displayRunner.duration"
-              :step="100"
-              :min="100"
-              :max="15000"
+              :step="500"
+              :min="500"
+              :max="20000"
             />
           </div>
           <div class="flex flex-col gap-1">

@@ -27,7 +27,7 @@ export const defaultAttendeeTableDisplayOptions: AttendeeTableDisplayOptions = {
     enabled: true,
     location: "top-right",
     size: 12,
-    duration: 7500,
+    duration: 10 * 1000,
   },
   displayCheckinLocation: CheckinDisplay.dialog,
   filterInputDisplay: TableFilterDisplay.row,
