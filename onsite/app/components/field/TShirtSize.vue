@@ -25,8 +25,8 @@ import {
 import {
   type TShirtSizeValue,
   setupTShirtSizes,
-} from "@/config/setupTShirtSizes";
-import { setupTShirtTypePlaceholder } from "@/config/setupTShirtTypes";
+} from "@/config/tshirt/setupTShirtSizes";
+import { setupTShirtTypePlaceholder } from "@/config/tshirt/setupTShirtTypes";
 import type { ModelRef } from "vue";
 
 const modelValue: ModelRef<TShirtSizeValue | undefined> = defineModel<

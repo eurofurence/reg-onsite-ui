@@ -1,7 +1,7 @@
 import { FilterMatchMode } from "@primevue/core/api";
-import { setupConBookChoices } from "@/config/setupConBookChoices";
-import { setupConRoles } from "@/config/setupConRoles";
-import { setupSponsorLevels } from "@/config/setupSponsorLevels";
+import { setupConBookChoices } from "@/config/flags/setupConBookChoices";
+import { setupConRoles } from "@/config/flags/setupConRoles";
+import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
 import { setupStatus, Status } from "@/config/setupStatus";
 import {
   AttendeeQueryStrategy,

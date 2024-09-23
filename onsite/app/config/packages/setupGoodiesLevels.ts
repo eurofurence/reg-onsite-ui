@@ -2,15 +2,17 @@ import {
   type GoodiesLevelValue,
   packageSponsor,
   packageSuperSponsor,
+  packageTShirt,
   packageTemplateRegular,
-} from "@/config/setupPackages";
+} from "@/config/packages/setupPackages";
 import type { PackageInfo } from "@/types/internal";
 
-export const setupSponsorLevels: PackageInfo<GoodiesLevelValue>[] = [
+export const setupGoodiesLevels: PackageInfo<GoodiesLevelValue>[] = [
   {
     ...packageTemplateRegular,
-    ...{ search: { packages: { sponsor: 0, sponsor2: 0 } } },
+    ...{ search: { packages: { tshirt: 0, sponsor: 0, sponsor2: 0 } } },
   },
+  packageTShirt,
   packageSponsor,
   packageSuperSponsor,
 ];

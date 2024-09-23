@@ -25,7 +25,7 @@ import {
   type ArtShowPanelValue,
   setupArtShowPanels,
   setupArtShowPanelsPlaceholder,
-} from "@/config/setupArtShowPanels";
+} from "@/config/packages/setupArtShowPanels";
 import type { PackageApiValue, PackageCountType } from "@/types/external";
 import type { WritableComputedRef } from "vue";
 import type { ModelRef } from "vue";

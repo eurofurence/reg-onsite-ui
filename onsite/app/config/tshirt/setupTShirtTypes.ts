@@ -3,7 +3,7 @@ import {
   TShirtSize,
   type TShirtSizeValue,
   setupTShirtSizes,
-} from "@/config/setupTShirtSizes";
+} from "@/config/tshirt/setupTShirtSizes";
 import type { LabeledValue } from "@/types/internal";
 import { TShirtShape, type TShirtShapeValue } from "@/config/setupTShirtShapes";
 

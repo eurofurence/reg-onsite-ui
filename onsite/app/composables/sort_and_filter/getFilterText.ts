@@ -85,6 +85,7 @@ function getValueLabelGetter(): Record<
     transConbookChoice: createCastAfterLabelMap(getConRoleItem),
     transSponsorChoice: createCastAfterLabelMap(getSponsorItem),
     transConRole: createCastAfterLabelMap(getConRoleItem),
+    transFullName: castToString,
   };
 }
 

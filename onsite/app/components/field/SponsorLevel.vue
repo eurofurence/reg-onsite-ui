@@ -22,8 +22,8 @@ import {
 } from "@/components/field/common";
 import { computePackageChoice } from "@/composables/fields/packages/computePackageChoice";
 import { getSelectedButtonStyle } from "@/composables/fields/packages/getSelectedButtonStyle";
-import type { GoodiesLevelValue } from "@/config/setupPackages";
-import { setupSponsorLevels } from "@/config/setupSponsorLevels";
+import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
+import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
 import type { PackageApiValue, PackageCountType } from "@/types/external";
 import type { SelectButtonPassThroughMethodOptions } from "primevue/selectbutton";
 import type { ModelRef, WritableComputedRef } from "vue";

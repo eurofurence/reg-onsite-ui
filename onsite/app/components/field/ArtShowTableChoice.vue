@@ -25,7 +25,7 @@ import {
   type ArtShowTableValue,
   setupArtShowTables,
   setupArtShowTablesPlaceholder,
-} from "@/config/setupArtShowTables";
+} from "@/config/packages/setupArtShowTables";
 import type { PackageApiValue, PackageCountType } from "@/types/external";
 import type { WritableComputedRef } from "vue";
 import type { ModelRef } from "vue";

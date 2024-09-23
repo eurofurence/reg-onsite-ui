@@ -1,6 +1,6 @@
 import { getRecordEntries } from "@/composables/collection_tools/getRecordEntries";
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
-import type { TShirtTypeValue } from "@/config/setupTShirtTypes";
+import type { TShirtTypeValue } from "@/config/tshirt/setupTShirtTypes";
 import type {
   AbstractTrinketValue,
   ConcreteTrinketValue,

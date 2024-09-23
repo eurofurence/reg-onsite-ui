@@ -1,9 +1,9 @@
 import { getColorVariants } from "@/composables/colors/getColorVariants";
 import { getGradientStyle } from "@/composables/colors/getGradientStyle";
 import { getConRoleChoice } from "@/composables/fields/conrole/getConRoleChoice";
-import type { GoodiesLevelValue } from "@/config/setupPackages";
+import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
 import { ConRole } from "@/config/setupConRoles";
-import { setupSponsorLevels } from "@/config/setupSponsorLevels";
+import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
 import type { ColorsPaletteValue } from "@/config/theme";
 import type {
   ConRoleInfo,

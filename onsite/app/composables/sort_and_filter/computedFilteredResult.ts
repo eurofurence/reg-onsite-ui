@@ -34,13 +34,11 @@ export function computedFilteredResult<Type extends TransformedAttendeeInfo>(
       skipFilterRef.value ||
       hasMinimalFilter(dataOptionsRef.value.filters)
     ) {
-      //console.time("filterAttendees");
       const result = getFilteredAttendees(
         unfilteredList.value,
         dataOptionsRef.value.filters,
         dataOptionsRef.value.globalFilterFields
       );
-      //console.timeEnd("filterAttendees");
       return fillEmptyResult(result);
     }
     return fillEmptyResult([]);

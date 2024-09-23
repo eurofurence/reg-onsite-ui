@@ -2,7 +2,7 @@ import { convertListToMap } from "@/composables/collection_tools/convertListToMa
 import {
   setupConBookChoices,
   type ConBookValue,
-} from "@/config/setupConBookChoices";
+} from "@/config/flags/setupConBookChoices";
 import type { ConBookInfo } from "@/types/internal";
 
 const propertyMap: Map<ConBookValue, ConBookInfo> =

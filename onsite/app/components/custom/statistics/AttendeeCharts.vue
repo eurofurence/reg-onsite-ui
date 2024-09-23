@@ -66,9 +66,9 @@ import {
   computeAttendeeStatisticEntries,
 } from "@/composables/statistics/computeAttendeeStatisticEntries";
 import { getStatsFromProperty } from "@/composables/statistics/getStatsFromProperty";
-import { setupConBookChoices } from "@/config/setupConBookChoices";
+import { setupConBookChoices } from "@/config/flags/setupConBookChoices";
 import { setupConRoles } from "@/config/setupConRoles";
-import { setupSponsorLevels } from "@/config/setupSponsorLevels";
+import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
 import { setupStatus } from "@/config/setupStatus";
 import type { TransformedAttendeeInfo } from "@/types/internal";
 import type { ModelRef } from "vue";

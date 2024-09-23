@@ -23,7 +23,7 @@ import {
 import { computePackageChoice } from "@/composables/fields/packages/computePackageChoice";
 import { getSelectedButtonStyle } from "@/composables/fields/packages/getSelectedButtonStyle";
 import { setupGoodiesLevels } from "@/config/setupGoodiesLevels";
-import type { GoodiesLevelValue } from "@/config/setupPackages";
+import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
 import type { PackageApiValue, PackageCountType } from "@/types/external";
 import type { SelectButtonPassThroughMethodOptions } from "primevue/selectbutton";
 import type { ModelRef, WritableComputedRef } from "vue";

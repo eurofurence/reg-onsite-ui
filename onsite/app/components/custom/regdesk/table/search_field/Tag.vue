@@ -49,7 +49,6 @@ import type {
 } from "@/types/internal";
 import type { ModelRef } from "vue";
 import { getLimitedOptionsFromAutoComplete } from "@/composables/sort_and_filter/getLimitedOptionsFromAutoComplete";
-import { filterComponentRegistry } from "~/composables/state/filterComponentRegistry";
 
 interface Props extends SearchElementProps {
   configItems: OptionalColoredIconLabeledValue<string>[];
@@ -61,16 +60,6 @@ const modelValue: ModelRef<string[] | null> = defineModel<string[] | null>({
 });
 const autoCompleteDataRef: ModelRef<TransformedAttendeeInfo[] | undefined> =
   defineModel<TransformedAttendeeInfo[] | undefined>("autoCompleteData");
-
-const componentId: string | undefined = useId();
-onMounted(
-  filterComponentRegistry.onMounted(componentId, props.columnDefinition, () => {
-    modelValue.value = [];
-  })
-);
-onBeforeUnmount(
-  filterComponentRegistry.onBeforeUnmount(componentId, props.columnDefinition)
-);
 </script>
 
 <style>

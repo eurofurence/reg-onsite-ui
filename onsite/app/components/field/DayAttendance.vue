@@ -21,7 +21,7 @@ import {
   fieldTextCSS,
 } from "@/components/field/common";
 import { computePackageSubset } from "@/composables/fields/packages/computePackageSubset";
-import type { DayAttendanceValue } from "@/config/setupDayAttendance";
+import type { DayAttendanceValue } from "@/config/packages/setupDayAttendance";
 import { configDayAttendanceItems } from "@/setupEFIteration";
 import type { PackageApiValue, PackageCountType } from "@/types/external";
 import type { WritableComputedRef } from "vue";

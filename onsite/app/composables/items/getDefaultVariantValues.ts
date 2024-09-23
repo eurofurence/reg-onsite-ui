@@ -1,6 +1,6 @@
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import { getTrinketFromConcreteItem } from "@/composables/items/getTrinketFromConcreteItem";
-import type { TShirtTypeValue } from "@/config/setupTShirtTypes";
+import type { TShirtTypeValue } from "@/config/tshirt/setupTShirtTypes";
 import {
   type ConcreteTrinketValue,
   type TrinketConfig,

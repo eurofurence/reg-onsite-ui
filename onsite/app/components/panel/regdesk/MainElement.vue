@@ -50,7 +50,7 @@ import { preventUnselectIfNotCheckedIn } from "@/composables/logic/regdesk/preve
 import {
   defaultAttendeeDataOptions,
   defaultAttendeeTableDisplayOptions,
-} from "@/config/regdesk";
+} from "@/config/app/regdesk";
 import { getIdleNoDataSearchStatus } from "@/composables/search_status/constructors";
 import { Status } from "@/config/setupStatus";
 import { dirtyState } from "@/composables/state/dirtyState";

@@ -1,4 +1,4 @@
-import { defaultAttendeeDataOptions } from "@/config/regdesk";
+import { defaultAttendeeDataOptions } from "@/config/app/regdesk";
 import type { AttendeeDataOptions } from "@/types/internal";
 import { deepCopy } from "@/composables/state/deepCopy";
 

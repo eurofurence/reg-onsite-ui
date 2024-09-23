@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { setupColumnDefinitionList } from "@/config/regdesk";
+import { setupColumnDefinitionList } from "@/config/app/regdesk";
 import type {
   AttendeeDataOptions,
   AttendeeTableDisplayOptions,

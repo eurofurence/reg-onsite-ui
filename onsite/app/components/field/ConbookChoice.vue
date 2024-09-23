@@ -26,7 +26,7 @@ import {
   type ConBookApiValue,
   type ConBookValue,
   setupConBookChoices,
-} from "@/config/setupConBookChoices";
+} from "@/config/flags/setupConBookChoices";
 import type { FlagApiValue } from "@/types/external";
 import type { SelectButtonPassThroughMethodOptions } from "primevue/selectbutton";
 import type { ModelRef } from "vue";

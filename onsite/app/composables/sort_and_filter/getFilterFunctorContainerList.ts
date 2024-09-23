@@ -13,7 +13,7 @@ import {
 import { getFieldGetters } from "@/composables/sort_and_filter/getFieldGetters";
 import { getMatcherStringAgainstValue } from "@/composables/filter/getMatcherStringAgainstValue";
 import type { DataTableFilterMetaData } from "primevue/datatable";
-import { setupColumnDefinitionList } from "@/config/regdesk";
+import { setupColumnDefinitionList } from "@/config/app/regdesk";
 import { getMatcherStringAgainstList } from "../filter/getMatcherStringAgainstList";
 import { getBirthdayFilterString } from "../fields/birthday/getBirthdayFilterString";
 import { getMatcherNumberAgainstValue } from "../filter/getMatcherNumberAgainstValue";

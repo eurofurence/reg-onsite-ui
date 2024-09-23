@@ -265,12 +265,12 @@ import type { ModelRef } from "vue";
 import {
   defaultAttendeeTableDisplayOptions,
   setupColumnDefinitionList,
-} from "@/config/regdesk";
-import { setupAttendeeQueryStrategy } from "@/config/regdesk";
-import { setupCheckinDisplay, setupTableFilterDisplay } from "@/config/regdesk";
+} from "@/config/app/regdesk";
+import { setupAttendeeQueryStrategy } from "@/config/app/regdesk";
+import { setupCheckinDisplay, setupTableFilterDisplay } from "@/config/app/regdesk";
 import { setupConRoles } from "@/config/setupConRoles";
-import type { GoodiesLevelValue } from "@/config/setupPackages";
-import { setupSponsorLevels } from "@/config/setupSponsorLevels";
+import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
+import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
 import { setupStatus } from "@/config/setupStatus";
 import {
   type AttendeeDataOptions,

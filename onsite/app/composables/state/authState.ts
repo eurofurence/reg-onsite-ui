@@ -12,6 +12,7 @@ export const authState: Ref<{
   userName: string | null;
   userGroups: string[];
   userCanAccessDDFrontdesk: boolean;
+  userRegNumList: number[];
   userIsAdmin: boolean;
   userIsDDMember: boolean;
 }> = ref({
@@ -19,6 +20,7 @@ export const authState: Ref<{
   userName: null,
   userGroups: [],
   userCanAccessDDFrontdesk: true,
+  userRegNumList: [],
   userIsAdmin: computed<boolean>(() =>
     checkGroupMembership(authState.value.userGroups, setupGroupsAdmin)
   ),

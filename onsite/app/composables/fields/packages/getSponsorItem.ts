@@ -1,6 +1,6 @@
 import { convertListToMap } from "@/composables/collection_tools/convertListToMap";
-import type { GoodiesLevelValue } from "@/config/setupPackages";
-import { setupSponsorLevels } from "@/config/setupSponsorLevels";
+import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
+import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
 import type { PackageInfo } from "@/types/internal";
 
 const propertyMap: Map<

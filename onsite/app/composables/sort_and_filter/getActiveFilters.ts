@@ -4,7 +4,7 @@ import type {
   CustomFilterMetaData,
   RawAttendeeFilter,
 } from "@/types/internal";
-import { setupColumnDefinitionList } from "@/config/regdesk";
+import { setupColumnDefinitionList } from "@/config/app/regdesk";
 
 export function getActiveFilters(
   dataFilter: RawAttendeeFilter

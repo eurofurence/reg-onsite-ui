@@ -47,7 +47,6 @@ import type {
   SearchElementProps,
   TransformedAttendeeInfo,
 } from "@/types/internal";
-import { filterComponentRegistry } from "@/composables/state/filterComponentRegistry";
 
 const props: SearchElementProps = defineProps<SearchElementProps>();
 const modelValue: ModelRef<CountryCode[] | null> = defineModel<
@@ -57,16 +56,6 @@ const modelValue: ModelRef<CountryCode[] | null> = defineModel<
 });
 const autoCompleteDataRef: ModelRef<TransformedAttendeeInfo[] | undefined> =
   defineModel<TransformedAttendeeInfo[] | undefined>("autoCompleteData");
-
-  const componentId: string | undefined = useId();
-onMounted(
-  filterComponentRegistry.onMounted(componentId, props.columnDefinition, () => {
-    modelValue.value = [];
-  })
-);
-onBeforeUnmount(
-  filterComponentRegistry.onBeforeUnmount(componentId, props.columnDefinition)
-);
 </script>
 
 <style>

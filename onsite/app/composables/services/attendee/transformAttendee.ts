@@ -7,14 +7,14 @@ import { canCheckin } from "@/composables/fields/status/canCheckin";
 import {
   type ConBookValue,
   setupConBookChoices,
-} from "@/config/setupConBookChoices";
+} from "@/config/flags/setupConBookChoices";
 import { setupGoodiesLevels } from "@/config/setupGoodiesLevels";
 import type {
   GoodiesLevelValue,
   SponsorLevelValue,
-} from "@/config/setupPackages";
+} from "@/config/packages/setupPackages";
 import type { ConRoleValue } from "@/config/setupConRoles";
-import { setupSponsorLevels } from "@/config/setupSponsorLevels";
+import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
 import type { ApiAttendeeInfo } from "@/types/external";
 import type { TransformedAttendeeInfo } from "@/types/internal";
 import { getAge } from "@/composables/fields/birthday/getAge";

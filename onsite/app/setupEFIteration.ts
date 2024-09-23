@@ -1,13 +1,13 @@
 import {
   DayAttendance,
   type DayAttendanceValue,
-} from "@/config/setupDayAttendance";
-import type { GoodiesLevelValue } from "@/config/setupPackages";
-import type { ConRoleValue } from "@/config/setupConRoles";
+} from "@/config/packages/setupDayAttendance";
+import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
+import type { ConRoleValue } from "@/config/flags/setupConRoles";
 import {
   type TShirtTypeValue,
   setupTShirtTypesInternal,
-} from "@/config/setupTShirtTypes";
+} from "@/config/tshirt/setupTShirtTypes";
 import type { GenericTrinketConfig, LabeledValue } from "@/types/internal";
 
 export const configConStartDate: Date = new Date("2024-09-18");

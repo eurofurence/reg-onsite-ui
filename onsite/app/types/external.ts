@@ -1,16 +1,16 @@
-import type { ArtShowPanelApiValue } from "@/config/setupArtShowPanels";
-import type { ArtShowTableApiValue } from "@/config/setupArtShowTables";
-import type { ConBookApiValue } from "@/config/setupConBookChoices";
+import type { ArtShowPanelApiValue } from "@/config/packages/setupArtShowPanels";
+import type { ArtShowTableApiValue } from "@/config/packages/setupArtShowTables";
+import type { ConBookApiValue } from "@/config/flags/setupConBookChoices";
 import type { CountryCode } from "@/config/setupCountries";
-import type { DayAttendanceValue } from "@/config/setupDayAttendance";
+import type { DayAttendanceValue } from "@/config/packages/setupDayAttendance";
 import type { DealerTableApiValue } from "@/config/setupDealerPackages";
-import type { OtherPackageApiValue } from "@/config/setupOtherPackages";
-import type { GoodiesLevelApiValue } from "@/config/setupPackages";
+import type { OtherPackageApiValue } from "@/config/packages/setupOtherPackages";
+import type { GoodiesLevelApiValue } from "@/config/packages/setupPackages";
 import type { ConRoleApiValue } from "@/config/setupConRoles";
 import type { StatusValues } from "@/config/setupStatus";
 import type { TShirtShapeValue } from "@/config/setupTShirtShapes";
-import type { TShirtSizeValue } from "@/config/setupTShirtSizes";
-import type { TShirtTypeValue } from "@/config/setupTShirtTypes";
+import type { TShirtSizeValue } from "@/config/tshirt/setupTShirtSizes";
+import type { TShirtTypeValue } from "@/config/tshirt/setupTShirtTypes";
 import type { ConcreteTrinketValue } from "@/setupEFIteration";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 

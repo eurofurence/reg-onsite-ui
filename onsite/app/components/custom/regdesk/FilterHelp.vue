@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { getActiveFilters } from "@/composables/sort_and_filter/getActiveFilters";
-import { setupColumnDefinitionList } from "@/config/regdesk";
+import { setupColumnDefinitionList } from "@/config/app/regdesk";
 import {
   Severity,
   type AttendeeDataOptions,

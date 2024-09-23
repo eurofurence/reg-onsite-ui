@@ -4,8 +4,8 @@ import {
   type TShirtInfo,
   type TShirtTypeValue,
   setupTShirtTypesInternal,
-} from "@/config/setupTShirtTypes";
-import { TShirtType } from "@/config/setupTShirtTypes";
+} from "@/config/tshirt/setupTShirtTypes";
+import { TShirtType } from "@/config/tshirt/setupTShirtTypes";
 import type { ConcreteTrinketValue, TrinketConfig } from "@/setupEFIteration";
 import type { ApiShippingAddInfo } from "@/types/external";
 import type { TransformedAttendeeInfo } from "@/types/internal";

@@ -3,7 +3,7 @@ import {
   type TShirtInfo,
   setupTShirtTypePlaceholder,
   setupTShirtTypes,
-} from "@/config/setupTShirtTypes";
+} from "@/config/tshirt/setupTShirtTypes";
 
 type FlexibleTShirtInfo = TShirtInfo | typeof setupTShirtTypePlaceholder;
 

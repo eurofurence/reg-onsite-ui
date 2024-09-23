@@ -21,8 +21,8 @@ import {
   fieldTextCSS,
 } from "@/components/field/common";
 import { computePackageSubset } from "@/composables/fields/packages/computePackageSubset";
-import { setupOtherPackages } from "@/config/setupOtherPackages";
-import type { OtherPackageApiValue } from "@/config/setupOtherPackages";
+import { setupOtherPackages } from "@/config/packages/setupOtherPackages";
+import type { OtherPackageApiValue } from "@/config/packages/setupOtherPackages";
 import type { PackageApiValue, PackageCountType } from "@/types/external";
 import type { ModelRef } from "vue";
 import type { WritableComputedRef } from "vue";

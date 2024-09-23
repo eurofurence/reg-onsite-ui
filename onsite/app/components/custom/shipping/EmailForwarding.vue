@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ShippingI18N } from "@/config/i18nShipping";
+import type { ShippingI18N } from "@/config/i18n/i18nShipping";
 import { type ApiShippingAddInfo, ShippingEmailUse } from "@/types/external";
 import type { ModelRef } from "vue";
 

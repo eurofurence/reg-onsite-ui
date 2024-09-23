@@ -27,7 +27,7 @@ import { getGroupedTShirtOptions } from "@/composables/fields/tshirt/getGroupedT
 import {
   type TShirtTypeValue,
   setupTShirtTypePlaceholder,
-} from "@/config/setupTShirtTypes";
+} from "@/config/tshirt/setupTShirtTypes";
 import type { ModelRef } from "vue";
 
 const modelValue: ModelRef<TShirtTypeValue | undefined> = defineModel<

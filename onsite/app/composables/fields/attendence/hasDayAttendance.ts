@@ -1,5 +1,5 @@
 import { getPurePackageList } from "@/composables/fields/packages/getPurePackageList";
-import type { DayAttendanceValue } from "@/config/setupDayAttendance";
+import type { DayAttendanceValue } from "@/config/packages/setupDayAttendance";
 import { configDayAttendanceItems } from "@/setupEFIteration";
 import type { PackageApiValue } from "@/types/external";
 import type { LabeledValue, TransformedAttendeeInfo } from "@/types/internal";

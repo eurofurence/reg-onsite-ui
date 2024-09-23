@@ -9,11 +9,11 @@ import type {
 import type {
   ConBookApiValue,
   ConBookValue,
-} from "@/config/setupConBookChoices";
+} from "@/config/flags/setupConBookChoices";
 import type {
   GoodiesLevelValue,
   SponsorLevelValue,
-} from "@/config/setupPackages";
+} from "@/config/packages/setupPackages";
 import type { ConRoleApiValue, ConRoleValue } from "@/config/setupConRoles";
 import type { StatusValues } from "@/config/setupStatus";
 import type { ColorsPaletteValue } from "@/config/theme";

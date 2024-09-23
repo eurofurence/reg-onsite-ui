@@ -1,6 +1,6 @@
 import { deepCopy } from "@/composables/state/deepCopy";
 import { TShirtShape } from "@/config/setupTShirtShapes";
-import { TShirtSize } from "@/config/setupTShirtSizes";
+import { TShirtSize } from "@/config/tshirt/setupTShirtSizes";
 import { type ApiShippingAddInfo, ShippingEmailUse } from "@/types/external";
 
 const emptyShippingAddInfo: ApiShippingAddInfo = {

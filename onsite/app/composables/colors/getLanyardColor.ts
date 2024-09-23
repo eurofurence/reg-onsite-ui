@@ -1,8 +1,8 @@
 import { getConRoleChoice } from "@/composables/fields/conrole/getConRoleChoice";
 import { computePackageChoice } from "@/composables/fields/packages/computePackageChoice";
-import type { GoodiesLevelValue } from "@/config/setupPackages";
+import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
 import { ConRole } from "@/config/setupConRoles";
-import { setupSponsorLevels } from "@/config/setupSponsorLevels";
+import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
 import { ColorsPalette, type ColorsPaletteValue } from "@/config/theme";
 import type {
   ConRoleInfo,
