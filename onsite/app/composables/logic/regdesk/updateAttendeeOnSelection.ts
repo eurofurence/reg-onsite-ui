@@ -1,4 +1,4 @@
-import type { TransformedAttendeeInfo } from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 export function updateAttendeeOnSelection(
   selectedAttendeeRef: Ref<TransformedAttendeeInfo | null>,
@@ -10,7 +10,7 @@ export function updateAttendeeOnSelection(
     () => JSON.stringify(selectedAttendeeRef.value),
     async (value: string, oldValue: string | undefined) => {
       if (value != oldValue && selectedAttendeeRef?.value?.id !== null) {
-        await updateCurrentAttendee(<number>selectedAttendeeRef?.value?.id);
+        await updateCurrentAttendee(selectedAttendeeRef?.value?.id as number);
       }
     },
     { immediate: true }

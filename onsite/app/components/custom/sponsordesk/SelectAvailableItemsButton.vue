@@ -15,8 +15,8 @@
 <script setup lang="ts">
 import type SelectAvailableItemsDialog from "@/components/custom/sponsordesk/SelectAvailableItemsDialog.vue";
 import type {
-  AbstractTrinketValue,
-  ConcreteTrinketValue,
+  AbstractGoodieValue,
+  ConcreteGoodieValue,
 } from "@/setupEFIteration";
 import type { MenuItem } from "primevue/menuitem";
 import type { ModelRef } from "vue";
@@ -37,13 +37,13 @@ const selectAvailableDropdown: MenuItem[] = [
   },
 ];
 
-const availableItemsRef: ModelRef<ConcreteTrinketValue[]> = defineModel<
-  ConcreteTrinketValue[]
+const availableItemsRef: ModelRef<ConcreteGoodieValue[]> = defineModel<
+  ConcreteGoodieValue[]
 >({
   required: true,
 });
 interface Props {
-  deskItemSubset: AbstractTrinketValue[];
+  deskItemSubset: AbstractGoodieValue[];
 }
 const props: Props = defineProps<Props>();
 const emit: CallableFunction = defineEmits(["selectAvailable"]);

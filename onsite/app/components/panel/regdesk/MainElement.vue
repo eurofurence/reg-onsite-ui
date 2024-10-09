@@ -1,6 +1,6 @@
 <template>
-  <Toast :group="toastGroup" position="bottom-right" />
-  <ConfirmDialog :group="confirmDialogGroup" />
+  <Toast :group="toastService.toastGroup" position="bottom-right" />
+  <ConfirmDialog :group="confirmService.confirmGroup" />
   <div class="flex flex-col w-screen">
     <PanelRegdeskDebug
       v-model:transformedAttendeeList="rawListRef"
@@ -33,12 +33,6 @@
 <script setup lang="ts">
 import type { CookieRef } from "#app";
 import type {
-  AttendeeDataOptions,
-  AttendeeTableDisplayOptions,
-  SearchStatus,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
-import type {
   DataTableFilterEvent,
   DataTablePageEvent,
 } from "primevue/datatable";
@@ -50,28 +44,34 @@ import { preventUnselectIfNotCheckedIn } from "@/composables/logic/regdesk/preve
 import {
   defaultAttendeeDataOptions,
   defaultAttendeeTableDisplayOptions,
-} from "@/config/app/regdesk";
+} from "@/config/system/regdesk";
 import { getIdleNoDataSearchStatus } from "@/composables/search_status/constructors";
-import { Status } from "@/config/setupStatus";
 import { dirtyState } from "@/composables/state/dirtyState";
-import type { ToastServiceMethods } from "primevue/toastservice";
 import { updateAttendeeOnSelection } from "@/composables/logic/regdesk/updateAttendeeOnSelection";
 import { getUpdateAttendeeInListFunction } from "@/composables/logic/regdesk/getUpdateAttendeeInListFunction";
 import { getOnCheckinFunction } from "@/composables/logic/getOnCheckinFunction";
 import { getUndoCheckinFunction } from "@/composables/logic/getUndoCheckinFunction";
 import { getFunctionForDataPreload } from "@/composables/logic/regdesk/getFunctionForDataPreload";
-import type { ConfirmServiceMethods } from "@/types/external";
 import {
   keyboardService,
   ShortcutScope,
 } from "@/composables/services/keyboardService";
-import { deepCopy } from "@/composables/state/deepCopy";
-
-const toast: ToastServiceMethods = useToast();
+import { deepCopy } from "@/composables/deepCopy";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { SearchStatus } from "@/types/internal/component/regnumsearch";
+import type {
+  AttendeeDataOptions,
+  AttendeeTableDisplayOptions,
+} from "@/types/internal/system/regdesk";
+import { OnsiteToastService } from "@/composables/services/toastService";
+import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
+import { OnsiteConfirmService } from "@/composables/services/confirmService";
 
 const componentId: string = generateId(useId());
-const toastGroup: string = `regdesk${componentId}`;
-
+const toastService: OnsiteToastService = new OnsiteToastService(componentId);
+const confirmService: OnsiteConfirmService = new OnsiteConfirmService(
+  componentId
+);
 // Filtering - already handled by reactivity of filter data structure!
 async function onFilter(event: DataTableFilterEvent): Promise<void> {}
 
@@ -87,23 +87,16 @@ const updateAttendee = getUpdateAttendeeInListFunction(
   rawListRef,
   selectedAttendeeRef,
   searchStatusRef,
-  toast,
-  toastGroup
+  toastService
 );
 
 updateAttendeeOnSelection(selectedAttendeeRef, updateAttendee);
 
-const confirm: ConfirmServiceMethods = useConfirm();
-const confirmDialogGroup: string = `confirmDialogGroup${componentId}`;
 const selectedAttendeeUpdater: (
   newValue: TransformedAttendeeInfo | null
-) => void = preventUnselectIfNotCheckedIn(
-  selectedAttendeeRef,
-  confirm,
-  confirmDialogGroup
-);
+) => void = preventUnselectIfNotCheckedIn(selectedAttendeeRef, confirmService);
 
-const onUndoCheckin = getUndoCheckinFunction(updateAttendee, toast, toastGroup);
+const onUndoCheckin = getUndoCheckinFunction(updateAttendee, toastService);
 
 const dataOptionsRef: Ref<AttendeeDataOptions> = ref(
   deepCopy(defaultAttendeeDataOptions)
@@ -111,15 +104,14 @@ const dataOptionsRef: Ref<AttendeeDataOptions> = ref(
 
 const doDataPreload: () => Promise<void> = getFunctionForDataPreload(
   rawListRef,
-  toast,
-  toastGroup
+  toastService
 );
 
 dirtyState.regdeskDirty = computed<boolean>(
   () =>
     selectedAttendeeRef.value !== null &&
     selectedAttendeeRef.value?.id !== null &&
-    selectedAttendeeRef.value?.status !== Status.checked_in
+    selectedAttendeeRef.value?.status !== AttendeeApiStatus.checked_in
 );
 
 const displayOptionsRef: CookieRef<AttendeeTableDisplayOptions> =
@@ -131,8 +123,7 @@ const onCheckin: (regNumber: number) => Promise<void> = getOnCheckinFunction(
   updateAttendee,
   selectedAttendeeRef,
   displayOptionsRef,
-  toast,
-  toastGroup
+  toastService
 );
 
 //////////////////////////////////////////////////////

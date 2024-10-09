@@ -1,12 +1,11 @@
-import type { TransformedAttendeeInfo } from "@/types/internal";
-import { Status } from "@/config/setupStatus";
-import type { ConfirmServiceMethods } from "@/types/external";
-import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
+import { ShortcutScope } from "@/composables/services/keyboardService";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { OnsiteConfirmService } from "@/composables/services/confirmService";
+import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 
 export function preventUnselectIfNotCheckedIn(
   selectedAttendeeRef: Ref<TransformedAttendeeInfo | null>,
-  confirm: ConfirmServiceMethods,
-  confirmGroup: string
+  confirmService: OnsiteConfirmService
 ): (newValue: TransformedAttendeeInfo | null) => void {
   return (newValue: TransformedAttendeeInfo | null): void => {
     // Nothing to protect
@@ -15,14 +14,12 @@ export function preventUnselectIfNotCheckedIn(
       return;
     }
     // Already checked in
-    if (selectedAttendeeRef.value.status === Status.checked_in) {
+    if (selectedAttendeeRef.value.status === AttendeeApiStatus.checked_in) {
       selectedAttendeeRef.value = newValue;
       return;
     }
-    keyboardService.pushScope(ShortcutScope.confirm_deselect_not_checkin)
     // Ask user for confirmation
-    confirm.require({
-      group: confirmGroup,
+    confirmService.require(ShortcutScope.confirm_deselect_not_checkin, {
       message:
         "The attendee was not checked in! Do you want to continue without checking in?",
       header: "Confirm",
@@ -31,7 +28,6 @@ export function preventUnselectIfNotCheckedIn(
         selectedAttendeeRef.value = newValue;
       },
     });
-    keyboardService.popScope(ShortcutScope.confirm_deselect_not_checkin)
     return;
   };
 }

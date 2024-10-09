@@ -30,8 +30,7 @@
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
-import type { TransformedAttendeeInfo } from "@/types/internal";
-import { getFilteredAttendees } from "@/composables/sort_and_filter/getFilteredAttendees";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 const enum FilterStatus {
   raw = "raw",

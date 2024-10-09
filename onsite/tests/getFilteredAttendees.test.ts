@@ -2,11 +2,8 @@ import { expect, test } from "vitest";
 import { getFilterText } from "@/composables/sort_and_filter/getFilterText";
 import { getFilteredAttendees } from "@/composables/sort_and_filter/getFilteredAttendees";
 import { transformAttendee } from "@/composables/services/attendee/transformAttendee";
-import type {
-  FilterFieldValue,
-  RawAttendeeFilter,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
+import type { FilterFieldValue, RawAttendeeFilter } from "@/types/internal/filter";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 const testAttendee8 = {
   id: 8,
@@ -333,6 +330,10 @@ function migrateFilter(item: any): RawAttendeeFilter {
     last_name: {
       value: item.last_name.value,
       matchMode: item.last_name.matchMode,
+    },
+    transFullName: {
+      value: `${item.first_name.value} ${item.last_name.value}`,
+      matchMode: item.first_name.matchMode,
     },
     nickname: {
       value: item.nickname.value,

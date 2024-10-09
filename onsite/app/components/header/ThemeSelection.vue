@@ -48,11 +48,14 @@
 </template>
 
 <script setup lang="ts">
-import { defaultUserSettings } from "@/config/theme";
-import type { UserThemeSettings } from "@/types/internal";
+import { defaultUserSettings } from "@/config/theme/common";
 import { ref } from "vue";
 import type { CookieRef } from "#app";
-import { watchDialogVisibility, ShortcutScope } from "@/composables/services/keyboardService";
+import {
+  watchDialogVisibility,
+  ShortcutScope,
+} from "@/composables/services/keyboardService";
+import type { UserThemeSettings } from "@/types/internal/system/theme";
 
 const isThemeConfigVisible: Ref<boolean> = ref(false);
 watchDialogVisibility(isThemeConfigVisible, ShortcutScope.dialog_theme);

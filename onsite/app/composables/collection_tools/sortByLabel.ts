@@ -1,4 +1,4 @@
-import type { LabeledValue } from "@/types/internal";
+import type { LabeledValue } from "@/types/internal/infos";
 
 export function sortByLabel<Type>(array: LabeledValue<Type>[]) {
   return array.sort(

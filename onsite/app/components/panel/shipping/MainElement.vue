@@ -1,8 +1,10 @@
 <template>
-  <Toast :group="toastGroup" position="bottom-right" />
-  <Message :severity="Severity.warn" v-if="attendeeMissingItems.length === 0">{{
-    descriptionsRef.nothing_missing
-  }}</Message>
+  <Toast :group="toastService.toastGroup" position="bottom-right" />
+  <Message
+    :severity="MessageSeverity.warn"
+    v-if="attendeeMissingItems.length === 0"
+    >{{ descriptionsRef.nothing_missing }}</Message
+  >
   <Fieldset
     :legend="`${descriptionsRef.header} ${attendeeShippingInfoRef.nickname} (#${attendeeShippingInfoRef.id})`"
     v-if="attendeeMissingItems.length > 0"
@@ -49,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ConcreteTrinketValue } from "@/setupEFIteration";
+import type { ConcreteGoodieValue } from "@/setupEFIteration";
 
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
@@ -58,17 +60,17 @@ import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
 import { attendeeService } from "@/composables/services/attendeeService";
 import { getEmptyShippingAddInfo } from "@/composables/shipping/getEmptyShippingAddInfo";
 import { getPrefilledShippingInfo } from "@/composables/shipping/getPrefilledShippingInfo";
-import { deepCopy } from "@/composables/state/deepCopy";
-import { type ShippingI18N, getShippingI18N } from "@/config/i18nShipping";
-import type {
-  ApiShippingAddInfo,
-  ApiSponsorDeskAddInfo,
-} from "@/types/external";
-import { Severity, type TransformedAttendeeInfo } from "@/types/internal";
-import type { ToastServiceMethods } from "primevue/toastservice";
-import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
-
-const toast: ToastServiceMethods = useToast();
+import { deepCopy } from "@/composables/deepCopy";
+import {
+  keyboardService,
+  ShortcutScope,
+} from "@/composables/services/keyboardService";
+import { getShippingI18N, type ShippingI18N } from "@/config/i18n/shipping";
+import { ToastSeverity, MessageSeverity } from "@/types/internal/primevue";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
+import type { ApiShippingAddInfo } from "@/types/external/attsrv/additional-info/shipping";
+import { OnsiteToastService } from "@/composables/services/toastService";
 
 keyboardService.pushScope(ShortcutScope.shipping);
 
@@ -77,20 +79,20 @@ const descriptionsRef: Ref<ShippingI18N> = ref<ShippingI18N>(
 );
 
 const componentId: string = generateId(useId());
-const toastGroup: string = `shipping${componentId}`;
-const errorHandler: RestErrorHandler = getErrorHandlerFunction(
-  toast,
-  toastGroup
-);
+const toastService: OnsiteToastService = new OnsiteToastService(componentId);
+const errorHandler: RestErrorHandler = getErrorHandlerFunction(toastService);
 
 async function determineMissingItems(
   attendeeInfo: TransformedAttendeeInfo
-): Promise<ConcreteTrinketValue[] | null | undefined> {
+): Promise<ConcreteGoodieValue[] | null | undefined> {
   if (attendeeInfo.id === null) {
     return undefined;
   }
   var storedAttendeeItemInfoTmp: ApiSponsorDeskAddInfo | null | undefined =
-    await attendeeService.getSponsorDeskAddInfo(errorHandler, attendeeInfo.id);
+    await attendeeService.addInfos.getSponsorDeskAddInfo(
+      errorHandler,
+      attendeeInfo.id
+    );
   if (storedAttendeeItemInfoTmp === undefined) {
     return storedAttendeeItemInfoTmp; // API Error - abort
   } else if (storedAttendeeItemInfoTmp === null) {
@@ -98,7 +100,7 @@ async function determineMissingItems(
   }
   const attendeeItemInfo: ApiSponsorDeskAddInfo = storedAttendeeItemInfoTmp; // Just for the linter
   {
-    const owedItems: ConcreteTrinketValue[] = getOwedConcreteItems(
+    const owedItems: ConcreteGoodieValue[] = getOwedConcreteItems(
       attendeeInfo,
       attendeeItemInfo
     );
@@ -118,7 +120,7 @@ async function initShippingFields(regNumber: number): Promise<void> {
   descriptionsRef.value = getShippingI18N(
     storedAttendeeInfo.registration_language
   );
-  const missingItems: ConcreteTrinketValue[] | null | undefined =
+  const missingItems: ConcreteGoodieValue[] | null | undefined =
     await determineMissingItems(storedAttendeeInfo);
   if (!missingItems) {
     return;
@@ -126,7 +128,7 @@ async function initShippingFields(regNumber: number): Promise<void> {
   attendeeMissingItems.value = missingItems;
 
   var attendeeShippingInfo: ApiShippingAddInfo | null | undefined =
-    await attendeeService.getShippingAddInfo(errorHandler, regNumber);
+    await attendeeService.addInfos.getShippingAddInfo(errorHandler, regNumber);
   if (attendeeShippingInfo === undefined) {
     return; // API Error - abort
   } else if (attendeeShippingInfo === null) {
@@ -147,7 +149,7 @@ interface Props {
   regNumber: number;
 }
 const props: Props = defineProps<Props>();
-const attendeeMissingItems: Ref<ConcreteTrinketValue[]> = ref([]);
+const attendeeMissingItems: Ref<ConcreteGoodieValue[]> = ref([]);
 const oldAttendeeShippingInfoRef: Ref<ApiShippingAddInfo> = ref(
   getEmptyShippingAddInfo()
 );
@@ -157,29 +159,28 @@ const attendeeShippingInfoRef: Ref<ApiShippingAddInfo> = ref(
 await initShippingFields(props.regNumber);
 
 function hasMissingTShirt(): boolean {
-  return attendeeMissingItems.value.some((item: ConcreteTrinketValue) =>
+  return attendeeMissingItems.value.some((item: ConcreteGoodieValue) =>
     item.startsWith("tshirt_")
   );
 }
 
 async function doSave(): Promise<void> {
-  const result: null | undefined = await attendeeService.putShippingAddInfo(
-    errorHandler,
-    props.regNumber,
-    attendeeShippingInfoRef.value
-  );
+  const result: null | undefined =
+    await attendeeService.addInfos.putShippingAddInfo(
+      errorHandler,
+      props.regNumber,
+      attendeeShippingInfoRef.value
+    );
   if (result === undefined) {
-    toast.add({
-      group: "global",
-      severity: "error",
+    toastService.add({
+      severity: ToastSeverity.error,
       summary: descriptionsRef.value.stored_failed,
       life: 10000,
     });
     return;
   }
-  toast.add({
-    group: "global",
-    severity: Severity.success,
+  toastService.add({
+    severity: ToastSeverity.success,
     summary: descriptionsRef.value.stored_ok,
     life: 10000,
   });

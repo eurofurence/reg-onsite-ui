@@ -1,10 +1,10 @@
 import type {
   AllFilterFieldValues,
-  ColumnDefinition,
   CustomFilterMetaData,
   RawAttendeeFilter,
-} from "@/types/internal";
-import { setupColumnDefinitionList } from "@/config/app/regdesk";
+} from "@/types/internal/filter";
+import { setupColumnDefinitionList } from "@/config/system/regdesk";
+import type { ColumnDefinition } from "@/types/internal/component/table";
 
 export function getActiveFilters(
   dataFilter: RawAttendeeFilter
@@ -28,9 +28,8 @@ export function getActiveFilters(
         filterItem.value?.length !== 0;
     })
     .map(([filterField, filterItem]) => {
-      const newFieldName: AllFilterFieldValues = <AllFilterFieldValues>(
-        filterField
-      );
+      const newFieldName: AllFilterFieldValues =
+        filterField as AllFilterFieldValues;
       return {
         ...filterItem,
         ...lookupColumnDefinition(newFieldName),

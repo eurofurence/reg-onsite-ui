@@ -19,14 +19,20 @@
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
+import {
+  watchDialogVisibility,
+  ShortcutScope,
+} from "@/composables/services/keyboardService";
 import type {
   AttendeeDataOptions,
   AttendeeTableDisplayOptions,
-} from "@/types/internal";
-import { watchDialogVisibility, ShortcutScope } from "@/composables/services/keyboardService";
+} from "@/types/internal/system/regdesk";
 
 const dialogVisibleForSettingsRef: Ref<boolean> = ref<boolean>(false);
-watchDialogVisibility(dialogVisibleForSettingsRef, ShortcutScope.dialog_regdesk_settings);
+watchDialogVisibility(
+  dialogVisibleForSettingsRef,
+  ShortcutScope.dialog_regdesk_settings
+);
 
 const displayOptionsRef: ModelRef<AttendeeTableDisplayOptions> =
   defineModel<AttendeeTableDisplayOptions>("displayOptions", {

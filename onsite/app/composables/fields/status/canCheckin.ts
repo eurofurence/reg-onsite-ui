@@ -1,10 +1,10 @@
 import { isValidAge } from "@/composables/fields/birthday/isValidAge";
-import { Status } from "@/config/setupStatus";
-import type { TransformedAttendeeInfo } from "@/types/internal";
-import { getAge } from "../birthday/getAge";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { getAge } from "@/composables/fields/birthday/getAge";
+import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 
 export function canCheckin(attendee: Partial<TransformedAttendeeInfo>) {
-  if (attendee?.status !== Status.paid) {
+  if (attendee?.status !== AttendeeApiStatus.paid) {
     return false;
   }
   if (

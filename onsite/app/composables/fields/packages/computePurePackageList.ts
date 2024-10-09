@@ -1,5 +1,8 @@
 import { getPurePackageList } from "@/composables/fields/packages/getPurePackageList";
-import type { PackageApiValue, PackageCountType } from "@/types/external";
+import type {
+  PackageApiValue,
+  PackageCountType,
+} from "@/types/external/attsrv/attendees/attendee";
 import type { WritableComputedRef } from "vue";
 
 function setPurePackageList(

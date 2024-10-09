@@ -2,7 +2,9 @@
   <div class="flex flex-wrap gap-5 place-content-center">
     <CustomStatisticsChart
       label="Status"
-      v-bind:data="getStatsFromProperty(statsRef, 'status', setupStatus, {})"
+      v-bind:data="
+        getStatsFromProperty(statsRef, 'status', metadataListForStatus, {})
+      "
     />
     <CustomStatisticsChart
       label="Sponsor Level"
@@ -10,7 +12,7 @@
         getStatsFromProperty(
           statsRef,
           'transSponsorChoice',
-          setupSponsorLevels,
+          metadataListForSponsorLevels,
           {}
         )
       "
@@ -21,7 +23,7 @@
         getStatsFromProperty(
           statsRef,
           'transConbookChoice',
-          setupConBookChoices,
+          metadataListForConBookChoice,
           {}
         )
       "
@@ -29,9 +31,14 @@
     <CustomStatisticsChart
       label="Roles"
       v-bind:data="
-        getStatsFromProperty(statsRef, 'transConRole', setupConRoles, {
-          flatten: true,
-        })
+        getStatsFromProperty(
+          statsRef,
+          'transConRole',
+          metadataListForConRoles,
+          {
+            flatten: true,
+          }
+        )
       "
     />
     <CustomStatisticsChart
@@ -40,7 +47,7 @@
       cssClass="w-[50rem]"
       :chartOptions="barlogYChartOptions"
       v-bind:data="
-        getStatsFromProperty(statsRef, 'country', setupCountries, {
+        getStatsFromProperty(statsRef, 'country', metadataListForCountry, {
           color: ColorsPalette.primary_400,
         })
       "
@@ -66,14 +73,14 @@ import {
   computeAttendeeStatisticEntries,
 } from "@/composables/statistics/computeAttendeeStatisticEntries";
 import { getStatsFromProperty } from "@/composables/statistics/getStatsFromProperty";
-import { setupConBookChoices } from "@/config/flags/setupConBookChoices";
-import { setupConRoles } from "@/config/setupConRoles";
-import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
-import { setupStatus } from "@/config/setupStatus";
-import type { TransformedAttendeeInfo } from "@/types/internal";
+import { metadataListForConBookChoice } from "@/config/metadata/flags/metadataForConBookChoice";
+import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
+import { metadataListForConRoles } from "@/config/metadata/flags/metadataForConRoles";
+import { metadataListForStatus } from "@/config/metadata/metadataForStatus";
 import type { ModelRef } from "vue";
-import { setupCountries } from "@/config/setupCountries";
-import { ColorsPalette } from "@/config/theme";
+import { metadataListForCountry } from "@/config/metadata/metadataForCountry";
+import { ColorsPalette } from "@/composables/theme/colors";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 const barlogYChartOptions: any = {
   plugins: {

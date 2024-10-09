@@ -19,18 +19,21 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { computePackageSubset } from "@/composables/fields/packages/computePackageSubset";
-import type { DayAttendanceValue } from "@/config/packages/setupDayAttendance";
+import type { AttendanceApiValue } from "@/config/metadata/packages/metadataForAttendance";
 import { configDayAttendanceItems } from "@/setupEFIteration";
-import type { PackageApiValue, PackageCountType } from "@/types/external";
+import type {
+  PackageApiValue,
+  PackageCountType,
+} from "@/types/external/attsrv/attendees/attendee";
 import type { WritableComputedRef } from "vue";
 import type { ModelRef } from "vue";
 
 const modelValue: ModelRef<PackageCountType<PackageApiValue>[] | null> =
   defineModel<PackageCountType<PackageApiValue>[] | null>({ required: true });
-const dayAttendanceSubset: WritableComputedRef<DayAttendanceValue[] | null> =
-  computePackageSubset<DayAttendanceValue>(
+const dayAttendanceSubset: WritableComputedRef<AttendanceApiValue[] | null> =
+  computePackageSubset<AttendanceApiValue>(
     modelValue,
     configDayAttendanceItems
   );

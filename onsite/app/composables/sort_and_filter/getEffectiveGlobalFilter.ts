@@ -1,7 +1,10 @@
 import { hasFilterContent } from "@/composables/sort_and_filter/hasFilterContent";
 import type { DataTableFilterMetaData } from "primevue/datatable";
-import type { FilterFieldValue, RawAttendeeFilter } from "@/types/internal";
 import { FilterMatchMode } from "@primevue/core/api";
+import type {
+  FilterFieldValue,
+  RawAttendeeFilter,
+} from "@/types/internal/filter";
 
 export interface EffectiveGlobalFilter {
   globalFilter: DataTableFilterMetaData;

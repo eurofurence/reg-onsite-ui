@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import { getSponsorLanyardStyle } from "@/composables/colors/getSponsorLanyardStyle";
 import type { ModelRef } from "vue";
-import type { TransformedAttendeeInfo } from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 const transformedAttendeeInfo: ModelRef<TransformedAttendeeInfo | null> =
   defineModel<TransformedAttendeeInfo | null>({

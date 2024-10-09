@@ -28,7 +28,7 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { computeMoney } from "@/composables/fields/money/computeMoney";
 import { getDuesFlag } from "@/composables/fields/money/getDuesFlag";
 import { getDuesNote } from "@/composables/fields/money/getDuesNote";

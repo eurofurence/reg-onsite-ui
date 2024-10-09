@@ -17,7 +17,7 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import type { ModelRef } from "vue";
 
 function getPronounFieldTextCSS(value: string | undefined) {

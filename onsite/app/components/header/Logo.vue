@@ -2,7 +2,7 @@
   <div class="flex flex-rows">
     <img
       class="header-logo"
-      src="/logo.png"
+      :src="conventionSetup.logoLink"
       @click="onLogoClick"
       v-tooltip="{
         value: versionInfo,
@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 import { version } from "@/config/buildInfo";
+import { conventionSetup } from "@/config/convention";
 const versionInfo: string = `Version: ${version}`;
 
 function onLogoClick(): void {

@@ -1,14 +1,14 @@
 import type {
-  AbstractTrinketValue,
-  AbstractTrinketWithVariantsValue,
+  AbstractGoodieValue,
+  AbstractGoodieWithVariantsValue,
 } from "@/setupEFIteration";
-import type { DefaultVariantValues } from "@/types/internal";
+import type { DefaultVariantValues } from "@/types/internal/goodies";
 
 export function getDefaultVariantValuesValue(
   defaultVariantValues: DefaultVariantValues,
-  abstractTrinketValue: AbstractTrinketValue
+  abstractGoodieValue: AbstractGoodieValue
 ): string | null | undefined {
   return defaultVariantValues.get(
-    <AbstractTrinketWithVariantsValue>abstractTrinketValue
+    abstractGoodieValue as AbstractGoodieWithVariantsValue
   );
 }

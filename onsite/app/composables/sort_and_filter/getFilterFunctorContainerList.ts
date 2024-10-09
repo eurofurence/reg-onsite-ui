@@ -1,22 +1,22 @@
+import { getFieldGetters } from "@/composables/sort_and_filter/getFieldGetters";
+import { getMatcherStringAgainstValue } from "@/composables/filter/getMatcherStringAgainstValue";
+import type { DataTableFilterMetaData } from "primevue/datatable";
+import { setupColumnDefinitionList } from "@/config/system/regdesk";
+import { getMatcherStringAgainstList } from "@/composables/filter/getMatcherStringAgainstList";
+import { getBirthdayFilterString } from "@/composables/fields/birthday/getBirthdayFilterString";
+import { getMatcherNumberAgainstValue } from "@/composables/filter/getMatcherNumberAgainstValue";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { ValueGetter } from "@/types/internal/sort";
+import type { ColumnDefinition } from "@/types/internal/component/table";
 import {
   FilterCmpType,
-  type ColumnDefinition,
   type FilterCmpTypeValue,
   type FilterFieldValue,
   type MatchNumberAgainstValue,
   type MatchStringAgainstList,
   type MatchStringAgainstValue,
   type RawAttendeeFilter,
-  type TransformedAttendeeInfo,
-  type ValueGetter,
-} from "@/types/internal";
-import { getFieldGetters } from "@/composables/sort_and_filter/getFieldGetters";
-import { getMatcherStringAgainstValue } from "@/composables/filter/getMatcherStringAgainstValue";
-import type { DataTableFilterMetaData } from "primevue/datatable";
-import { setupColumnDefinitionList } from "@/config/app/regdesk";
-import { getMatcherStringAgainstList } from "../filter/getMatcherStringAgainstList";
-import { getBirthdayFilterString } from "../fields/birthday/getBirthdayFilterString";
-import { getMatcherNumberAgainstValue } from "../filter/getMatcherNumberAgainstValue";
+} from "@/types/internal/filter";
 
 interface PreparedMatchFunction<Type> {
   (item: Type): boolean;
@@ -79,12 +79,12 @@ function addNumberValueFilter<Type extends TransformedAttendeeInfo>(
     fieldName
   );
   const matchFunction: PreparedMatchFunction<Type> = (item: Type): boolean => {
-    const dataValue: number = <number>closureFieldGetFunction(item);
+    const dataValue: number = closureFieldGetFunction(item) as number;
     return closureMatchFunction(dataValue, filterValue);
   };
   const entry: FilterFunctorContainer<Type> = {
     filterValue: filterValue,
-    matchModeString: <any>filterMeta.matchMode,
+    matchModeString: filterMeta.matchMode as any,
     fieldGetFunction: closureFieldGetFunction,
     columnDefintion: param.columnDefintion,
     matchFunction: matchFunction,
@@ -124,12 +124,12 @@ function addValueFilter<Type extends TransformedAttendeeInfo>(
     fieldName
   );
   const matchFunction: PreparedMatchFunction<Type> = (item: Type): boolean => {
-    const dataValue: string = <string>closureFieldGetFunction(item);
+    const dataValue: string = closureFieldGetFunction(item) as string;
     return closureMatchFunction(dataValue, filterValue);
   };
   const entry: FilterFunctorContainer<Type> = {
     filterValue: filterValue,
-    matchModeString: <any>filterMeta.matchMode,
+    matchModeString: filterMeta.matchMode as any,
     fieldGetFunction: closureFieldGetFunction,
     columnDefintion: param.columnDefintion,
     matchFunction: matchFunction,
@@ -162,7 +162,7 @@ function addCIValueFilter<Type extends TransformedAttendeeInfo>(
   };
   const entry: FilterFunctorContainer<Type> = {
     filterValue: filterValue,
-    matchModeString: <any>filterMeta.matchMode,
+    matchModeString: filterMeta.matchMode as any,
     fieldGetFunction: closureFieldGetFunction,
     columnDefintion: param.columnDefintion,
     matchFunction: matchFunction,
@@ -202,12 +202,12 @@ function addListFilter<Type extends TransformedAttendeeInfo>(
     fieldName
   );
   const matchFunction: PreparedMatchFunction<Type> = (item: Type): boolean => {
-    const dataValue: string = <string>closureFieldGetFunction(item);
+    const dataValue: string = closureFieldGetFunction(item) as string;
     return closureMatchFunction(dataValue, filterValue);
   };
   const entry: FilterFunctorContainer<Type> = {
     filterValue: filterValue,
-    matchModeString: <any>filterMeta.matchMode,
+    matchModeString: filterMeta.matchMode as any,
     fieldGetFunction: closureFieldGetFunction,
     columnDefintion: param.columnDefintion,
     matchFunction: matchFunction,
@@ -232,12 +232,10 @@ export function getFilterFunctorContainerList<
 
   setupColumnDefinitionList.forEach((columnDefintion: ColumnDefinition) => {
     const cmpType: FilterCmpTypeValue | undefined = columnDefintion?.filterType;
-    const fieldName: FilterFieldValue = <FilterFieldValue>(
-      columnDefintion.fieldName
-    );
-    const filterKey: keyof RawAttendeeFilter = <keyof RawAttendeeFilter>(
-      columnDefintion.fieldName
-    );
+    const fieldName: FilterFieldValue =
+      columnDefintion.fieldName as FilterFieldValue;
+    const filterKey: keyof RawAttendeeFilter =
+      columnDefintion.fieldName as keyof RawAttendeeFilter;
     const isActiveGlobalColumn: boolean =
       isGlobalFilterActive &&
       (columnDefintion?.fieldCanBeUsedByGlobalSearch || false) &&

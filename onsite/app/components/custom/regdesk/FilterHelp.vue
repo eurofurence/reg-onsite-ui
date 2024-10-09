@@ -1,7 +1,7 @@
 <template>
-  <div v-if="!hasMinimalFilter(props.dataOptions.filters)">
+  <div v-if="!hasMinimalFilter(props.dataOptions.filterConfig.filterValues)">
     <CustomRegdeskSearchMessage
-      :severity="Severity.info"
+      :severity="MessageSeverity.info"
       title="Please enter search criteria!"
     >
       <ul>
@@ -14,30 +14,48 @@
       </ul>
     </CustomRegdeskSearchMessage>
     <CustomRegdeskSearchMessage
-      v-if="props.dataOptions.globalFilterFields.length > 0"
-      :severity="Severity.info"
+      v-if="props.dataOptions.filterConfig.globalFilterFields.length > 0"
+      :severity="MessageSeverity.info"
       title="Use the 'Global Search' to search for"
     >
       <ul>
-        <li v-if="props.dataOptions.globalFilterFields.includes('badge_id')">
+        <li
+          v-if="
+            props.dataOptions.filterConfig.globalFilterFields.includes(
+              'badge_id'
+            )
+          "
+        >
           'Badge ID' with or without the checksum letter
         </li>
         <li v-if="getGlobalFilterNameItems().length > 0">
           {{ getGlobalNameFilterFieldsHelp() }}
         </li>
-        <li v-if="props.dataOptions.globalFilterFields.includes('birthday')">
+        <li
+          v-if="
+            props.dataOptions.filterConfig.globalFilterFields.includes(
+              'birthday'
+            )
+          "
+        >
           'Birthday' using the yyyy-mm-dd format and entering at least 'yyyy-'
         </li>
       </ul>
     </CustomRegdeskSearchMessage>
     <CustomRegdeskSearchMessage
-      :severity="Severity.info"
+      :severity="MessageSeverity.info"
       title="Auto-Selection of attendees is done when"
       v-if="props.displayOptions.filterAutoSelect"
     >
       <ul class="search-help-list">
         <li>the filtered search result contains only a single attendee,</li>
-        <li v-if="props.dataOptions.globalFilterFields.includes('badge_id')">
+        <li
+          v-if="
+            props.dataOptions.filterConfig.globalFilterFields.includes(
+              'badge_id'
+            )
+          "
+        >
           and the global filter is not a number,
         </li>
         <li>
@@ -47,20 +65,28 @@
       </ul>
     </CustomRegdeskSearchMessage>
     <CustomRegdeskSearchMessage
-      :severity="Severity.warn"
+      :severity="MessageSeverity.warn"
       title=""
-      v-else-if="hasActiveFilter(props.dataOptions.filters)"
+      v-else-if="hasActiveFilter(props.dataOptions.filterConfig.filterValues)"
     >
       <div v-if="props.dataOptions.queryMode !== AttendeeQueryStrategy.manual">
         No attendees are matching the current filters!
-        <pre>{{ getFilterText(props.dataOptions.filters) }}</pre>
+        <pre>{{
+          getFilterText(props.dataOptions.filterConfig.filterValues)
+        }}</pre>
       </div>
       <div v-else>
         Please press the search button to search for:
-        <pre>{{ getFilterText(props.dataOptions.filters) }}</pre>
+        <pre>{{
+          getFilterText(props.dataOptions.filterConfig.filterValues)
+        }}</pre>
       </div>
     </CustomRegdeskSearchMessage>
-    <CustomRegdeskSearchMessage :severity="Severity.warn" title="" v-else>
+    <CustomRegdeskSearchMessage
+      :severity="MessageSeverity.warn"
+      title=""
+      v-else
+    >
       No attendees were retrieved from the database!
     </CustomRegdeskSearchMessage>
   </div>
@@ -68,17 +94,19 @@
 
 <script setup lang="ts">
 import { getActiveFilters } from "@/composables/sort_and_filter/getActiveFilters";
-import { setupColumnDefinitionList } from "@/config/app/regdesk";
-import {
-  Severity,
-  type AttendeeDataOptions,
-  type RawAttendeeFilter,
-  type AttendeeTableDisplayOptions,
-  type ColumnDefinition,
-  type FilterFieldValue,
-  AttendeeQueryStrategy,
-} from "@/types/internal";
+import { setupColumnDefinitionList } from "@/config/system/regdesk";
 import { hasMinimalFilter } from "@/composables/sort_and_filter/hasMinimalFilter";
+import { MessageSeverity } from "@/types/internal/primevue";
+import {
+  AttendeeQueryStrategy,
+  type AttendeeDataOptions,
+  type AttendeeTableDisplayOptions,
+} from "@/types/internal/system/regdesk";
+import type {
+  FilterFieldValue,
+  RawAttendeeFilter,
+} from "@/types/internal/filter";
+import type { ColumnDefinition } from "@/types/internal/component/table";
 
 function getFilterText(dataFilter: RawAttendeeFilter) {
   return dataFilter;
@@ -90,7 +118,7 @@ function hasActiveFilter(dataFilter: RawAttendeeFilter): boolean {
 
 function getBadgeInputHelp(): string {
   const isBadgeIdInGlobalFilter: boolean =
-    props.dataOptions.globalFilterFields.includes("badge_id");
+    props.dataOptions.filterConfig.globalFilterFields.includes("badge_id");
   return `Enter some number in the ${
     isBadgeIdInGlobalFilter ? "global or " : ""
   }'Badge ID' search field`;
@@ -106,9 +134,10 @@ function getGlobalFilterNameItems(): ColumnDefinition[] {
     const isNameField: boolean = nameFilterFieldList.some(
       (field: FilterFieldValue) => field == item.fieldName
     );
-    const isInActiveGlobalFilters = props.dataOptions.globalFilterFields.some(
-      (field: FilterFieldValue) => field == item.fieldName
-    );
+    const isInActiveGlobalFilters =
+      props.dataOptions.filterConfig.globalFilterFields.some(
+        (field: FilterFieldValue) => field == item.fieldName
+      );
     return isNameField && isInActiveGlobalFilters;
   });
 }
@@ -126,8 +155,8 @@ function getGlobalNameFilterFieldsHelp(): string {
     .map((item: ColumnDefinition) => `'${item.label}'`)
     .join(", ");
   const hasFirstAndLastNameInGlobalFilter =
-    props.dataOptions.globalFilterFields.includes("first_name") &&
-    props.dataOptions.globalFilterFields.includes("last_name");
+    props.dataOptions.filterConfig.globalFilterFields.includes("first_name") &&
+    props.dataOptions.filterConfig.globalFilterFields.includes("last_name");
   return (
     (hasFirstAndLastNameInGlobalFilter
       ? `${nameFilterFieldsString}, or the 'Full Name' `

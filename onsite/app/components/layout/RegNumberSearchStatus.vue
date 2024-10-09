@@ -1,13 +1,13 @@
 <template>
   <div class="flex flex-col">
     <div class="pt-3" v-if="props.status.mode == SearchStatusMode.searching">
-      <Message :closable="false" :severity="Severity.info">
+      <Message :closable="false" :severity="MessageSeverity.info">
         Searching for registration number "{{ props.status.regNumber }}"
       </Message>
       <ProgressBar mode="indeterminate" />
     </div>
     <div class="pt-3" v-if="props.status.mode == SearchStatusMode.error">
-      <Message :closable="false" severity="error">
+      <Message :closable="false" :severity="MessageSeverity.error">
         Encountered error while searching for registration number "{{
           props.status.regNumber
         }}":
@@ -16,7 +16,7 @@
       </Message>
     </div>
     <div class="pt-3" v-if="props.status.mode == SearchStatusMode.idle_no_data">
-      <Message :closable="false" :severity="Severity.info">
+      <Message :closable="false" :severity="MessageSeverity.info">
         No pending operations ...
       </Message>
     </div>
@@ -24,8 +24,12 @@
 </template>
 
 <script setup lang="ts">
-import { SearchStatusMode, Severity } from "@/types/internal";
-import type { SearchStatus } from "@/types/internal";
+import { MessageSeverity } from "@/types/internal/primevue";
+import {
+  SearchStatusMode,
+  type SearchStatus,
+} from "@/types/internal/component/regnumsearch";
+
 interface Props {
   status: SearchStatus;
 }

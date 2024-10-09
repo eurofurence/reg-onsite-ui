@@ -1,11 +1,11 @@
+import { hasMinimalFilter } from "@/composables/sort_and_filter/hasMinimalFilter";
+import { getFilteredAttendees } from "@/composables/sort_and_filter/getFilteredAttendees";
+import { getPlaceholderAttendeeInfo } from "@/composables/fields/getPlaceholderAttendeeInfo";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import {
   AttendeeQueryStrategy,
   type AttendeeDataOptions,
-  type TransformedAttendeeInfo,
-} from "@/types/internal";
-import { hasMinimalFilter } from "@/composables/sort_and_filter/hasMinimalFilter";
-import { getFilteredAttendees } from "@/composables/sort_and_filter/getFilteredAttendees";
-import { getPlaceholderAttendeeInfo } from "../fields/getPlaceholderAttendeeInfo";
+} from "@/types/internal/system/regdesk";
 
 // Prevent focus loss by filling in dummy data
 function fillEmptyResult<Type extends TransformedAttendeeInfo>(
@@ -32,12 +32,12 @@ export function computedFilteredResult<Type extends TransformedAttendeeInfo>(
       return fillEmptyResult(unfilteredList.value);
     } else if (
       skipFilterRef.value ||
-      hasMinimalFilter(dataOptionsRef.value.filters)
+      hasMinimalFilter(dataOptionsRef.value.filterConfig.filterValues)
     ) {
       const result = getFilteredAttendees(
         unfilteredList.value,
-        dataOptionsRef.value.filters,
-        dataOptionsRef.value.globalFilterFields
+        dataOptionsRef.value.filterConfig.filterValues,
+        dataOptionsRef.value.filterConfig.globalFilterFields
       );
       return fillEmptyResult(result);
     }

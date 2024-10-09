@@ -1,9 +1,9 @@
-import { resolveColorEntry } from "@/components/field/common";
-import type { PackageApiValue } from "@/types/external";
-import type { PackageInfo } from "@/types/internal";
+import { resolveColorEntry } from "@/components/field/common/common";
 import type { SelectButtonPassThroughMethodOptions } from "primevue/selectbutton";
+import type { PackageInfo } from "@/types/internal/infos";
+import type { PackageValue } from "@/types/internal/fields";
 
-export function getSelectedButtonStyle<Type extends PackageApiValue | "">(
+export function getSelectedButtonStyle<Type extends PackageValue>(
   choice: Ref<Type | null>,
   packageSubset: PackageInfo<Type>[],
   styleOptions: SelectButtonPassThroughMethodOptions

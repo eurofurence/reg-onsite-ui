@@ -1,9 +1,13 @@
 import { computeFirstElementFromList } from "@/composables/collection_tools/computeFirstElementFromList";
 import { computeSubsetList } from "@/composables/collection_tools/computeSubsetList";
 import { computePurePackageList } from "@/composables/fields/packages/computePurePackageList";
-import type { PackageApiValue, PackageCountType } from "@/types/external";
-import type { LabeledValue } from "@/types/internal";
+import type {
+  PackageApiValue,
+  PackageCountType,
+} from "@/types/external/attsrv/attendees/attendee";
+import type { LabeledValue } from "@/types/internal/infos";
 import type { WritableComputedRef } from "vue";
+import type { PackageValue } from "@/types/internal/fields";
 
 export function computePackageChoice<Type extends PackageApiValue>(
   dataRef: Ref<PackageCountType<PackageApiValue>[] | null>,
@@ -15,7 +19,7 @@ export function computePackageChoice<Type extends PackageApiValue>(
   const purePackagesList: WritableComputedRef<PackageApiValue[] | null> =
     computePurePackageList(dataRef);
   const subsetList: WritableComputedRef<(Type | "")[] | null> =
-    computeSubsetList<Type | "", PackageApiValue | "">(
+    computeSubsetList<Type | "", PackageValue>(
       purePackagesList,
       subsetValueList
     );

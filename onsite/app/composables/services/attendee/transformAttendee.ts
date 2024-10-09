@@ -1,23 +1,21 @@
 import { getSubsetChoice } from "@/composables/collection_tools/getSubsetChoice";
-import { getAllRoleValues } from "@/composables/fields/conrole/getAllRoleValues";
-import { getConRoleChoice } from "@/composables/fields/conrole/getConRoleChoice";
+import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRoleChoice";
 import { getCountryName } from "@/composables/fields/country/getCountryName";
 import { getPackageChoice } from "@/composables/fields/packages/getPackageChoice";
 import { canCheckin } from "@/composables/fields/status/canCheckin";
 import {
   type ConBookValue,
-  setupConBookChoices,
-} from "@/config/flags/setupConBookChoices";
-import { setupGoodiesLevels } from "@/config/setupGoodiesLevels";
+  metadataListForConBookChoice,
+} from "@/config/metadata/flags/metadataForConBookChoice";
 import type {
   GoodiesLevelValue,
   SponsorLevelValue,
-} from "@/config/packages/setupPackages";
-import type { ConRoleValue } from "@/config/setupConRoles";
-import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
-import type { ApiAttendeeInfo } from "@/types/external";
-import type { TransformedAttendeeInfo } from "@/types/internal";
+} from "@/config/metadata/packages/metadataForPerks";
+import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
 import { getAge } from "@/composables/fields/birthday/getAge";
+import type { ApiAttendeeInfo } from "@/types/external/attsrv/attendees/attendee";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { metadataListForGoodiesLevels } from "@/config/metadata/packages/metadataForGoodiesLevels";
 
 function removeLeadingZerosFromDate(value: string): string {
   const dateComponents: number[] = value.split("-").map(Number);
@@ -31,18 +29,15 @@ function removeLeadingZerosFromDate(value: string): string {
 export function transformAttendee(
   attendee: ApiAttendeeInfo
 ): TransformedAttendeeInfo {
-  const allRoles: ConRoleValue[] = getAllRoleValues(
-    attendee.flags_list,
-    attendee.id
-  );
   const conbookChoice: ConBookValue =
-    getSubsetChoice(attendee.flags_list, setupConBookChoices) || "";
-  const sponsorChoice: SponsorLevelValue =
-    <SponsorLevelValue>(
-      getPackageChoice(attendee.packages_list, setupSponsorLevels)
-    ) || "";
-  const goodiesChoice: GoodiesLevelValue =
-    getPackageChoice(attendee.packages_list, setupGoodiesLevels) || "";
+    getSubsetChoice(attendee.flags_list, metadataListForConBookChoice) || "";
+  const sponsorChoice: SponsorLevelValue = (getPackageChoice(
+    attendee.packages_list,
+    metadataListForSponsorLevels
+  ) || "") as SponsorLevelValue;
+  const goodieChoice: GoodiesLevelValue =
+    getPackageChoice(attendee.packages_list, metadataListForGoodiesLevels) ||
+    "";
   var transAttendee: TransformedAttendeeInfo = {
     ...{
       pronouns: attendee?.pronouns || null,
@@ -59,14 +54,13 @@ export function transformAttendee(
       transId: `${attendee.id}`,
       transAge: getAge(attendee.birthday),
       transBirthday: removeLeadingZerosFromDate(attendee.birthday),
-      transConRole: getConRoleChoice(attendee.flags_list, attendee.id).value,
+      transConRole: getMainConRoleChoice(attendee.flags_list, attendee.id)
+        .value,
       transFullName: `${attendee.first_name} ${attendee.last_name}`,
-      transConRoleList: allRoles,
-      transConRoleListStr: allRoles.join("|"),
       transCountryName: getCountryName(attendee.country),
       transConbookChoice: conbookChoice,
       transSponsorChoice: sponsorChoice,
-      transGoodieChoice: goodiesChoice,
+      transGoodieChoice: goodieChoice,
       transCanCheckin: canCheckin(attendee),
     },
   };

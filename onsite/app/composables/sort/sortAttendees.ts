@@ -1,7 +1,8 @@
 import type { DataTableSortMeta } from "primevue/datatable";
-import type { TransformedAttendeeInfo, ValueGetter } from "@/types/internal";
 import { getFieldGetters } from "@/composables/sort_and_filter/getFieldGetters";
 import { getAttendeeDummyFun } from "@/composables/sort_and_filter/getAttendeeDummyFun";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { ValueGetter } from "@/types/internal/sort";
 
 interface ResolvedSortMeta<Type extends TransformedAttendeeInfo>
   extends DataTableSortMeta {
@@ -16,7 +17,7 @@ function getPreparedSortSettings<Type extends TransformedAttendeeInfo>(
   } = getFieldGetters();
   return sortSettingList.map((sortSetting: DataTableSortMeta) => {
     // Function as field selector are unsupported
-    const sortField: string = <string>sortSetting.field;
+    const sortField: string = sortSetting.field as string;
     return {
       ...{ get: fieldResolvers[sortField] || getAttendeeDummyFun(sortField) },
       ...sortSetting,

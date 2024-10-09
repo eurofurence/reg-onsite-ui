@@ -39,9 +39,12 @@
 </template>
 
 <script setup lang="ts">
-import type { ShippingI18N } from "@/config/i18n/i18nShipping";
-import { type ApiShippingAddInfo, ShippingEmailUse } from "@/types/external";
+import type { ShippingI18N } from "@/config/i18n/shipping";
 import type { ModelRef } from "vue";
+import {
+  ShippingEmailUse,
+  type ApiShippingAddInfo,
+} from "@/types/external/attsrv/additional-info/shipping";
 
 const shippingInfoRef: ModelRef<ApiShippingAddInfo> =
   defineModel<ApiShippingAddInfo>({

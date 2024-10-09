@@ -1,15 +1,17 @@
-import { getAllSponsorDeskAddInfos } from "@/composables/api/getAllSponsorDeskAddInfos";
-import { getAttendeeStatusHistory } from "@/composables/api/getAttendeeStatusHistory";
-import { getOwnRegs } from "@/composables/api/getOwnRegs";
-import { getShippingAddInfo } from "@/composables/api/getShippingAddInfo";
-import { getSponsorDeskAddInfo } from "@/composables/api/getSponsorDeskAddInfo";
-import { putShippingAddInfo } from "@/composables/api/putShippingAddInfo";
-import { putSponsorDeskAddInfo } from "@/composables/api/putSponsorDeskAddInfo";
+import { getAllSponsorDeskAddInfos } from "@/composables/api/attsrv/additional-info/getAllSponsorDeskAddInfos";
+import { getAttendeeStatusHistory } from "@/composables/api/attsrv/attendees/getAttendeeStatusHistory";
+import { getOwnRegs } from "@/composables/api/attsrv/attendees/getOwnRegs";
+import { getShippingAddInfo } from "@/composables/api/attsrv/additional-info/getShippingAddInfo";
+import { getSponsorDeskAddInfo } from "@/composables/api/attsrv/additional-info/getSponsorDeskAddInfo";
+import { putShippingAddInfo } from "@/composables/api/attsrv/additional-info/putShippingAddInfo";
+import { putSponsorDeskAddInfo } from "@/composables/api/attsrv/additional-info/putSponsorDeskAddInfo";
 import { checkinAttendee } from "@/composables/services/attendee/checkinAttendee";
 import { debugSetStatusToPaid } from "@/composables/services/attendee/debugSetStatusToPaid";
 import { getAllAttendeesTrans } from "@/composables/services/attendee/getAllAttendeesTrans";
 import { getAttendeeByRegNumberTrans } from "@/composables/services/attendee/getAttendeeByRegNumberTrans";
 import { getAttendeesTrans } from "@/composables/services/attendee/getAttendeesTrans";
+import { getRoomKeyAddInfo } from "@/composables/api/attsrv/additional-info/getRoomKeyAddInfo";
+import { putRoomKeyAddInfo } from "@/composables/api/attsrv/additional-info/putRoomKeyAddInfo";
 
 interface AttendeeService {
   getOwnRegs: typeof getOwnRegs;
@@ -20,12 +22,17 @@ interface AttendeeService {
   getAttendeeStatusHistory: typeof getAttendeeStatusHistory;
   debugSetStatusToPaid: typeof debugSetStatusToPaid;
 
-  getAllSponsorDeskAddInfos: typeof getAllSponsorDeskAddInfos;
-  getSponsorDeskAddInfo: typeof getSponsorDeskAddInfo;
-  putSponsorDeskAddInfo: typeof putSponsorDeskAddInfo;
+  addInfos: {
+    getAllSponsorDeskAddInfos: typeof getAllSponsorDeskAddInfos;
+    getSponsorDeskAddInfo: typeof getSponsorDeskAddInfo;
+    putSponsorDeskAddInfo: typeof putSponsorDeskAddInfo;
 
-  getShippingAddInfo: typeof getShippingAddInfo;
-  putShippingAddInfo: typeof putShippingAddInfo;
+    getShippingAddInfo: typeof getShippingAddInfo;
+    putShippingAddInfo: typeof putShippingAddInfo;
+
+    getRoomKeyAddInfo: typeof getRoomKeyAddInfo;
+    putRoomKeyAddInfo: typeof putRoomKeyAddInfo;
+  };
 }
 
 export const attendeeService: AttendeeService = {
@@ -37,9 +44,15 @@ export const attendeeService: AttendeeService = {
   getAttendeeStatusHistory: getAttendeeStatusHistory,
   debugSetStatusToPaid: debugSetStatusToPaid,
 
-  getAllSponsorDeskAddInfos: getAllSponsorDeskAddInfos,
-  getSponsorDeskAddInfo: getSponsorDeskAddInfo,
-  putSponsorDeskAddInfo: putSponsorDeskAddInfo,
-  getShippingAddInfo: getShippingAddInfo,
-  putShippingAddInfo: putShippingAddInfo,
+  addInfos: {
+    getAllSponsorDeskAddInfos: getAllSponsorDeskAddInfos,
+    getSponsorDeskAddInfo: getSponsorDeskAddInfo,
+    putSponsorDeskAddInfo: putSponsorDeskAddInfo,
+
+    getShippingAddInfo: getShippingAddInfo,
+    putShippingAddInfo: putShippingAddInfo,
+
+    getRoomKeyAddInfo: getRoomKeyAddInfo,
+    putRoomKeyAddInfo: putRoomKeyAddInfo,
+  },
 };

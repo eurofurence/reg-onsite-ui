@@ -26,11 +26,12 @@
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
-import type {
-  RawAttendeeFilter,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
-import { watchDialogVisibility, ShortcutScope } from "@/composables/services/keyboardService";
+import {
+  watchDialogVisibility,
+  ShortcutScope,
+} from "@/composables/services/keyboardService";
+import type { RawAttendeeFilter } from "@/types/internal/filter";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 const visible: Ref<boolean> = ref<boolean>(false);
 watchDialogVisibility(visible, ShortcutScope.dialog_statistics);

@@ -1,5 +1,5 @@
-import { minAge } from "@/config/setupReg";
+import { conventionSetup } from "@/config/convention";
 
 export function isValidAge(age: number): boolean {
-  return age >= minAge;
+  return age >= conventionSetup.minAge;
 }

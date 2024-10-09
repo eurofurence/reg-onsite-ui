@@ -1,11 +1,14 @@
 import { getColorVariants } from "@/composables/colors/getColorVariants";
 import { getGradientStyle } from "@/composables/colors/getGradientStyle";
 import { getStatusItem } from "@/composables/fields/status/getStatusItem";
-import { Status, type StatusValues } from "@/config/setupStatus";
-import { ColorsPalette, type ColorsPaletteValue } from "@/config/theme";
+import {
+  ColorsPalette,
+  type ColorsPaletteValue,
+} from "@/composables/theme/colors";
+import type { AttendeeApiStatusValues } from "@/config/metadata/metadataForStatus";
 
 export function getStatusStyle(
-  status: StatusValues | null
+  status: AttendeeApiStatusValues | null
 ): { style: { background: string; color: string } } | {} {
   if (status === null) {
     return {};

@@ -6,7 +6,7 @@
       :class="fieldTextCSS"
       class="w-40"
       v-model="modelValue"
-      :options="setupTShirtSizes"
+      :options="metadataListForTShirtSizes"
       optionValue="value"
       optionLabel="label"
       :placeholder="setupTShirtTypePlaceholder.label"
@@ -21,12 +21,12 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import {
   type TShirtSizeValue,
-  setupTShirtSizes,
-} from "@/config/tshirt/setupTShirtSizes";
-import { setupTShirtTypePlaceholder } from "@/config/tshirt/setupTShirtTypes";
+  metadataListForTShirtSizes,
+} from "@/config/metadata/tshirt/metadataForTShirtSizes";
+import { setupTShirtTypePlaceholder } from "@/config/metadata/tshirt/metadataForTShirtTypes";
 import type { ModelRef } from "vue";
 
 const modelValue: ModelRef<TShirtSizeValue | undefined> = defineModel<

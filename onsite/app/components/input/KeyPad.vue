@@ -18,14 +18,14 @@
     <Button
       @click="onSubmit()"
       icon="pi pi-search"
-      :severity="props.severityOK"
+      :severity="props.severitySubmitButton"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
-import type { SeverityValue } from "@/types/internal";
+import type { ButtonSeverityValue } from "@/types/internal/primevue";
 
 function onSubmit(): void {
   resetOnNextNumber.value = true;
@@ -69,7 +69,7 @@ function onRemove(): void {
 
 interface Props {
   max: number;
-  severityOK?: SeverityValue;
+  severitySubmitButton?: ButtonSeverityValue;
 }
 const props: Props = defineProps<Props>();
 const modelValue: ModelRef<number | null> = defineModel<number | null>({

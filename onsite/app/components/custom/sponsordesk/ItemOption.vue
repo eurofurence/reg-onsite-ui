@@ -17,34 +17,39 @@
 
 <script setup lang="ts">
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
-import type { ConcreteTrinketValue, TrinketConfig } from "@/setupEFIteration";
-import type { DefaultVariantValues, LabeledValue } from "@/types/internal";
+import type {
+  AbstractGoodieWithVariants,
+  ConcreteGoodieValue,
+  GoodieConfig,
+} from "@/setupEFIteration";
 import type { ModelRef } from "vue";
+import type { DefaultVariantValues } from "@/types/internal/goodies";
+import type { LabeledValue } from "@/types/internal/infos";
 
-function checkConcreteItem(referenceList: ConcreteTrinketValue[]): boolean {
+function checkConcreteItem(referenceList: ConcreteGoodieValue[]): boolean {
   return referenceList.includes(
-    getConcreteItemValue(props.trinketConfig, modelValue.value)
+    getConcreteItemValue(props.goodieConfig, modelValue.value)
   );
 }
 
 function isReserved(): boolean {
-  return checkConcreteItem(props.reservedConcreteTrinkets);
+  return checkConcreteItem(props.reservedConcreteGoodies);
 }
 
 function isAvailableItem(): boolean {
-  return checkConcreteItem(props.availableConcreteTrinkets);
+  return checkConcreteItem(props.availableConcreteGoodies);
 }
 
 function isDefault(): boolean {
-  const defaultValue: string | null | undefined = (<Map<string, string>>(
-    props.defaultValue
-  )).get(props.trinketConfig.value);
+  const defaultValue: string | null | undefined = props.defaultValue.get(
+    props.goodieConfig.value as AbstractGoodieWithVariants
+  );
   if (defaultValue === undefined) {
     return false;
   }
   return (
-    getConcreteItemValue(props.trinketConfig, modelValue.value) ==
-    getConcreteItemValue(props.trinketConfig, {
+    getConcreteItemValue(props.goodieConfig, modelValue.value) ==
+    getConcreteItemValue(props.goodieConfig, {
       value: defaultValue,
       label: "",
     })
@@ -52,11 +57,11 @@ function isDefault(): boolean {
 }
 
 interface Props {
-  trinketConfig: TrinketConfig;
+  goodieConfig: GoodieConfig;
   defaultValue: DefaultVariantValues;
-  issuedConcreteTrinkets: ConcreteTrinketValue[];
-  reservedConcreteTrinkets: ConcreteTrinketValue[];
-  availableConcreteTrinkets: ConcreteTrinketValue[];
+  issuedConcreteGoodies: ConcreteGoodieValue[];
+  reservedConcreteGoodies: ConcreteGoodieValue[];
+  availableConcreteGoodies: ConcreteGoodieValue[];
 }
 const props: Props = defineProps<Props>();
 

@@ -1,13 +1,13 @@
 import { getConcreteVariantItemValue } from "@/composables/items/getConcreteVariantItemValue";
-import type { ConcreteTrinketValue, TrinketConfig } from "@/setupEFIteration";
-import type { LabeledValue } from "@/types/internal";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
+import type { LabeledValue } from "@/types/internal/infos";
 
 export function getConcreteItemValue<VariantType>(
-  trinketConfig: TrinketConfig,
+  goodieConfig: GoodieConfig,
   variantConfig: LabeledValue<VariantType> | null
-): ConcreteTrinketValue {
-  if (variantConfig === null || trinketConfig?.variants === undefined) {
-    return <ConcreteTrinketValue>trinketConfig.value;
+): ConcreteGoodieValue {
+  if (variantConfig === null || goodieConfig?.variants === undefined) {
+    return goodieConfig.value as ConcreteGoodieValue;
   }
-  return getConcreteVariantItemValue(trinketConfig, variantConfig);
+  return getConcreteVariantItemValue(goodieConfig, variantConfig);
 }

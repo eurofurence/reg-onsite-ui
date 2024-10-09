@@ -1,12 +1,10 @@
-import type {
-  RestErrorInfo,
-  SearchStatus,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
-import type { RestErrorHandler } from "../api/base/restErrorWrapper";
-import { attendeeService } from "../services/attendeeService";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
+import { attendeeService } from "@/composables/services/attendeeService";
 import { doTrackedSearch } from "@/composables/search_status/doTrackedSearch";
-import type { ToastServiceMethods } from "primevue/toastservice";
+import type { RestErrorInfo } from "@/types/internal/rest";
+import type { SearchStatus } from "@/types/internal/component/regnumsearch";
+import type { OnsiteToastService } from "@/composables/services/toastService";
 
 async function handleSearch(
   regNumber: number,
@@ -39,16 +37,14 @@ async function handleSearch(
 export async function handleSingleAttendeeSearch(
   regNumber: number,
   searchStatusRef: Ref<SearchStatus>,
-  toast: ToastServiceMethods,
-  toastGroup: string
+  toastService: OnsiteToastService
 ): Promise<TransformedAttendeeInfo | null> {
   const resultRef: Ref<TransformedAttendeeInfo | null> =
     ref<TransformedAttendeeInfo | null>(null);
   await doTrackedSearch(
     regNumber,
     searchStatusRef,
-    toast,
-    toastGroup,
+    toastService,
     async (
       regNumber: number,
       errorHandler: RestErrorHandler

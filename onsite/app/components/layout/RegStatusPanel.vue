@@ -15,11 +15,11 @@
 
 <script setup lang="ts">
 import { getStatusStyle } from "@/composables/fields/status/getStatusStyle";
-import type { StatusValues } from "@/config/setupStatus";
 import type { ModelRef } from "vue";
+import type { AttendeeApiStatusValues } from "@/config/metadata/metadataForStatus";
 
-const modelValue: ModelRef<StatusValues | null> =
-  defineModel<StatusValues | null>({
+const modelValue: ModelRef<AttendeeApiStatusValues | null> =
+  defineModel<AttendeeApiStatusValues | null>({
     required: true,
   });
 </script>

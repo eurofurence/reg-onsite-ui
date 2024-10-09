@@ -18,15 +18,15 @@
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
-import { scheduleRegularTask } from "@/composables/events/scheduleRegularTask";
 import {
   AttendeeQueryStrategy,
   type AttendeeDataOptions,
-} from "@/types/internal";
+} from "@/types/internal/system/regdesk";
+import { scheduleRegularTask } from "@/composables/events/scheduleRegularTask";
 
-const scheduledTime: number = 5 * 60; // Every 5 minuts
-const scheduledTimeVariance: number = 60; // Introduce a variance of 1 minute
-const cooldownTime: number = 3; // Cooldown of 10 seconds between refreshs
+const scheduledInterval: number = 5 * 60; // Every 5 minuts
+const scheduledIntervalVariance: number = 60; // Introduce a variance of 1 minute
+const cooldownDuration: number = 3; // Cooldown of 10 seconds between refreshs
 
 const currentTimeRef: Ref<Date> = ref<Date>(new Date());
 const preloadTimeRef: Ref<Date | null> = ref<Date | null>(null);
@@ -48,7 +48,7 @@ function canReload(): boolean {
   }
   return (
     currentTimeRef.value.valueOf() - preloadTimeRef.value.valueOf() >
-    cooldownTime * 1000
+    cooldownDuration * 1000
   );
 }
 
@@ -66,8 +66,8 @@ scheduleRegularTask(() => {
 onMounted(triggerLoad);
 scheduleRegularTask(
   triggerLoad,
-  scheduledTime * 1000,
-  scheduledTimeVariance * 1000
+  scheduledInterval * 1000,
+  scheduledIntervalVariance * 1000
 );
 
 const dataOptionsRef: ModelRef<AttendeeDataOptions> =

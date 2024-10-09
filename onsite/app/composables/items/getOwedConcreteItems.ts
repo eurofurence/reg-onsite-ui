@@ -3,32 +3,33 @@ import { getAbstractFromConcreteItems } from "@/composables/items/getAbstractFro
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import { getDefaultVariantValues } from "@/composables/items/getDefaultVariantValues";
 import { getDefaultVariantValuesValue } from "@/composables/items/getDefaultVariantValuesValue";
-import { getTrinketFromAbstractItem } from "@/composables/items/getTrinketFromAbstractItem";
+import { getGoodieFromAbstractItem } from "@/composables/items/getGoodieFromAbstractItem";
 import {
   configFlagsToItemsMap,
   configPackageToItemsMap,
   configRegNumbersToItemsMap,
 } from "@/setupEFIteration";
 import type {
-  AbstractTrinketValue,
-  ConcreteTrinketValue,
-  TrinketConfig,
+  AbstractGoodieValue,
+  ConcreteGoodieValue,
+  GoodieConfig,
 } from "@/setupEFIteration";
 import type {
   FlagApiValue,
   PackageApiValue,
   PackageCountType,
-} from "@/types/external";
-import type { ApiSponsorDeskAddInfo } from "@/types/external";
-import type { TransformedAttendeeInfo } from "@/types/internal";
-import type { DefaultVariantValues, LabeledValue } from "@/types/internal";
+} from "@/types/external/attsrv/attendees/attendee";
+import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { DefaultVariantValues } from "@/types/internal/goodies";
+import type { LabeledValue } from "@/types/internal/infos";
 
 function getLabeledValue(
   defaultVariantValues: DefaultVariantValues,
-  abstractTrinketValue: AbstractTrinketValue
+  abstractGoodieValue: AbstractGoodieValue
 ): LabeledValue<string | null> | null {
   const defaultVariantValuesValue: string | null | undefined =
-    getDefaultVariantValuesValue(defaultVariantValues, abstractTrinketValue);
+    getDefaultVariantValuesValue(defaultVariantValues, abstractGoodieValue);
   if (defaultVariantValuesValue !== undefined) {
     return {
       label: "",
@@ -40,7 +41,7 @@ function getLabeledValue(
 
 function getConcreteItemsFromSponsorInfo(
   apiSponsorDeskAddInfo: ApiSponsorDeskAddInfo
-): ConcreteTrinketValue[] {
+): ConcreteGoodieValue[] {
   return [
     ...new Set([
       ...apiSponsorDeskAddInfo.pastItems,
@@ -54,17 +55,17 @@ function getAbstractItemsFromAttendeeInfo(
   package_count_list: PackageCountType<PackageApiValue>[],
   flags_list: FlagApiValue[],
   reg_id: number
-): AbstractTrinketValue[] {
+): AbstractGoodieValue[] {
   const packages_list: PackageApiValue[] = package_count_list.map(
     (item: PackageCountType<PackageApiValue>) => item.name
   );
-  const itemsForPackages: AbstractTrinketValue[] =
+  const itemsForPackages: AbstractGoodieValue[] =
     concatenateListsForMatchingKeys(packages_list, configPackageToItemsMap);
-  const itemsForFlags: AbstractTrinketValue[] = concatenateListsForMatchingKeys(
+  const itemsForFlags: AbstractGoodieValue[] = concatenateListsForMatchingKeys(
     flags_list,
     configFlagsToItemsMap
   );
-  const itemsForRegNumber: AbstractTrinketValue[] =
+  const itemsForRegNumber: AbstractGoodieValue[] =
     concatenateListsForMatchingKeys(
       [reg_id.toString()],
       configRegNumbersToItemsMap
@@ -77,38 +78,36 @@ function getAbstractItemsFromAttendeeInfo(
 export function getOwedConcreteItems(
   attendee: TransformedAttendeeInfo,
   apiSponsorDeskAddInfo: ApiSponsorDeskAddInfo
-): ConcreteTrinketValue[] {
-  const owedConcreteItemsFromSponsorInfo: ConcreteTrinketValue[] =
+): ConcreteGoodieValue[] {
+  const owedConcreteItemsFromSponsorInfo: ConcreteGoodieValue[] =
     getConcreteItemsFromSponsorInfo(apiSponsorDeskAddInfo);
-  const owedAbstractItemsFromSponsorInfo: AbstractTrinketValue[] =
+  const owedAbstractItemsFromSponsorInfo: AbstractGoodieValue[] =
     getAbstractFromConcreteItems(owedConcreteItemsFromSponsorInfo);
-  const owedAbstractItemsFromAttendeeInfo: AbstractTrinketValue[] =
+  const owedAbstractItemsFromAttendeeInfo: AbstractGoodieValue[] =
     getAbstractItemsFromAttendeeInfo(
       attendee.packages_list || [],
       attendee.flags_list || [],
       attendee.id || 0
     );
   const missingAbstractItems = owedAbstractItemsFromAttendeeInfo.filter(
-    (abstractItemFromAttendeeInfo: AbstractTrinketValue) =>
+    (abstractItemFromAttendeeInfo: AbstractGoodieValue) =>
       !owedAbstractItemsFromSponsorInfo.includes(abstractItemFromAttendeeInfo)
   );
   const defaultVariantValues: DefaultVariantValues = getDefaultVariantValues(
     attendee,
     apiSponsorDeskAddInfo
   );
-  const trinketConfigList: (TrinketConfig | null)[] = missingAbstractItems.map(
-    getTrinketFromAbstractItem
+  const goodieConfigList: (GoodieConfig | null)[] = missingAbstractItems.map(
+    getGoodieFromAbstractItem
   );
-  const cleanedTrinketConfigList: TrinketConfig[] = <TrinketConfig[]>(
-    trinketConfigList.filter(
-      (trinketConfig: TrinketConfig | null) => trinketConfig !== null
-    )
+  const cleanedGoodieConfigList: GoodieConfig[] = goodieConfigList.filter(
+    (goodieConfig: GoodieConfig | null) => goodieConfig !== null
   );
-  const missingConcreteItems = cleanedTrinketConfigList.map(
-    (trinketConfig: TrinketConfig) =>
+  const missingConcreteItems = cleanedGoodieConfigList.map(
+    (goodieConfig: GoodieConfig) =>
       getConcreteItemValue(
-        trinketConfig,
-        getLabeledValue(defaultVariantValues, trinketConfig.value)
+        goodieConfig,
+        getLabeledValue(defaultVariantValues, goodieConfig.value)
       )
   );
   return missingConcreteItems.concat(owedConcreteItemsFromSponsorInfo);

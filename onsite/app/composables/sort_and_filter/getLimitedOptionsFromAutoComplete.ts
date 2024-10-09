@@ -1,4 +1,5 @@
-import type { LabeledValue, TransformedAttendeeInfo } from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { LabeledValue } from "@/types/internal/infos";
 
 export function getLimitedOptionsFromAutoComplete<
   Type extends LabeledValue<ValueType>,
@@ -12,11 +13,9 @@ export function getLimitedOptionsFromAutoComplete<
   if (!autoCompleteData || !fieldName) {
     return configItems;
   }
-  const mappedValues: ValueType[] = <ValueType[]>(
-    autoCompleteData.map(
-      (item: TransformedAttendeeInfo) => item[fieldName] || ""
-    )
-  );
+  const mappedValues: ValueType[] = autoCompleteData.map(
+    (item: TransformedAttendeeInfo) => item[fieldName] || ""
+  ) as ValueType[];
   if (mappedValues.length > 0) {
     return configItems.filter(
       (item: Type) =>

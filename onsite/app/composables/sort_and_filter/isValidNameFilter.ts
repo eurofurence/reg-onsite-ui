@@ -4,5 +4,5 @@ export function isValidNameFilter(value: string | null): boolean {
   if (!hasFilterContent(value)) {
     return false;
   }
-  return (<string>value).length >= 2;
+  return (value as string).length >= 2;
 }

@@ -13,10 +13,10 @@
 </template>
 
 <script setup lang="ts">
-import { resolveColorEntry } from "@/components/field/common";
+import { resolveColorEntry } from "@/components/field/common/common";
 import { convertListToMap } from "@/composables/collection_tools/convertListToMap";
-import type { OptionalColoredIconLabeledValue } from "@/types/internal";
 import type { ModelRef } from "vue";
+import type { OptionalColoredIconLabeledValue } from "@/types/internal/infos";
 
 interface Props {
   configItems: OptionalColoredIconLabeledValue<string>[];

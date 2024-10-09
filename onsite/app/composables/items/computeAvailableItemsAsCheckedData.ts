@@ -1,38 +1,36 @@
 import { getRecordEntries } from "@/composables/collection_tools/getRecordEntries";
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
-import type { TShirtTypeValue } from "@/config/tshirt/setupTShirtTypes";
+import type { TShirtTypeValue } from "@/config/metadata/tshirt/metadataForTShirtTypes";
 import type {
-  AbstractTrinketValue,
-  ConcreteTrinketValue,
-  TrinketConfig,
+  AbstractGoodieValue,
+  ConcreteGoodieValue,
+  GoodieConfig,
 } from "@/setupEFIteration";
-import type { LabeledValue } from "@/types/internal";
 import type { WritableComputedRef } from "vue";
+import type { LabeledValue } from "@/types/internal/infos";
 
 interface CheckedItemData {
   checked: boolean;
   partialChecked: boolean;
 }
 
-export type CheckedData = Partial<
-  Record<ConcreteTrinketValue, CheckedItemData>
->;
+export type CheckedData = Partial<Record<ConcreteGoodieValue, CheckedItemData>>;
 
 export function computeAvailableItemsAsCheckedData(
-  availableItemsRef: Ref<ConcreteTrinketValue[]>,
-  allTrinketItems: TrinketConfig[]
+  availableItemsRef: Ref<ConcreteGoodieValue[]>,
+  allGoodieItems: GoodieConfig[]
 ): WritableComputedRef<CheckedData> {
   return computed<CheckedData>({
     get: () => {
       var result: CheckedData = {};
-      allTrinketItems.forEach((item: TrinketConfig) => {
-        const concreteTrinketValue: ConcreteTrinketValue = getConcreteItemValue(
+      allGoodieItems.forEach((item: GoodieConfig) => {
+        const concreteGoodieValue: ConcreteGoodieValue = getConcreteItemValue(
           item,
           null
         );
         if (item?.variants === undefined || item?.variants === null) {
-          if (availableItemsRef.value.includes(concreteTrinketValue)) {
-            result[concreteTrinketValue] = {
+          if (availableItemsRef.value.includes(concreteGoodieValue)) {
+            result[concreteGoodieValue] = {
               checked: true,
               partialChecked: false,
             };
@@ -41,11 +39,11 @@ export function computeAvailableItemsAsCheckedData(
           var hasActiveVariant = false;
           var hasInActiveVariant = false;
           item.variants.forEach((variant: LabeledValue<TShirtTypeValue>) => {
-            const concreteTrinketVariantValue: ConcreteTrinketValue =
+            const concreteGoodieVariantValue: ConcreteGoodieValue =
               getConcreteItemValue(item, variant);
-            if (availableItemsRef.value.includes(concreteTrinketVariantValue)) {
+            if (availableItemsRef.value.includes(concreteGoodieVariantValue)) {
               hasActiveVariant = true;
-              result[concreteTrinketVariantValue] = {
+              result[concreteGoodieVariantValue] = {
                 checked: true,
                 partialChecked: false,
               };
@@ -54,12 +52,12 @@ export function computeAvailableItemsAsCheckedData(
             }
           });
           if (hasActiveVariant && hasInActiveVariant) {
-            result[concreteTrinketValue] = {
+            result[concreteGoodieValue] = {
               checked: false,
               partialChecked: true,
             };
           } else if (hasActiveVariant && !hasInActiveVariant) {
-            result[concreteTrinketValue] = {
+            result[concreteGoodieValue] = {
               checked: true,
               partialChecked: false,
             };
@@ -69,21 +67,21 @@ export function computeAvailableItemsAsCheckedData(
       return result;
     },
     set: (new_value: CheckedData) => {
-      const itemsWithVariants: AbstractTrinketValue[] = allTrinketItems
+      const itemsWithVariants: AbstractGoodieValue[] = allGoodieItems
         .filter(
-          (item: TrinketConfig) =>
+          (item: GoodieConfig) =>
             item?.variants !== undefined && item?.variants !== null
         )
-        .map((item: TrinketConfig) => item.value);
-      const newAvailableItems: ConcreteTrinketValue[] = getRecordEntries(
+        .map((item: GoodieConfig) => item.value);
+      const newAvailableItems: ConcreteGoodieValue[] = getRecordEntries(
         new_value
       )
         .filter(
-          ([key, value]: [ConcreteTrinketValue, CheckedItemData]) =>
+          ([key, value]: [ConcreteGoodieValue, CheckedItemData]) =>
             value.checked &&
-            !itemsWithVariants.includes(key as AbstractTrinketValue)
+            !itemsWithVariants.includes(key as AbstractGoodieValue)
         )
-        .map(([key, _value]: [ConcreteTrinketValue, CheckedItemData]) => key);
+        .map(([key, _value]: [ConcreteGoodieValue, CheckedItemData]) => key);
       availableItemsRef.value = newAvailableItems;
     },
   });

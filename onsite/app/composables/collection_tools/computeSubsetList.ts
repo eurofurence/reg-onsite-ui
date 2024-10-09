@@ -7,7 +7,7 @@ function setSubsetList<TypeSubset extends TypeSuperset, TypeSuperset>(
   subset: TypeSubset[]
 ): TypeSuperset[] {
   const invertedList: TypeSuperset[] = data.filter(
-    (value: TypeSuperset) => !(<TypeSuperset[]>subset).includes(value)
+    (value: TypeSuperset) => !(subset as TypeSuperset[]).includes(value)
   );
   return invertedList.concat(new_value);
 }

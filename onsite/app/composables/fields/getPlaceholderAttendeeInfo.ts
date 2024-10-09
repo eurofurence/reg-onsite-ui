@@ -1,5 +1,5 @@
-import type { TransformedAttendeeInfo } from "@/types/internal";
-import { deepCopy } from "@/composables/state/deepCopy";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { deepCopy } from "@/composables/deepCopy";
 
 const placeholderAttendeeInfo: TransformedAttendeeInfo = {
   id: null,
@@ -24,7 +24,6 @@ const placeholderAttendeeInfo: TransformedAttendeeInfo = {
   transCanCheckin: null,
   transConbookChoice: null,
   transConRole: null,
-  transConRoleList: null,
   transCountryName: null,
   transGoodieChoice: null,
   transFullName: null,
@@ -41,5 +40,5 @@ const placeholderAttendeeInfo: TransformedAttendeeInfo = {
 export function getPlaceholderAttendeeInfo<
   Type extends TransformedAttendeeInfo
 >(): Type {
-  return deepCopy<Type>(<Type>placeholderAttendeeInfo);
+  return deepCopy<Type>(placeholderAttendeeInfo as Type);
 }

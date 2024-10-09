@@ -1,6 +1,6 @@
 import { getFirstElementFromList } from "@/composables/collection_tools/getFirstElementFromList";
 import { getSubsetList } from "@/composables/collection_tools/getSubsetList";
-import type { LabeledValue } from "@/types/internal";
+import type { LabeledValue } from "@/types/internal/infos";
 
 export function getSubsetChoice<TypeSubset extends TypeSuperset, TypeSuperset>(
   data: TypeSuperset[],

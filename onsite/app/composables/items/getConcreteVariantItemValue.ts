@@ -1,9 +1,9 @@
-import type { ConcreteTrinketValue, TrinketConfig } from "@/setupEFIteration";
-import type { LabeledValue } from "@/types/internal";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
+import type { LabeledValue } from "@/types/internal/infos";
 
 export function getConcreteVariantItemValue<Type>(
-  trinketConfig: TrinketConfig,
+  goodieConfig: GoodieConfig,
   variantConfig: LabeledValue<Type>
-): ConcreteTrinketValue {
-  return <ConcreteTrinketValue>`${trinketConfig.value}_${variantConfig.value}`;
+): ConcreteGoodieValue {
+  return `${goodieConfig.value}_${variantConfig.value}` as ConcreteGoodieValue;
 }

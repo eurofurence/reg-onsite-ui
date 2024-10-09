@@ -5,10 +5,10 @@
       class="grid gap-1 auto-cols-auto items-checkbox-list"
       :id="componentId"
     >
-      <div class="flex" v-for="trinketConfig of trinketConfigListRef">
+      <div class="flex" v-for="goodieConfig of goodieConfigListRef">
         <CustomSponsordeskItem
           :itemGroupId="itemGroupId"
-          :trinketConfig="trinketConfig"
+          :goodieConfig="goodieConfig"
           v-model="apiSDAddInfoRef.issuedItems"
           v-model:reservedItems="apiSDAddInfoRef.reservedItems"
           v-model:defaultVariantValues="defaultVariantValuesRef"
@@ -16,38 +16,36 @@
         />
       </div>
     </div>
-    <div v-if="trinketConfigListRef.length === 0">Nothing to issue...</div>
+    <div v-if="goodieConfigListRef.length === 0">Nothing to issue...</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { fieldCSS, fieldLabelCSS } from "@/components/field/common";
-import type { ApiSponsorDeskAddInfo } from "@/types/external";
-import type {
-  DefaultVariantValues,
-  SponsorDeskSettings,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
+import { fieldCSS, fieldLabelCSS } from "@/components/field/common/common";
+import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 import type { ModelRef } from "vue";
 
 import { getSubsetList } from "@/composables/collection_tools/getSubsetList";
 import { getAbstractFromConcreteItems } from "@/composables/items/getAbstractFromConcreteItems";
 import { getDefaultVariantValues } from "@/composables/items/getDefaultVariantValues";
 import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
-import { getTrinketItemsSubset } from "@/composables/items/getTrinketItemsSubset";
-import type { AbstractTrinketValue, TrinketConfig } from "@/setupEFIteration";
+import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
+import type { AbstractGoodieValue, GoodieConfig } from "@/setupEFIteration";
+import type { DefaultVariantValues } from "@/types/internal/goodies";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
 
-const trinketConfigListRef: ComputedRef<TrinketConfig[]> = computed<
-  TrinketConfig[]
+const goodieConfigListRef: ComputedRef<GoodieConfig[]> = computed<
+  GoodieConfig[]
 >(() => {
   const owedConcreteitems = getOwedConcreteItems(
     attendeeInfoRef.value,
     apiSDAddInfoRef.value
   );
   const owedAbstractItemList = getAbstractFromConcreteItems(owedConcreteitems);
-  const enabledAbstractItemList: AbstractTrinketValue[] =
+  const enabledAbstractItemList: AbstractGoodieValue[] =
     getSubsetList(owedAbstractItemList, props.deskItemSubset) || [];
-  return getTrinketItemsSubset(enabledAbstractItemList);
+  return getGoodieItemsSubset(enabledAbstractItemList);
 });
 
 const defaultVariantValuesRef: ComputedRef<DefaultVariantValues> =
@@ -72,7 +70,7 @@ const sponsorDeskSettingsRef: ModelRef<SponsorDeskSettings> =
   });
 
 interface Props {
-  deskItemSubset: AbstractTrinketValue[];
+  deskItemSubset: AbstractGoodieValue[];
 }
 const props: Props = defineProps<Props>();
 const componentId: string = generateId(useId());

@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { hasDayAttendance } from "@/composables/fields/attendence/hasDayAttendance";
 import { hasRoles } from "@/composables/fields/conrole/hasRoles";
-import type { TransformedAttendeeInfo } from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { ModelRef } from "vue";
 
 const attendeeInfoRef: ModelRef<TransformedAttendeeInfo> =

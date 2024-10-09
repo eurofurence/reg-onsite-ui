@@ -27,7 +27,11 @@
       v-model:resetOnNextNumber="resetOnNextNumber"
       @numberSubmit="onNumberSubmit"
       :max="maxNumber"
-      :severityOK="props.severityOK === null ? undefined : props.severityOK"
+      :severitySubmitButton="
+        props.severitySubmitButton === null
+          ? undefined
+          : props.severitySubmitButton
+      "
     />
   </div>
 </template>
@@ -40,7 +44,8 @@ import {
   keyboardService,
 } from "@/composables/services/keyboardService";
 import type { ModelRef } from "vue";
-import type { SeverityValue } from "@/types/internal";
+import { getInputElement } from "@/composables/getInputElement";
+import type { ButtonSeverityValue } from "@/types/internal/primevue";
 
 var resetOnNextNumber: Ref<boolean> = ref<boolean>(true);
 
@@ -55,6 +60,7 @@ async function focusRegNumberInputAndHandleReset(): Promise<void> {
 async function focusRegNumberInput(): Promise<void> {
   const inputElement: HTMLInputElement = getInputElement(inputElementId);
   inputElement.focus();
+  // Position cursor at the end of the input
   inputElement.setSelectionRange(
     inputElement.value.length,
     inputElement.value.length
@@ -108,9 +114,11 @@ keyboardService.registerShortcuts(
 
 interface Props {
   maxNumber: number;
-  severityOK: SeverityValue | null;
+  severitySubmitButton: ButtonSeverityValue | null;
 }
-const props: Props = withDefaults(defineProps<Props>(), { severityOK: null });
+const props: Props = withDefaults(defineProps<Props>(), {
+  severitySubmitButton: null,
+});
 const modelValue: ModelRef<number | null> = defineModel<number | null>({
   required: true,
 });

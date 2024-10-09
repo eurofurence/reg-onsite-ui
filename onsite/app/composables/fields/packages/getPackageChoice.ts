@@ -1,7 +1,10 @@
 import { getSubsetChoice } from "@/composables/collection_tools/getSubsetChoice";
 import { getPurePackageList } from "@/composables/fields/packages/getPurePackageList";
-import type { PackageApiValue, PackageCountType } from "@/types/external";
-import type { LabeledValue } from "@/types/internal";
+import type {
+  PackageApiValue,
+  PackageCountType,
+} from "@/types/external/attsrv/attendees/attendee";
+import type { LabeledValue } from "@/types/internal/infos";
 
 export function getPackageChoice<Type extends PackageApiValue>(
   data: PackageCountType<PackageApiValue>[],

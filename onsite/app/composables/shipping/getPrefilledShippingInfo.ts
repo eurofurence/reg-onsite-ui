@@ -1,35 +1,35 @@
-import { getTrinketFromConcreteItem } from "@/composables/items/getTrinketFromConcreteItem";
+import { getGoodieFromConcreteItem } from "@/composables/items/getGoodieFromConcreteItem";
 import { getEmptyShippingAddInfo } from "@/composables/shipping/getEmptyShippingAddInfo";
 import {
   type TShirtInfo,
   type TShirtTypeValue,
-  setupTShirtTypesInternal,
-} from "@/config/tshirt/setupTShirtTypes";
-import { TShirtType } from "@/config/tshirt/setupTShirtTypes";
-import type { ConcreteTrinketValue, TrinketConfig } from "@/setupEFIteration";
-import type { ApiShippingAddInfo } from "@/types/external";
-import type { TransformedAttendeeInfo } from "@/types/internal";
+  metadataListForTShirtTypesInternal,
+} from "@/config/metadata/tshirt/metadataForTShirtTypes";
+import { TShirtType } from "@/config/metadata/tshirt/metadataForTShirtTypes";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
+import type { ApiShippingAddInfo } from "@/types/external/attsrv/additional-info/shipping";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { CountryCode } from "@/config/metadata/metadataForCountry";
 
 function getTShirtTypeFromMissingItems(
-  missingItems: ConcreteTrinketValue[]
+  missingItems: ConcreteGoodieValue[]
 ): TShirtTypeValue | undefined {
-  const missingTShirtValue: ConcreteTrinketValue | undefined =
-    missingItems.find((item: ConcreteTrinketValue) =>
-      item.startsWith("tshirt_")
-    );
+  const missingTShirtValue: ConcreteGoodieValue | undefined = missingItems.find(
+    (item: ConcreteGoodieValue) => item.startsWith("tshirt_")
+  );
   if (!missingTShirtValue) {
     return;
   }
-  const trinket: TrinketConfig | null =
-    getTrinketFromConcreteItem(missingTShirtValue);
-  if (!trinket) {
+  const goodie: GoodieConfig | null =
+    getGoodieFromConcreteItem(missingTShirtValue);
+  if (!goodie) {
     return;
   }
 }
 
 export function getPrefilledShippingInfo<Type extends TransformedAttendeeInfo>(
   storedAttendeeInfo: Type,
-  missingItems: ConcreteTrinketValue[]
+  missingItems: ConcreteGoodieValue[]
 ): ApiShippingAddInfo {
   var result = getEmptyShippingAddInfo();
   result.id = storedAttendeeInfo.id || 0;
@@ -40,14 +40,14 @@ export function getPrefilledShippingInfo<Type extends TransformedAttendeeInfo>(
   result.zip = storedAttendeeInfo.zip || "";
   result.email = storedAttendeeInfo.email || "";
   result.city = storedAttendeeInfo.city || "";
-  result.country = storedAttendeeInfo.country || "";
+  result.country = (storedAttendeeInfo.country || "") as CountryCode;
   result.state = storedAttendeeInfo.state || "";
 
   const tshirtType: TShirtTypeValue =
     getTShirtTypeFromMissingItems(missingItems) ||
     storedAttendeeInfo?.tshirt_size ||
     TShirtType.regular_m;
-  setupTShirtTypesInternal.forEach((item: TShirtInfo) => {
+  metadataListForTShirtTypesInternal.forEach((item: TShirtInfo) => {
     if (item.value === tshirtType) {
       result.tshirt_shape = item.shape;
       result.tshirt_size = item.size;

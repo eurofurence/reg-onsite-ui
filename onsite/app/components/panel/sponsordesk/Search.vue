@@ -1,5 +1,8 @@
 <template>
-  <ConfirmDialog :group="dialogGroup" :breakpoints="getDialogBreakPoints()" />
+  <ConfirmDialog
+    :group="confirmService.confirmGroup"
+    :breakpoints="getDialogBreakPoints()"
+  />
   <div
     class="route-target"
     :id="getRegNumberFromRoute()?.toString() || componentId"
@@ -8,9 +11,9 @@
     <InputFieldWithKeyPad
       v-model="inputRegNumber"
       @numberSubmit="onSearchRegNumber"
-      :maxNumber="setupRegNum.maxRegNumber"
-      :severityOK="
-        inputRegNumber !== null && isDirty ? Severity.secondary : null
+      :maxNumber="conventionSetup.maxRegNumber"
+      :severitySubmitButton="
+        inputRegNumber !== null && isDirty ? ButtonSeverity.secondary : null
       "
     />
   </LayoutGroupPanel>
@@ -21,13 +24,12 @@ import { confirmIfDirty } from "@/composables/dirty/confirmIfDirty";
 import { isDirty } from "@/composables/dirty/isDirty";
 import { getRegNumberFromRoute } from "@/composables/route/getRegNumberFromRoute";
 import { authService } from "@/composables/services/authService";
-import { setupRegNum } from "@/config/setupReg";
-import { getDialogBreakPoints } from "@/config/theme";
-import type { ConfirmServiceMethods } from "@/types/external";
+import { conventionSetup } from "@/config/convention";
+import { getDialogBreakPoints } from "@/config/theme/common";
 import type { RouteLocationNormalizedLoaded } from "vue-router";
-import { Severity } from "@/types/internal";
+import { ButtonSeverity } from "@/types/internal/primevue";
+import { OnsiteConfirmService } from "@/composables/services/confirmService";
 
-const confirm: ConfirmServiceMethods = useConfirm();
 const route: RouteLocationNormalizedLoaded = useRoute();
 
 const inputRegNumber: Ref<number | null> = ref<number | null>(null);
@@ -61,7 +63,7 @@ async function onSearchRegNumber(): Promise<void> {
   const regNumberFromRoute: number | null = getRegNumberFromRoute();
   if (regNumberFromRoute !== inputRegNumber.value) {
     const regNumber: number | null = inputRegNumber.value;
-    confirmIfDirty(confirm, dialogGroup, async () => {
+    confirmIfDirty(confirmService, async () => {
       await setRegNumberRoute(regNumber);
     });
   }
@@ -69,5 +71,7 @@ async function onSearchRegNumber(): Promise<void> {
 
 const emit: CallableFunction = defineEmits(["onSearchRegNumber"]);
 const componentId: string = generateId(useId());
-const dialogGroup: string = `checkSearchDialog${componentId}`;
+const confirmService: OnsiteConfirmService = new OnsiteConfirmService(
+  componentId
+);
 </script>

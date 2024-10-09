@@ -30,23 +30,21 @@ import {
   ShortcutScope,
   keyboardService,
 } from "@/composables/services/keyboardService";
-import { EnvName } from "@/types/internal";
 import { attendeeService } from "@/composables/services/attendeeService";
 import type { ModelRef } from "vue";
+import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import type {
   AttendeeDataOptions,
   AttendeeTableDisplayOptions,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
-import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
-import type { ToastServiceMethods } from "primevue/toastservice";
-
-const toast: ToastServiceMethods = useToast();
+} from "@/types/internal/system/regdesk";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { EnvName } from "@/types/internal/env";
+import { OnsiteToastService } from "@/composables/services/toastService";
 
 async function debugLoadAll(): Promise<void> {
   transformedAttendeeListRef.value =
     (await attendeeService.getAllAttendees(
-      getErrorHandlerFunction(toast, componentId)
+      getErrorHandlerFunction(toastService)
     )) || [];
 }
 
@@ -56,9 +54,11 @@ async function debugLoadDummy(): Promise<void> {
 
 function getDebugOutput(): string {
   const filteredListStr = JSON.stringify(transformedAttendeeListRef.value);
-  const filtersStr = JSON.stringify(dataOptionsRef.value.filters);
+  const filtersStr = JSON.stringify(
+    dataOptionsRef.value.filterConfig.filterValues
+  );
   const globalSearchStr = JSON.stringify(
-    dataOptionsRef.value.globalFilterFields
+    dataOptionsRef.value.filterConfig.globalFilterFields
   );
   return `testFilter(
         ${filteredListStr}
@@ -84,6 +84,7 @@ const transformedAttendeeListRef: ModelRef<TransformedAttendeeInfo[]> =
     required: true,
   });
 const componentId: string = generateId(useId());
+const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 
 const debugModeRef: Ref<boolean> = ref<boolean>(false);
 async function toggleDebug(): Promise<void> {

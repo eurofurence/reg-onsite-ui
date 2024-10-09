@@ -14,7 +14,8 @@
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
-import type { SearchStatus, TransformedAttendeeInfo } from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { SearchStatus } from "@/types/internal/component/regnumsearch";
 
 const searchStatusRef: ModelRef<SearchStatus> = defineModel<SearchStatus>(
   "searchStatus",

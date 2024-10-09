@@ -1,5 +1,5 @@
-import { getFrontendUserInfo } from "@/composables/api/getFrontendUserInfo";
-import { getLoginUrl } from "@/composables/api/getLoginUrl";
+import { getFrontendUserInfo } from "@/composables/api/authsrv/getFrontendUserInfo";
+import { getLoginUrl } from "@/composables/api/authsrv/getLoginUrl";
 import { authState } from "@/composables/state/authState";
 
 function onLogin(fun: CallableFunction): void {

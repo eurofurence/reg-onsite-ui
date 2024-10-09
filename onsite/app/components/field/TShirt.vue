@@ -22,16 +22,15 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { getGroupedTShirtOptions } from "@/composables/fields/tshirt/getGroupedTShirtOptions";
 import {
   type TShirtTypeValue,
   setupTShirtTypePlaceholder,
-} from "@/config/tshirt/setupTShirtTypes";
+} from "@/config/metadata/tshirt/metadataForTShirtTypes";
 import type { ModelRef } from "vue";
 
-const modelValue: ModelRef<TShirtTypeValue | undefined> = defineModel<
-  TShirtTypeValue | undefined
->({ required: true });
+const modelValue: ModelRef<TShirtTypeValue | null> =
+  defineModel<TShirtTypeValue | null>({ required: true });
 const componentId: string = generateId(useId());
 </script>

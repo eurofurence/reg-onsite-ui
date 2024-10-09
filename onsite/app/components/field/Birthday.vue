@@ -28,7 +28,7 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { getBirthdayFlag } from "@/composables/fields/birthday/getBirthdayFlag";
 import { getBirthdayNote } from "@/composables/fields/birthday/getBirthdayNote";
 import { isValidAge } from "@/composables/fields/birthday/isValidAge";

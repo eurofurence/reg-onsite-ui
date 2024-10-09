@@ -1,5 +1,5 @@
 import type { DataTableFilterMetaData } from "primevue/datatable";
-import type { MatchStringAgainstValue } from "@/types/internal";
+import type { MatchStringAgainstValue } from "@/types/internal/filter";
 
 function getSupportedStringMatchers(): Map<string, MatchStringAgainstValue> {
   const result: Map<string, MatchStringAgainstValue> = new Map();
@@ -26,7 +26,7 @@ export function getMatcherStringAgainstValue(
   filter: DataTableFilterMetaData
 ): MatchStringAgainstValue {
   const matcher: MatchStringAgainstValue | undefined = supportedMatchers.get(
-    <string>filter.matchMode
+    filter.matchMode as string
   );
   if (matcher === undefined) {
     throw new Error(`Unknown matcher ${filter.matchMode}!`);

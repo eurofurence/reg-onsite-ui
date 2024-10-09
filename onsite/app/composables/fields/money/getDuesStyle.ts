@@ -1,5 +1,5 @@
 import { resolveColor } from "@/composables/colors/resolveColor";
-import { ColorsPalette } from "@/config/theme";
+import { ColorsPalette } from "@/composables/theme/colors";
 
 export function getDuesStyle(value: number): any {
   if (value > 0) {

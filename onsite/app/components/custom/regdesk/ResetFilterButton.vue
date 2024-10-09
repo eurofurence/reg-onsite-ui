@@ -9,9 +9,9 @@
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
-import type { AttendeeDataOptions } from "@/types/internal";
 import { isFilterPristine } from "@/composables/filter/isFilterPristine";
 import { doResetFilters } from "@/composables/filter/doResetFilters";
+import type { AttendeeDataOptions } from "@/types/internal/system/regdesk";
 
 function onResetFilters() {
   doResetFilters(dataOptionsRef);

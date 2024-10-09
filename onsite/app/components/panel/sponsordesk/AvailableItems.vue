@@ -1,5 +1,5 @@
 <template>
-  <Toast :group="toastGroup" position="bottom-right" />
+  <Toast :group="toastService.toastGroup" position="bottom-right" />
   <div>
     <div class="pb-1" v-if="isLoadingSponsorStats">
       <ProgressBar mode="indeterminate"></ProgressBar>
@@ -28,26 +28,20 @@ import { getConcreteVariantItemValue } from "@/composables/items/getConcreteVari
 import { getEmptySponsorDeskAddInfo } from "@/composables/items/getEmptySponsorDeskAddInfo";
 import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
 import { attendeeService } from "@/composables/services/attendeeService";
-import type { ConcreteTrinketValue, TrinketConfig } from "@/setupEFIteration";
-import type {
-  ApiAllSponsorDeskAddInfo,
-  ApiSponsorDeskAddInfo,
-} from "@/types/external";
-import type {
-  LabeledValue,
-  TransformedAttendeeInfo,
-  TrinketTreeNode,
-} from "@/types/internal";
-import type { ToastServiceMethods } from "primevue/toastservice";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
 import type { ModelRef } from "vue";
 import type { WritableComputedRef } from "vue";
-
-const toast: ToastServiceMethods = useToast();
+import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { GoodieTreeNode } from "@/types/internal/goodies";
+import type { LabeledValue } from "@/types/internal/infos";
+import { OnsiteToastService } from "@/composables/services/toastService";
+import type { ApiAllAddInfo } from "@/types/external/attsrv/additional-info/common";
 
 const isLoadingSponsorStats = ref(false);
 
 interface SponsorStats {
-  rawData: ApiAllSponsorDeskAddInfo;
+  rawData: ApiAllAddInfo<ApiSponsorDeskAddInfo>;
   allServedAttendees: number[];
   allIssuedItems: string[];
   allPastItems: string[];
@@ -60,7 +54,7 @@ const sponsorStatsRef: Ref<SponsorStats | null> = ref<SponsorStats | null>(
 );
 
 function compileStats(
-  allSponsorInfo: ApiAllSponsorDeskAddInfo,
+  allSponsorInfo: ApiAllAddInfo<ApiSponsorDeskAddInfo>,
   allAttendes: TransformedAttendeeInfo[]
 ): SponsorStats {
   const emptySponsorInfo: ApiSponsorDeskAddInfo = getEmptySponsorDeskAddInfo();
@@ -91,22 +85,22 @@ function compileStats(
 
 onMounted(async () => {
   isLoadingSponsorStats.value = true;
-  const errorHandler: RestErrorHandler = getErrorHandlerFunction(
-    toast,
-    toastGroup
+  const errorHandler: RestErrorHandler = getErrorHandlerFunction(toastService);
+  const allSponsorDeskAddInfos:
+    | ApiAllAddInfo<ApiSponsorDeskAddInfo>
+    | undefined = await attendeeService.addInfos.getAllSponsorDeskAddInfos(
+    errorHandler
   );
-  const allSponsorDeskAddInfos: ApiAllSponsorDeskAddInfo | null =
-    await attendeeService.getAllSponsorDeskAddInfos(errorHandler);
   const allAttendes: TransformedAttendeeInfo[] =
     (await attendeeService.getAllAttendees(errorHandler)) || [];
-  if (allSponsorDeskAddInfos !== null) {
+  if (allSponsorDeskAddInfos !== undefined) {
     sponsorStatsRef.value = compileStats(allSponsorDeskAddInfos, allAttendes);
   }
-  nodesRef.value = getTrinketTree(props.allTrinketItems);
+  nodesRef.value = getGoodieTree(props.allGoodieItems);
   isLoadingSponsorStats.value = false;
 });
 
-function lookupStats(node: TrinketTreeNode): TrinketTreeNode {
+function lookupStats(node: GoodieTreeNode): GoodieTreeNode {
   function filterIssuedReserved(item: ApiSponsorDeskAddInfo) {
     if (item.issuedItems === undefined || item.reservedItems === undefined) {
       return false;
@@ -137,52 +131,52 @@ function lookupStats(node: TrinketTreeNode): TrinketTreeNode {
   return node;
 }
 
-function getTrinketVariantNode(
-  trinketConfig: TrinketConfig,
+function getGoodieVariantNode(
+  goodieConfig: GoodieConfig,
   variantConfig: LabeledValue<string>
-): TrinketTreeNode {
+): GoodieTreeNode {
   return lookupStats({
-    key: getConcreteVariantItemValue(trinketConfig, variantConfig),
+    key: getConcreteVariantItemValue(goodieConfig, variantConfig),
     data: variantConfig,
   });
 }
 
-function getTrinketNode(trinketConfig: TrinketConfig): TrinketTreeNode {
-  const headConcreteTrinketValue: ConcreteTrinketValue = getConcreteItemValue(
-    trinketConfig,
+function getGoodieNode(goodieConfig: GoodieConfig): GoodieTreeNode {
+  const headConcreteGoodieValue: ConcreteGoodieValue = getConcreteItemValue(
+    goodieConfig,
     null
   );
-  if (trinketConfig.variants === undefined) {
+  if (goodieConfig.variants === undefined) {
     return lookupStats({
-      key: headConcreteTrinketValue,
-      data: trinketConfig,
+      key: headConcreteGoodieValue,
+      data: goodieConfig,
     });
   }
-  const variantChildren: TrinketTreeNode[] =
-    trinketConfig?.variants?.map((variantConfig: LabeledValue<string>) =>
-      getTrinketVariantNode(trinketConfig, variantConfig)
+  const variantChildren: GoodieTreeNode[] =
+    goodieConfig?.variants?.map((variantConfig: LabeledValue<string>) =>
+      getGoodieVariantNode(goodieConfig, variantConfig)
     ) || [];
-  function sumStats(statAccess: (entry: TrinketTreeNode) => number): number {
+  function sumStats(statAccess: (entry: GoodieTreeNode) => number): number {
     return variantChildren
-      .map((entry: TrinketTreeNode) => statAccess(entry))
+      .map((entry: GoodieTreeNode) => statAccess(entry))
       .reduce((a: number, b: number) => a + b, 0);
   }
   return {
-    key: headConcreteTrinketValue,
+    key: headConcreteGoodieValue,
     data: {
-      ...trinketConfig,
+      ...goodieConfig,
       ...{
         issuedCount: sumStats(
-          (entry: TrinketTreeNode) => entry.data.issuedCount || 0
+          (entry: GoodieTreeNode) => entry.data.issuedCount || 0
         ),
         reservedCount: sumStats(
-          (entry: TrinketTreeNode) => entry.data.reservedCount || 0
+          (entry: GoodieTreeNode) => entry.data.reservedCount || 0
         ),
         reservedIssuedCount: sumStats(
-          (entry: TrinketTreeNode) => entry.data.reservedIssuedCount || 0
+          (entry: GoodieTreeNode) => entry.data.reservedIssuedCount || 0
         ),
         plannedCount: sumStats(
-          (entry: TrinketTreeNode) => entry.data.plannedCount || 0
+          (entry: GoodieTreeNode) => entry.data.plannedCount || 0
         ),
       },
     },
@@ -190,25 +184,25 @@ function getTrinketNode(trinketConfig: TrinketConfig): TrinketTreeNode {
   };
 }
 
-function getTrinketTree(trinketConfigList: TrinketConfig[]): TrinketTreeNode[] {
-  return trinketConfigList.map(getTrinketNode);
+function getGoodieTree(goodieConfigList: GoodieConfig[]): GoodieTreeNode[] {
+  return goodieConfigList.map(getGoodieNode);
 }
 
 interface Props {
-  allTrinketItems: TrinketConfig[];
+  allGoodieItems: GoodieConfig[];
 }
 const props: Props = defineProps<Props>();
-const availableItemsRef: ModelRef<ConcreteTrinketValue[]> = defineModel<
-  ConcreteTrinketValue[]
+const availableItemsRef: ModelRef<ConcreteGoodieValue[]> = defineModel<
+  ConcreteGoodieValue[]
 >({
   required: true,
 });
 const availableItemsAsCheckedDataRef: WritableComputedRef<CheckedData> =
-  computeAvailableItemsAsCheckedData(availableItemsRef, props.allTrinketItems);
+  computeAvailableItemsAsCheckedData(availableItemsRef, props.allGoodieItems);
 
-const nodesRef: Ref<TrinketTreeNode[]> = ref<TrinketTreeNode[]>(
-  getTrinketTree(props.allTrinketItems)
+const nodesRef: Ref<GoodieTreeNode[]> = ref<GoodieTreeNode[]>(
+  getGoodieTree(props.allGoodieItems)
 );
 const componentId: string = generateId(useId());
-const toastGroup: string = `availableItemsToast${componentId}`;
+const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 </script>

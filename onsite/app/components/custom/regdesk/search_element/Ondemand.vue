@@ -14,7 +14,7 @@ import type { ModelRef } from "vue";
 import {
   AttendeeQueryStrategy,
   type AttendeeDataOptions,
-} from "@/types/internal";
+} from "@/types/internal/system/regdesk";
 
 const dataOptionsRef: ModelRef<AttendeeDataOptions> =
   defineModel<AttendeeDataOptions>({ required: true });

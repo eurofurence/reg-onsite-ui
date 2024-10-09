@@ -1,6 +1,6 @@
 <template>
   <ConfirmDialog
-    :group="dialogGroup"
+    :group="confirmService.confirmGroup"
     :breakpoints="getDialogBreakPoints()"
     pt:pcRejectButton:root:style:display="none"
   >
@@ -18,25 +18,21 @@
 </template>
 
 <script setup lang="ts">
-import { getDialogBreakPoints } from "@/config/theme";
-import type { ConfirmServiceMethods } from "@/types/external";
-import { useConfirm } from "primevue/useconfirm";
-import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
-
-const confirm: ConfirmServiceMethods = useConfirm();
+import { getDialogBreakPoints } from "@/config/theme/common";
+import { OnsiteConfirmService } from "@/composables/services/confirmService";
+import { ShortcutScope } from "@/composables/services/keyboardService";
 
 function showHelp(): void {
-  keyboardService.pushScope(ShortcutScope.confirmHelp);
-  confirm.require({
-    group: dialogGroup,
+  confirmService.require(ShortcutScope.confirm_show_help, {
     header: "Help",
     acceptLabel: "Ok",
     rejectClass: "hidden",
     icon: "pi pi-question-circle",
   });
-  keyboardService.popScope(ShortcutScope.confirmHelp);
 }
 
 const componentId: string = generateId(useId());
-const dialogGroup: string = `helpDialog${componentId}`;
+const confirmService: OnsiteConfirmService = new OnsiteConfirmService(
+  componentId
+);
 </script>

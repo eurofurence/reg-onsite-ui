@@ -1,17 +1,22 @@
-import { getCountryName } from "../fields/country/getCountryName";
+import { getCountryName } from "@/composables/fields/country/getCountryName";
 import { getSubsetChoice } from "@/composables/collection_tools/getSubsetChoice";
-import { getConRoleChoice } from "@/composables/fields/conrole/getConRoleChoice";
+import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRoleChoice";
 import { getPackageChoice } from "@/composables/fields/packages/getPackageChoice";
-import { setupConBookChoices } from "@/config/flags/setupConBookChoices";
-import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
-import type { TransformedAttendeeInfo, ValueGetter } from "@/types/internal";
-import { setupGoodiesLevels } from "@/config/setupGoodiesLevels";
+import { metadataListForConBookChoice } from "@/config/metadata/flags/metadataForConBookChoice";
+import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
 import { getAttendeeDummyFun } from "@/composables/sort_and_filter/getAttendeeDummyFun";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { metadataListForGoodiesLevels } from "@/config/metadata/packages/metadataForGoodiesLevels";
+import type { ValueGetter } from "@/types/internal/sort";
+import type { CountryCode } from "@/config/metadata/metadataForCountry";
 
 function getAttendeeCountry<Type extends TransformedAttendeeInfo>(
   attendee: Type
 ): string {
-  return attendee.transCountryName || getCountryName(attendee.country || "");
+  return (
+    attendee.transCountryName ||
+    getCountryName(attendee.country || ("" as CountryCode))
+  );
 }
 
 function getAttendeeConbook<Type extends TransformedAttendeeInfo>(
@@ -19,7 +24,7 @@ function getAttendeeConbook<Type extends TransformedAttendeeInfo>(
 ): string {
   return (
     attendee.transConbookChoice ||
-    getSubsetChoice(attendee.flags_list || [], setupConBookChoices) ||
+    getSubsetChoice(attendee.flags_list || [], metadataListForConBookChoice) ||
     ""
   );
 }
@@ -29,7 +34,7 @@ function getAttendeeConRole<Type extends TransformedAttendeeInfo>(
 ): string {
   return (
     attendee.transConRole ||
-    getConRoleChoice(attendee.flags_list, attendee.id).value
+    getMainConRoleChoice(attendee.flags_list, attendee.id).value
   );
 }
 
@@ -37,7 +42,10 @@ function getAttendeeSponsor<Type extends TransformedAttendeeInfo>(
   attendee: Type
 ): string {
   return (
-    getPackageChoice(attendee.packages_list || [], setupSponsorLevels) || ""
+    getPackageChoice(
+      attendee.packages_list || [],
+      metadataListForSponsorLevels
+    ) || ""
   );
 }
 
@@ -45,7 +53,10 @@ function getAttendeeGoodies<Type extends TransformedAttendeeInfo>(
   attendee: Type
 ): string {
   return (
-    getPackageChoice(attendee.packages_list || [], setupGoodiesLevels) || ""
+    getPackageChoice(
+      attendee.packages_list || [],
+      metadataListForGoodiesLevels
+    ) || ""
   );
 }
 
@@ -56,7 +67,7 @@ type AllowedFieldsWithType<Obj, Type> = {
 function getAttendeeStringFun<Type extends TransformedAttendeeInfo>(
   fieldName: keyof AllowedFieldsWithType<Type, string>
 ): ValueGetter<Type> {
-  return (attendee: Type) => <string>attendee[fieldName];
+  return (attendee: Type) => attendee[fieldName] as string;
 }
 
 function getAttendeeNumberFun<Type extends TransformedAttendeeInfo>(
@@ -83,7 +94,6 @@ export function getFieldGetters(): Record<
     country: getAttendeeCountry,
     transCountryName: getAttendeeCountry,
     transCanCheckin: getAttendeeBooleanFun("transCanCheckin"),
-    transConRoleList: getAttendeeConRole,
     transConbookChoice: getAttendeeConbook,
     transGoodieChoice: getAttendeeGoodies,
     transConRole: getAttendeeConRole,

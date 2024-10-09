@@ -1,4 +1,4 @@
-import { setupRegNum } from "@/config/setupReg";
+import { conventionSetup } from "@/config/convention";
 import type { RouteLocationNormalizedLoaded } from "vue-router";
 
 const route: RouteLocationNormalizedLoaded = useRoute();
@@ -8,7 +8,7 @@ export function getRegNumberFromRoute(): number | null {
   if (
     isNaN(regNumber) ||
     regNumber < 0 ||
-    regNumber > setupRegNum.maxRegNumber
+    regNumber > conventionSetup.maxRegNumber
   ) {
     return null;
   }

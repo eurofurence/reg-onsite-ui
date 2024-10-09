@@ -1,6 +1,5 @@
 <template>
-  <Toast position="bottom-right" group="global" />
-  <div class="flex flex-col h-screen ef-app">
+  <div class="flex flex-col h-screen">
     <div class="p-px">
       <HeaderLoginPanel :title="props.title" :theming="props.theming">
         <template #help v-if="$slots.help">
@@ -19,10 +18,6 @@
 
 <script setup lang="ts">
 import { authState } from "@/composables/state/authState";
-import { initTheme } from "@/composables/theme/initTheme";
-import Toast from "primevue/toast";
-
-initTheme();
 
 interface Props {
   title: string;
@@ -32,9 +27,3 @@ const props = withDefaults(defineProps<Props>(), {
   theming: true,
 });
 </script>
-
-<style>
-.ef-app .p-skeleton::after {
-  animation: p-skeleton-animation 5s infinite;
-}
-</style>

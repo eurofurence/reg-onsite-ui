@@ -1,5 +1,5 @@
 import { resolveColor } from "@/composables/colors/resolveColor";
-import type { ColorsPaletteValue } from "@/config/theme";
+import type { ColorsPaletteValue } from "@/composables/theme/colors";
 
 export function getGradientStyle(
   mainColor: ColorsPaletteValue,

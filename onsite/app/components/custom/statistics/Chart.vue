@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ChartData } from "@/types/internal";
 import Chart from "primevue/chart";
+import type { ChartData } from "@/types/internal/statistics";
 
 const defaultChartOptions: any = {
   plugins: {

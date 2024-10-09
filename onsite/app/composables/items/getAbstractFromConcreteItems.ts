@@ -1,18 +1,18 @@
-import { getTrinketFromConcreteItem } from "@/composables/items/getTrinketFromConcreteItem";
+import { getGoodieFromConcreteItem } from "@/composables/items/getGoodieFromConcreteItem";
 import type {
-  AbstractTrinketValue,
-  ConcreteTrinketValue,
-  TrinketConfig,
+  AbstractGoodieValue,
+  ConcreteGoodieValue,
+  GoodieConfig,
 } from "@/setupEFIteration";
 
 export function getAbstractFromConcreteItems(
-  concreteItems: ConcreteTrinketValue[]
-): AbstractTrinketValue[] {
-  const trinketConfigList: (TrinketConfig | null)[] = <TrinketConfig[]>(
-    concreteItems.map(getTrinketFromConcreteItem)
+  concreteItems: ConcreteGoodieValue[]
+): AbstractGoodieValue[] {
+  const goodieConfigList: (GoodieConfig | null)[] = concreteItems.map(
+    getGoodieFromConcreteItem
   );
-  const validTrinketConfigList: TrinketConfig[] = <TrinketConfig[]>(
-    trinketConfigList.filter((entry: TrinketConfig | null) => entry !== null)
+  const validGoodieConfigList: GoodieConfig[] = goodieConfigList.filter(
+    (entry: GoodieConfig | null) => entry !== null
   );
-  return validTrinketConfigList.map((entry: TrinketConfig) => entry.value);
+  return validGoodieConfigList.map((entry: GoodieConfig) => entry.value);
 }

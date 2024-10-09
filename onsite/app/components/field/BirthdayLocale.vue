@@ -28,12 +28,12 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { getBirthdayFlag } from "@/composables/fields/birthday/getBirthdayFlag";
 import { getBirthdayNote } from "@/composables/fields/birthday/getBirthdayNote";
 import { isValidAge } from "@/composables/fields/birthday/isValidAge";
 import type { ModelRef } from "vue";
-import type { TransformedAttendeeInfo } from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 function getBirthdayFieldTextCSS(birthday: number): string {
   if (!isValidAge(birthday)) {

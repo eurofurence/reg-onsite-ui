@@ -32,7 +32,7 @@ import {
 } from "@/composables/services/keyboardService";
 import { debugState } from "@/composables/state/debugState";
 import { getApiAttendeeInfo } from "@/tests/getApiAttendeeInfo";
-import { EnvName } from "@/types/internal";
+import { EnvName } from "@/types/internal/env";
 import { ref } from "vue";
 
 const debugFlag = ref(false);

@@ -1,7 +1,7 @@
 import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
-import { putAttendeeStatus } from "@/composables/api/putAttendeeStatus";
+import { putAttendeeStatus } from "@/composables/api/attsrv/attendees/putAttendeeStatus";
 import { authState } from "@/composables/state/authState";
-import { Status } from "@/config/setupStatus";
+import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 
 export async function checkinAttendee(
   errorHandler: RestErrorHandler,
@@ -11,5 +11,10 @@ export async function checkinAttendee(
     by: authState.value.userName,
     where: "regdesk",
   });
-  await putAttendeeStatus(errorHandler, regNumber, Status.checked_in, comment);
+  await putAttendeeStatus(
+    errorHandler,
+    regNumber,
+    AttendeeApiStatus.checked_in,
+    comment
+  );
 }

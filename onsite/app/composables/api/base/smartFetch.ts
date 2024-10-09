@@ -1,5 +1,5 @@
 import { getUrl } from "@/composables/api/base/getUrl";
-import { getLoginUrl } from "@/composables/api/getLoginUrl";
+import { getLoginUrl } from "@/composables/api/authsrv/getLoginUrl";
 
 async function tryTokenRefresh(): Promise<void> {
   await fetch(getLoginUrl(), {

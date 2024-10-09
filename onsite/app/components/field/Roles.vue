@@ -24,9 +24,9 @@ import {
   fieldLabelCSS,
   fieldTextCSS,
   resolveColorEntry,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { getAllApiRoleItems } from "@/composables/fields/conrole/getAllApiRoleItems";
-import type { FlagApiValue } from "@/types/external";
+import type { FlagApiValue } from "@/types/external/attsrv/attendees/attendee";
 import type { ModelRef } from "vue";
 
 const modelValue: ModelRef<FlagApiValue[] | null> = defineModel<

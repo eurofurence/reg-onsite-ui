@@ -1,12 +1,15 @@
-import { defaultAttendeeDataOptions } from "@/config/app/regdesk";
-import type { AttendeeDataOptions } from "@/types/internal";
+import { defaultAttendeeDataOptions } from "@/config/system/regdesk";
+import type { AttendeeDataOptions } from "@/types/internal/system/regdesk";
 
 const referenceFilterStr: string = JSON.stringify(
-  defaultAttendeeDataOptions.filters
+  defaultAttendeeDataOptions.filterConfig.filterValues
 );
 
 export function isFilterPristine(
   dataOptionsRef: Ref<AttendeeDataOptions>
 ): boolean {
-  return referenceFilterStr === JSON.stringify(dataOptionsRef.value.filters);
+  return (
+    referenceFilterStr ===
+    JSON.stringify(dataOptionsRef.value.filterConfig.filterValues)
+  );
 }

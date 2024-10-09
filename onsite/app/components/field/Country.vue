@@ -8,7 +8,7 @@
         :class="fieldTextCSS"
         class="w-56"
         v-model="modelValue"
-        :options="setupCountries"
+        :options="metadataListForCountry"
         optionValue="value"
         optionLabel="label"
         v-bind="$attrs"
@@ -43,11 +43,11 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { getCountryName } from "@/composables/fields/country/getCountryName";
 import { getFlagCSSClass } from "@/composables/fields/country/getFlagCSSClass";
-import { setupCountries } from "@/config/setupCountries";
-import type { CountryCode } from "@/config/setupCountries";
+import { metadataListForCountry } from "@/config/metadata/metadataForCountry";
+import type { CountryCode } from "@/config/metadata/metadataForCountry";
 import type { ModelRef } from "vue";
 
 const modelValue: ModelRef<CountryCode | null> =

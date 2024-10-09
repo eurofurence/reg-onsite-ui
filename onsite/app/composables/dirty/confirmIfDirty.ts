@@ -1,16 +1,13 @@
 import { isDirty } from "@/composables/dirty/isDirty";
-import type { ConfirmServiceMethods } from "@/types/external";
-import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
+import { ShortcutScope } from "@/composables/services/keyboardService";
+import type { OnsiteConfirmService } from "@/composables/services/confirmService";
 
 export function confirmIfDirty(
-  confirm: ConfirmServiceMethods,
-  groupName: string,
+  confirmService: OnsiteConfirmService,
   call: CallableFunction
 ): void {
   if (isDirty.value) {
-    keyboardService.pushScope(ShortcutScope.confirm_if_dirty);
-    confirm.require({
-      group: groupName,
+    confirmService.require(ShortcutScope.confirm_if_dirty, {
       message: "There are unsaved changes! Are you sure you want to proceed?",
       header: "Confirmation",
       icon: "pi pi-exclamation-triangle",
@@ -19,7 +16,6 @@ export function confirmIfDirty(
       },
       reject: () => {},
     });
-    keyboardService.popScope(ShortcutScope.confirm_if_dirty);
   } else {
     call();
   }

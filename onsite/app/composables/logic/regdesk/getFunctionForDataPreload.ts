@@ -1,23 +1,22 @@
-import { Severity, type TransformedAttendeeInfo } from "@/types/internal";
 import { attendeeService } from "@/composables/services/attendeeService";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
-import type { ToastServiceMethods } from "primevue/toastservice";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { ToastSeverity } from "@/types/internal/primevue";
+import type { OnsiteToastService } from "@/composables/services/toastService";
 
 export function getFunctionForDataPreload(
   targetList: Ref<TransformedAttendeeInfo[]>,
-  toast: ToastServiceMethods,
-  toastGroup: string
+  toastService: OnsiteToastService
 ): () => Promise<void> {
   return async (): Promise<void> => {
     const result: TransformedAttendeeInfo[] | undefined =
       await attendeeService.getAllAttendees(
-        getErrorHandlerFunction(toast, toastGroup)
+        getErrorHandlerFunction(toastService)
       );
     if (result !== undefined) {
       targetList.value = result;
-      toast.add({
-        group: "global",
-        severity: Severity.info,
+      toastService.add({
+        severity: ToastSeverity.info,
         summary: `Cached ${result.length} attendees`,
         life: 1000,
       });

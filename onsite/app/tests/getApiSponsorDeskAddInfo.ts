@@ -1,6 +1,6 @@
-import { deepCopy } from "@/composables/state/deepCopy";
-import { AbstractTrinketWithoutVariants } from "@/setupEFIteration";
-import type { ApiSponsorDeskAddInfo } from "@/types/external";
+import { deepCopy } from "@/composables/deepCopy";
+import { AbstractGoodieWithoutVariants } from "@/setupEFIteration";
+import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 
 const dummyData: ApiSponsorDeskAddInfo[] = [
   {
@@ -19,13 +19,13 @@ const dummyData: ApiSponsorDeskAddInfo[] = [
     pastItems: [],
   },
   {
-    issuedItems: [AbstractTrinketWithoutVariants.coin_2024],
+    issuedItems: [AbstractGoodieWithoutVariants.staff_coin_2024],
     reservedItems: [],
     pastItems: [],
   },
   {
-    reservedItems: [AbstractTrinketWithoutVariants.coin_2024],
-    issuedItems: [AbstractTrinketWithoutVariants.coin_2024],
+    reservedItems: [AbstractGoodieWithoutVariants.staff_coin_2024],
+    issuedItems: [AbstractGoodieWithoutVariants.staff_coin_2024],
     pastItems: [],
   },
 ];

@@ -1,17 +1,20 @@
 import { getActiveFilters } from "@/composables/sort_and_filter/getActiveFilters";
 import { FilterMatchMode } from "@primevue/core/api";
+import type { DataTableFilterMetaData } from "primevue/datatable";
+import { getSponsorItem } from "@/composables/fields/packages/getSponsorItem";
+import { getStatusItem } from "@/composables/fields/status/getStatusItem";
+import { getCountryName } from "@/composables/fields/country/getCountryName";
+import type { CountryCode } from "@/config/metadata/metadataForCountry";
+import type { LabeledValue } from "@/types/internal/infos";
 import type {
   AllFilterFieldValues,
   CustomFilterMetaData,
-  LabeledValue,
   RawAttendeeFilter,
-} from "@/types/internal";
-import type { DataTableFilterMetaData } from "primevue/datatable";
-import { getSponsorItem } from "@/composables/fields/packages/getSponsorItem";
-import { getStatusItem } from "../fields/status/getStatusItem";
-import { getConRoleItem } from "../fields/conrole/getConRoleItem";
-import { getCountryName } from "../fields/country/getCountryName";
-import type { CountryCode } from "@/config/setupCountries";
+} from "@/types/internal/filter";
+import {
+  metadataRecordForConRoles,
+  type ConRoleValue,
+} from "@/config/metadata/flags/metadataForConRoles";
 
 const matchModeMap: Record<string, string> = {
   [FilterMatchMode.STARTS_WITH]: "starts with",
@@ -35,7 +38,7 @@ const matchModeMap: Record<string, string> = {
 function getMatchModeLabel(
   value: DataTableFilterMetaData["matchMode"]
 ): string {
-  return matchModeMap[<string>value] || <string>value;
+  return matchModeMap[value as string] || (value as string);
 }
 
 function getMaxLengthOfStrings(array: string[]): number {
@@ -45,21 +48,21 @@ function getMaxLengthOfStrings(array: string[]): number {
 }
 
 function castToString(value: string | string[]): string {
-  return <string>value;
+  return value as string;
 }
 
 function createCastAfterLabelMap<Type>(
   lookupItemFun: (value: Type) => LabeledValue<Type>
 ) {
   return (value: string | string[]) =>
-    (<Type[]>value)
+    (value as Type[])
       .map(lookupItemFun)
       .map((value: LabeledValue<Type>) => `${value.label}`)
       .join(", ");
 }
 
 function getCountryValueLabelGetter(value: string | string[]): string {
-  const countryCodeList: CountryCode[] = <CountryCode[]>value;
+  const countryCodeList: CountryCode[] = value as CountryCode[];
   var truncatedCountryNameList: string[] = countryCodeList
     .slice(0, 5)
     .map(getCountryName);
@@ -79,17 +82,18 @@ function getValueLabelGetter(): Record<
     nickname: castToString,
     first_name: castToString,
     last_name: castToString,
-    birthday: castToString,
-    status: createCastAfterLabelMap(getStatusItem),
-    country: getCountryValueLabelGetter,
-    transConbookChoice: createCastAfterLabelMap(getConRoleItem),
-    transSponsorChoice: createCastAfterLabelMap(getSponsorItem),
-    transConRole: createCastAfterLabelMap(getConRoleItem),
     transFullName: castToString,
+    birthday: castToString,
+    country: getCountryValueLabelGetter,
+    status: createCastAfterLabelMap(getStatusItem),
+    transConbookChoice: (value: string | string[]) => "",
+    transSponsorChoice: createCastAfterLabelMap(getSponsorItem),
+    transConRole: (value: string | string[]) =>
+      metadataRecordForConRoles[value as ConRoleValue].label,
   };
 }
 
-export function getFilterText(filters: RawAttendeeFilter) {
+export function getFilterText(filters: RawAttendeeFilter): string {
   const activeFilters: CustomFilterMetaData[] = getActiveFilters(filters);
   const maxLengthLabel: number =
     getMaxLengthOfStrings(
@@ -120,7 +124,7 @@ export function getFilterText(filters: RawAttendeeFilter) {
   const result: string[] = activeFilters.map((item: CustomFilterMetaData) =>
     getFilterTextEntry(
       item,
-      valueLabelGetterMap[item.fieldName](<string | string[]>item.value)
+      valueLabelGetterMap[item.fieldName](item.value as string | string[])
     )
   );
   return result.join("\n");

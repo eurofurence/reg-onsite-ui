@@ -1,8 +1,6 @@
-import type {
-  AttendeeDataOptions,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
 import { sortAttendees } from "@/composables/sort/sortAttendees";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { AttendeeDataOptions } from "@/types/internal/system/regdesk";
 
 export function computedSortedResult<Type extends TransformedAttendeeInfo>(
   unsortedList: Ref<Type[]>,

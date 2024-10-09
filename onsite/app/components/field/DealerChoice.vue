@@ -1,41 +1,24 @@
 <template>
-  <div :class="fieldCSS + ' w-40'">
-    <label :for="componentId" :class="fieldLabelCSS"
-      >Dealer's Den Package</label
-    >
-    <Select
-      :id="componentId"
-      :class="fieldTextCSS"
-      v-model="dealerPackageChoice"
-      :options="setupDealerPackages"
-      optionValue="value"
-      optionLabel="label"
-      :placeholder="setupDealerPackagesPlaceholder.label"
-      v-bind="$attrs"
-    />
-  </div>
+  <FieldCommonLabeledPackageSelect
+    v-model:model-value="modelValue"
+    label="Dealer's Den Package"
+    :width-in-rem="10"
+    :metadata-map="metadataRecordForDealerPackages"
+    :placeholderKey="DealerTable.none"
+  />
 </template>
 
 <script setup lang="ts">
 import {
-  fieldCSS,
-  fieldLabelCSS,
-  fieldTextCSS,
-} from "@/components/field/common";
-import { computePackageChoice } from "@/composables/fields/packages/computePackageChoice";
+  DealerTable,
+  metadataRecordForDealerPackages,
+} from "@/config/metadata/packages/metadataForDealerPackages";
 import {
-  type DealerTableValue,
-  setupDealerPackages,
-  setupDealerPackagesPlaceholder,
-} from "@/config/setupDealerPackages";
-import type { PackageApiValue, PackageCountType } from "@/types/external";
-import type { WritableComputedRef } from "vue";
+  type PackageApiValue,
+  type PackageCountType,
+} from "@/types/external/attsrv/attendees/attendee";
 import type { ModelRef } from "vue";
 
-const modelValue: ModelRef<PackageCountType<PackageApiValue>[]> = defineModel<
-  PackageCountType<PackageApiValue>[]
->({ required: true });
-const dealerPackageChoice: WritableComputedRef<DealerTableValue | null> =
-  computePackageChoice(modelValue, setupDealerPackages);
-const componentId: string = generateId(useId());
+const modelValue: ModelRef<PackageCountType<PackageApiValue>[] | null> =
+  defineModel<PackageCountType<PackageApiValue>[] | null>({ required: true });
 </script>

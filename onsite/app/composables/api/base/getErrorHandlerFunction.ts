@@ -1,16 +1,15 @@
-import type { RestErrorInfo } from "@/types/internal";
-import type { ToastServiceMethods } from "primevue/toastservice";
+import type { RestErrorInfo } from "@/types/internal/rest";
+import { ToastSeverity } from "@/types/internal/primevue";
+import type { OnsiteToastService } from "@/composables/services/toastService";
 
 function internalErrorHandler(
-  toast: ToastServiceMethods,
-  toastGroup: string,
+  toastService: OnsiteToastService | null,
   errorInfo: RestErrorInfo
 ) {
   const summary: string = `${errorInfo.serviceName}: ${errorInfo.errorCategory}`;
-  if (toast !== null) {
-    toast.add({
-      group: toastGroup,
-      severity: "error",
+  if (toastService !== null) {
+    toastService.add({
+      severity: ToastSeverity.error,
       summary: summary,
       detail: errorInfo.errorDetail,
       life: 10000,
@@ -20,10 +19,7 @@ function internalErrorHandler(
   }
 }
 
-export function getErrorHandlerFunction(
-  toast: ToastServiceMethods,
-  toastGroup: string
-) {
+export function getErrorHandlerFunction(toastService: OnsiteToastService) {
   return (errorInfo: RestErrorInfo) =>
-    internalErrorHandler(toast, toastGroup, errorInfo);
+    internalErrorHandler(toastService, errorInfo);
 }

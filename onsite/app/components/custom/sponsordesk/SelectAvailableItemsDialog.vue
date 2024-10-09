@@ -1,7 +1,7 @@
 <template>
   <ConfirmDialog
     header="Available items"
-    :group="availableDialogGroupId"
+    :group="confirmService.confirmGroup"
     class="select-items-dialog"
   >
     <template #message="slotProps">
@@ -12,7 +12,7 @@
         <div class="flex flex-grow">
           <PanelSponsordeskAvailableItems
             v-model="availableItemsRef"
-            :allTrinketItems="getTrinketItemsSubset(props.deskItemSubset)"
+            :allGoodieItems="getGoodieItemsSubset(props.deskItemSubset)"
           />
         </div>
         <div>
@@ -24,23 +24,22 @@
 </template>
 
 <script setup lang="ts">
-import { getTrinketItemsSubset } from "@/composables/items/getTrinketItemsSubset";
+import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
 import type {
-  AbstractTrinketValue,
-  ConcreteTrinketValue,
+  AbstractGoodieValue,
+  ConcreteGoodieValue,
 } from "@/setupEFIteration";
-import type { ConfirmServiceMethods } from "@/types/external";
 import { useConfirm } from "primevue/useconfirm";
 import type { ModelRef } from "vue";
-import { keyboardService, ShortcutScope } from "@/composables/services/keyboardService";
-
-const confirm: ConfirmServiceMethods = useConfirm();
+import {
+  keyboardService,
+  ShortcutScope,
+} from "@/composables/services/keyboardService";
+import { OnsiteConfirmService } from "@/composables/services/confirmService";
 
 function run() {
   availableItemsRef.value = modelValue.value;
-  keyboardService.pushScope(ShortcutScope.confirm_available_items);
-  confirm.require({
-    group: availableDialogGroupId,
+  confirmService.require(ShortcutScope.confirm_available_items, {
     header: "Configure Available Items",
     message: "Do you want to save the changes to the available items?",
     rejectProps: {
@@ -55,27 +54,28 @@ function run() {
     accept: () => {
       modelValue.value = availableItemsRef.value;
     },
-    reject: () => { },
+    reject: () => {},
   });
-  keyboardService.popScope(ShortcutScope.confirm_available_items);
 }
 
-const availableItemsRef: Ref<ConcreteTrinketValue[]> = ref<
-  ConcreteTrinketValue[]
+const availableItemsRef: Ref<ConcreteGoodieValue[]> = ref<
+  ConcreteGoodieValue[]
 >([]);
 
 interface Props {
-  deskItemSubset: AbstractTrinketValue[];
+  deskItemSubset: AbstractGoodieValue[];
 }
 const props: Props = defineProps<Props>();
 defineExpose({ run });
-const modelValue: ModelRef<ConcreteTrinketValue[]> = defineModel<
-  ConcreteTrinketValue[]
+const modelValue: ModelRef<ConcreteGoodieValue[]> = defineModel<
+  ConcreteGoodieValue[]
 >({
   required: true,
 });
 const componentId: string = generateId(useId());
-const availableDialogGroupId: string = `availableDialog${componentId}`;
+const confirmService: OnsiteConfirmService = new OnsiteConfirmService(
+  componentId
+);
 </script>
 
 <style>

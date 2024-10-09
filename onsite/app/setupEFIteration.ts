@@ -1,41 +1,44 @@
 import {
-  DayAttendance,
-  type DayAttendanceValue,
-} from "@/config/packages/setupDayAttendance";
-import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
-import type { ConRoleValue } from "@/config/flags/setupConRoles";
+  AttendeeApiAttendance,
+  type AttendanceApiValue,
+} from "@/config/metadata/packages/metadataForAttendance";
+import {
+  type GoodiesLevelValue,
+  GoodiesLevel,
+} from "@/config/metadata/packages/metadataForPerks";
+import { type ConRoleValue } from "@/config/metadata/flags/metadataForConRoles";
 import {
   type TShirtTypeValue,
-  setupTShirtTypesInternal,
-} from "@/config/tshirt/setupTShirtTypes";
-import type { GenericTrinketConfig, LabeledValue } from "@/types/internal";
+  metadataListForTShirtTypesInternal,
+} from "@/config/metadata/tshirt/metadataForTShirtTypes";
+import type { LabeledValue } from "@/types/internal/infos";
+import type { GenericGoodieConfig } from "@/types/internal/goodies";
+import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 
 export const configConStartDate: Date = new Date("2024-09-18");
+export const configConDays: number = 4;
 
 export const vipRegNumList: number[] = [];
 
-export const configDayAttendanceItems: LabeledValue<DayAttendanceValue>[] = [
-  {
-    value: DayAttendance.day_wed,
-    label: "Wed (Sep-18)",
-  },
-  {
-    value: DayAttendance.day_thu,
-    label: "Thu (Sep-19)",
-  },
-  {
-    value: DayAttendance.day_fri,
-    label: "Fri (Sep-20)",
-  },
-  {
-    value: DayAttendance.day_sat,
-    label: "Sat (Sep-21)",
-  },
-];
+export const configDayAttendanceItems: LabeledValue<AttendanceApiValue>[] =
+  getMetadataList({
+    [AttendeeApiAttendance.day_wed]: {
+      label: "Wed (Sep-18)",
+    },
+    [AttendeeApiAttendance.day_thu]: {
+      label: "Thu (Sep-19)",
+    },
+    [AttendeeApiAttendance.day_fri]: {
+      label: "Fri (Sep-20)",
+    },
+    [AttendeeApiAttendance.day_sat]: {
+      label: "Sat (Sep-21)",
+    },
+  });
 
-export const enum AbstractTrinketWithoutVariants {
+export const enum AbstractGoodieWithoutVariants {
   // 2024
-  coin_2024 = "coin_2024",
+  staff_coin_2024 = "coin_2024",
   pin_2024 = "pin_2024",
   luggage_strap_2024 = "luggage_strap_2024",
   bag_2024 = "bag_2024",
@@ -46,123 +49,111 @@ export const enum AbstractTrinketWithoutVariants {
   scarf_2023 = "scarf_2023",
 }
 
-export const enum AbstractTrinketWithVariants {
+export const enum AbstractGoodieWithVariants {
   tshirt_2024 = "tshirt_2024",
   tshirt_2023 = "tshirt_2023",
 }
-export type AbstractTrinketWithVariantsValue = `${AbstractTrinketWithVariants}`;
+export type AbstractGoodieWithVariantsValue = `${AbstractGoodieWithVariants}`;
 
-export type AbstractTrinket =
-  | AbstractTrinketWithoutVariants
-  | AbstractTrinketWithVariants;
-export type AbstractTrinketValue = `${AbstractTrinket}`;
+export type AbstractGoodie =
+  | AbstractGoodieWithoutVariants
+  | AbstractGoodieWithVariants;
+export type AbstractGoodieValue = `${AbstractGoodie}`;
 
-export type ConcreteTrinketValue =
-  | `${AbstractTrinketWithoutVariants}`
-  | `${AbstractTrinketWithVariants.tshirt_2024}_${TShirtTypeValue}`
-  | `${AbstractTrinketWithVariants.tshirt_2023}_${TShirtTypeValue}`;
+export type ConcreteGoodieValue =
+  | `${AbstractGoodieWithoutVariants}`
+  | `${AbstractGoodieWithVariants.tshirt_2024}_${TShirtTypeValue}`
+  | `${AbstractGoodieWithVariants.tshirt_2023}_${TShirtTypeValue}`;
 
-export type TrinketConfig =
-  | GenericTrinketConfig<AbstractTrinketWithoutVariants, null, null>
-  | GenericTrinketConfig<
-      AbstractTrinketWithVariants.tshirt_2023,
+export type GoodieConfig =
+  | GenericGoodieConfig<AbstractGoodieWithoutVariants, null, null>
+  | GenericGoodieConfig<
+      AbstractGoodieWithVariants.tshirt_2023,
       LabeledValue<TShirtTypeValue>[],
       TShirtTypeValue
     >
-  | GenericTrinketConfig<
-      AbstractTrinketWithVariants.tshirt_2024,
+  | GenericGoodieConfig<
+      AbstractGoodieWithVariants.tshirt_2024,
       LabeledValue<TShirtTypeValue>[],
       TShirtTypeValue
     >;
 
-export const configTinketItems: TrinketConfig[] = [
-  {
-    value: AbstractTrinketWithVariants.tshirt_2024,
+export const configTinketItems: GoodieConfig[] = getMetadataList<GoodieConfig>({
+  [AbstractGoodieWithVariants.tshirt_2024]: {
     label: "T-Shirt",
-    variants: setupTShirtTypesInternal,
+    variants: metadataListForTShirtTypesInternal,
   },
-  {
-    value: AbstractTrinketWithoutVariants.coin_2024,
-    label: "Coin",
+  [AbstractGoodieWithoutVariants.staff_coin_2024]: {
+    label: "Staff Coin",
   },
-  {
-    value: AbstractTrinketWithoutVariants.pin_2024,
+  [AbstractGoodieWithoutVariants.pin_2024]: {
     label: "Pin",
   },
-  {
-    value: AbstractTrinketWithoutVariants.luggage_strap_2024,
+  [AbstractGoodieWithoutVariants.luggage_strap_2024]: {
     label: "Luggage Strap",
   },
-  {
-    value: AbstractTrinketWithoutVariants.bag_2024,
+  [AbstractGoodieWithoutVariants.bag_2024]: {
     label: "Bag",
   },
-  {
-    value: AbstractTrinketWithoutVariants.led_badge_2024,
+  [AbstractGoodieWithoutVariants.led_badge_2024]: {
     label: "LED Badge",
   },
   // 2023
-  {
-    value: AbstractTrinketWithVariants.tshirt_2023,
+  [AbstractGoodieWithVariants.tshirt_2023]: {
     label: "T-Shirt (2023)",
-    variants: setupTShirtTypesInternal,
+    variants: metadataListForTShirtTypesInternal,
   },
-  {
-    value: AbstractTrinketWithoutVariants.pin_2023,
+  [AbstractGoodieWithoutVariants.pin_2023]: {
     label: "Pin (2023)",
   },
-  {
-    value: AbstractTrinketWithoutVariants.cup_2023,
+  [AbstractGoodieWithoutVariants.cup_2023]: {
     label: "Cup (2023)",
   },
-  {
-    value: AbstractTrinketWithoutVariants.scarf_2023,
+  [AbstractGoodieWithoutVariants.scarf_2023]: {
     label: "Scarf (2023)",
   },
-];
+});
 
 export const configPackageToItemsMap: Partial<
-  Record<GoodiesLevelValue, AbstractTrinketValue[]>
+  Record<GoodiesLevelValue, AbstractGoodieValue[]>
 > = {
-  tshirt: [AbstractTrinketWithVariants.tshirt_2024],
-  sponsor: [
-    AbstractTrinketWithVariants.tshirt_2024,
-    AbstractTrinketWithoutVariants.pin_2024,
-    AbstractTrinketWithoutVariants.luggage_strap_2024,
+  [GoodiesLevel.tshirt]: [AbstractGoodieWithVariants.tshirt_2024],
+  [GoodiesLevel.sponsor]: [
+    AbstractGoodieWithVariants.tshirt_2024,
+    AbstractGoodieWithoutVariants.pin_2024,
+    AbstractGoodieWithoutVariants.luggage_strap_2024,
   ],
-  sponsor2: [
-    AbstractTrinketWithVariants.tshirt_2024,
-    AbstractTrinketWithoutVariants.pin_2024,
-    AbstractTrinketWithoutVariants.luggage_strap_2024,
-    AbstractTrinketWithoutVariants.bag_2024,
-    AbstractTrinketWithoutVariants.led_badge_2024,
+  [GoodiesLevel.super_sponsor]: [
+    AbstractGoodieWithVariants.tshirt_2024,
+    AbstractGoodieWithoutVariants.pin_2024,
+    AbstractGoodieWithoutVariants.luggage_strap_2024,
+    AbstractGoodieWithoutVariants.bag_2024,
+    AbstractGoodieWithoutVariants.led_badge_2024,
   ],
 };
 
 export const configFlagsToItemsMap: Partial<
-  Record<ConRoleValue, AbstractTrinketValue[]>
+  Record<ConRoleValue, AbstractGoodieValue[]>
 > = {
-  staff: [AbstractTrinketWithoutVariants.coin_2024],
-  director: [AbstractTrinketWithoutVariants.coin_2024],
+  staff: [AbstractGoodieWithoutVariants.staff_coin_2024],
+  director: [AbstractGoodieWithoutVariants.staff_coin_2024],
 };
 
-export const configRegNumbersToItemsMap: Record<
-  string,
-  AbstractTrinketValue[]
-> = {};
+export const configRegNumbersToItemsMap: Record<string, AbstractGoodieValue[]> =
+  {};
 
-interface ConfigPortalTrinketSubset {
-  sponsordesk: AbstractTrinketValue[];
-  constore: AbstractTrinketValue[];
+interface ConfigPortalGoodieSubset {
+  sponsordesk: AbstractGoodieValue[];
+  constore: AbstractGoodieValue[];
 }
 
-export const configSponsordeskSubset: AbstractTrinketValue[] =
+export const configSponsordeskSubset: AbstractGoodieValue[] =
   configPackageToItemsMap.sponsor2 || [];
 
-export const configConstoreSubset: AbstractTrinketValue[] =
-  configTinketItems.map((trinketConfig: TrinketConfig) => trinketConfig.value);
+export const configConstoreSubset: AbstractGoodieValue[] =
+  configTinketItems.map((goodieConfig: GoodieConfig) => goodieConfig.value);
 
-export const configPortalTrinketSubset: ConfigPortalTrinketSubset = {
+export const configPortalGoodieSubset: ConfigPortalGoodieSubset = {
   sponsordesk: configSponsordeskSubset,
   constore: configConstoreSubset,
 };

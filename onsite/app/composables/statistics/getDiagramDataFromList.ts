@@ -1,12 +1,12 @@
 import { convertListToMap } from "@/composables/collection_tools/convertListToMap";
 import { getColorFromStyle } from "@/composables/colors/getColorFromStyle";
 import { getColorVariants } from "@/composables/colors/getColorVariants";
-import { ColorsPalette, type ColorsPaletteValue } from "@/config/theme";
-import type {
-  ColoredLabeledValue,
-  ChartData,
-  StatsConfig,
-} from "@/types/internal";
+import {
+  ColorsPalette,
+  type ColorsPaletteValue,
+} from "@/composables/theme/colors";
+import type { ChartData, StatsConfig } from "@/types/internal/statistics";
+import type { ColoredLabeledValue } from "@/types/internal/infos";
 
 function getValueCounts<ConfigValueType extends string>(
   valueList: ConfigValueType[]
@@ -36,9 +36,8 @@ export function getDiagramDataFromList<ConfigValueType extends string>(
   const valueCountList: number[] = dataEntriesList.map(
     ([_value, key]: [ConfigValueType, number]) => key
   );
-  const castConfigItems: ColoredLabeledValue<ConfigValueType>[] = <
-    ColoredLabeledValue<ConfigValueType>[]
-  >configItems;
+  const castConfigItems: ColoredLabeledValue<ConfigValueType>[] =
+    configItems as ColoredLabeledValue<ConfigValueType>[];
   const configMap: Map<
     ConfigValueType,
     ColoredLabeledValue<ConfigValueType>

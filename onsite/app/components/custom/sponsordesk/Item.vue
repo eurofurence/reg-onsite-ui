@@ -3,27 +3,27 @@
     <div class="flex flex-grow items-center">
       <div class="items-checkbox">
         <Checkbox
-          v-model="selectedConcreteTrinketValueListRef"
+          v-model="selectedConcreteGoodieValueListRef"
           :name="props.itemGroupId"
-          :value="getLocalConcreteTrinketValue(selectedVariantRef)"
+          :value="getLocalConcreteGoodieValue(selectedVariantRef)"
           :inputId="labelId"
           :disabled="isCheckboxDisabled()"
         />
       </div>
       <div class="items-label">
         <label :class="fieldTextCSS" class="ml-2 checkbox-label" :for="labelId">
-          <span class="text-nowrap" v-if="props.trinketConfig?.variants">
+          <span class="text-nowrap" v-if="props.goodieConfig?.variants">
             <i class="invisible pi pi-circle" />
-            {{ props.trinketConfig.label }}
+            {{ props.goodieConfig.label }}
           </span>
           <span v-else>
             <CustomSponsordeskItemOption
-              v-model="props.trinketConfig"
-              :trinketConfig="props.trinketConfig"
+              v-model="props.goodieConfig"
+              :goodieConfig="props.goodieConfig"
               :defaultValue="defaultVariantValuesRef"
-              :issuedConcreteTrinkets="selectedConcreteTrinketValueListRef"
-              :reservedConcreteTrinkets="reservedConcreteTrinketValueListRef"
-              :availableConcreteTrinkets="sponsorDeskSettingsRef.available"
+              :issuedConcreteGoodies="selectedConcreteGoodieValueListRef"
+              :reservedConcreteGoodies="reservedConcreteGoodieValueListRef"
+              :availableConcreteGoodies="sponsorDeskSettingsRef.available"
             />
           </span>
         </label>
@@ -32,9 +32,9 @@
     <div>
       <Select
         class="w-64"
-        v-if="props.trinketConfig?.variants"
+        v-if="props.goodieConfig?.variants"
         v-model="selectedVariantRef"
-        :options="props.trinketConfig.variants"
+        :options="props.goodieConfig.variants"
         :scrollHeight="getSelectHeight()"
         placeholder="Nothing selected"
         @change="onVariantChange"
@@ -44,11 +44,11 @@
           <div v-if="slotProps.value">
             <CustomSponsordeskItemOption
               v-model="slotProps.value"
-              :trinketConfig="props.trinketConfig"
+              :goodieConfig="props.goodieConfig"
               :defaultValue="defaultVariantValuesRef"
-              :issuedConcreteTrinkets="selectedConcreteTrinketValueListRef"
-              :reservedConcreteTrinkets="reservedConcreteTrinketValueListRef"
-              :availableConcreteTrinkets="sponsorDeskSettingsRef.available"
+              :issuedConcreteGoodies="selectedConcreteGoodieValueListRef"
+              :reservedConcreteGoodies="reservedConcreteGoodieValueListRef"
+              :availableConcreteGoodies="sponsorDeskSettingsRef.available"
             />
           </div>
           <div v-else>
@@ -58,11 +58,11 @@
         <template #option="slotProps">
           <CustomSponsordeskItemOption
             v-model="slotProps.option"
-            :trinketConfig="props.trinketConfig"
+            :goodieConfig="props.goodieConfig"
             :defaultValue="defaultVariantValuesRef"
-            :issuedConcreteTrinkets="selectedConcreteTrinketValueListRef"
-            :reservedConcreteTrinkets="reservedConcreteTrinketValueListRef"
-            :availableConcreteTrinkets="sponsorDeskSettingsRef.available"
+            :issuedConcreteGoodies="selectedConcreteGoodieValueListRef"
+            :reservedConcreteGoodies="reservedConcreteGoodieValueListRef"
+            :availableConcreteGoodies="sponsorDeskSettingsRef.available"
           />
         </template>
       </Select>
@@ -71,66 +71,63 @@
 </template>
 
 <script setup lang="ts">
-import { fieldTextCSS } from "@/components/field/common";
+import { fieldTextCSS } from "@/components/field/common/common";
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import { getDefaultVariantValuesValue } from "@/composables/items/getDefaultVariantValuesValue";
-import type { ConcreteTrinketValue, TrinketConfig } from "@/setupEFIteration";
-import type {
-  DefaultVariantValues,
-  LabeledValue,
-  SponsorDeskSettings,
-} from "@/types/internal";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
 import type { SelectChangeEvent } from "primevue/select";
 import type { ModelRef } from "vue";
+import type { DefaultVariantValues } from "@/types/internal/goodies";
+import type { LabeledValue } from "@/types/internal/infos";
+import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
 
 function getSelectHeight(): string {
-  if (!props.trinketConfig?.variants) {
+  if (!props.goodieConfig?.variants) {
     return "1rem";
   }
-  const showItems: number = Math.min(props.trinketConfig.variants.length, 10);
+  const showItems: number = Math.min(props.goodieConfig.variants.length, 10);
   const selectHeight: number = showItems * 2.5;
   return `${selectHeight}rem`;
 }
 
 function isCheckboxDisabled(): boolean {
   return (
-    props.trinketConfig?.variants !== undefined &&
+    props.goodieConfig?.variants !== undefined &&
     selectedVariantRef.value === null
   );
 }
 
 function onVariantChange(_event: SelectChangeEvent): void {
-  const concreteValue: ConcreteTrinketValue = getLocalConcreteTrinketValue(
+  const concreteValue: ConcreteGoodieValue = getLocalConcreteGoodieValue(
     selectedVariantRef.value
   );
   // Remove any existing concrete values belonging to this abstract item
-  const concreteValueList = selectedConcreteTrinketValueListRef.value.filter(
-    (value: ConcreteTrinketValue) =>
-      !value.startsWith(`${props.trinketConfig.value}_`)
+  const concreteValueList = selectedConcreteGoodieValueListRef.value.filter(
+    (value: ConcreteGoodieValue) =>
+      !value.startsWith(`${props.goodieConfig.value}_`)
   );
   // If the list is shorter after the removal - add the new concrete value back
   const hasSelectedVariant =
-    selectedConcreteTrinketValueListRef.value.length !=
-    concreteValueList.length;
+    selectedConcreteGoodieValueListRef.value.length != concreteValueList.length;
   if (hasSelectedVariant) {
     concreteValueList.push(concreteValue);
   }
-  selectedConcreteTrinketValueListRef.value = concreteValueList;
+  selectedConcreteGoodieValueListRef.value = concreteValueList;
 }
 
-function getLocalConcreteTrinketValue<VariantType>(
+function getLocalConcreteGoodieValue<VariantType>(
   selectedVariant: LabeledValue<VariantType> | null
-): ConcreteTrinketValue {
-  return getConcreteItemValue(props.trinketConfig, selectedVariant);
+): ConcreteGoodieValue {
+  return getConcreteItemValue(props.goodieConfig, selectedVariant);
 }
 
-const selectedConcreteTrinketValueListRef: ModelRef<ConcreteTrinketValue[]> =
-  defineModel<ConcreteTrinketValue[]>({
+const selectedConcreteGoodieValueListRef: ModelRef<ConcreteGoodieValue[]> =
+  defineModel<ConcreteGoodieValue[]>({
     required: true,
   });
 
-const reservedConcreteTrinketValueListRef: ModelRef<ConcreteTrinketValue[]> =
-  defineModel<ConcreteTrinketValue[]>("reservedItems", {
+const reservedConcreteGoodieValueListRef: ModelRef<ConcreteGoodieValue[]> =
+  defineModel<ConcreteGoodieValue[]>("reservedItems", {
     required: true,
   });
 
@@ -146,27 +143,27 @@ const sponsorDeskSettingsRef: ModelRef<SponsorDeskSettings> =
 
 interface Props {
   itemGroupId: string;
-  trinketConfig: TrinketConfig;
+  goodieConfig: GoodieConfig;
 }
 const props: Props = defineProps<Props>();
 
 function lookupVariant<VariantValueType extends string>(
-  selectedValueList: ConcreteTrinketValue[]
+  selectedValueList: ConcreteGoodieValue[]
 ): LabeledValue<VariantValueType> | null {
   // No variant - quick abort
-  if (props.trinketConfig?.variants === undefined) {
+  if (props.goodieConfig?.variants === undefined) {
     return null;
   }
-  if (props.trinketConfig?.variants === null) {
+  if (props.goodieConfig?.variants === null) {
     return null;
   }
   // Variant
   const completeVariantList: LabeledValue<VariantValueType>[] = props
-    .trinketConfig?.variants as LabeledValue<VariantValueType>[];
+    .goodieConfig?.variants as LabeledValue<VariantValueType>[];
   // Variant is encoded in issued item list
   const variantEntry: LabeledValue<VariantValueType> | undefined =
     completeVariantList?.find((variant: LabeledValue<VariantValueType>) =>
-      selectedValueList.includes(getLocalConcreteTrinketValue(variant))
+      selectedValueList.includes(getLocalConcreteGoodieValue(variant))
     );
   if (variantEntry !== undefined) {
     return variantEntry;
@@ -175,7 +172,7 @@ function lookupVariant<VariantValueType extends string>(
   const defaultVariantValuesValue: string | null | undefined =
     getDefaultVariantValuesValue(
       defaultVariantValuesRef.value,
-      props.trinketConfig.value
+      props.goodieConfig.value
     );
   if (defaultVariantValuesValue !== undefined) {
     const variantConfig: LabeledValue<VariantValueType> | undefined =
@@ -192,10 +189,10 @@ function lookupVariant<VariantValueType extends string>(
 
 const selectedVariantRef: Ref<LabeledValue<string> | null> =
   ref<LabeledValue<string> | null>(
-    lookupVariant(selectedConcreteTrinketValueListRef.value)
+    lookupVariant(selectedConcreteGoodieValueListRef.value)
   );
 
-watch(selectedConcreteTrinketValueListRef, (new_value, _old_value) => {
+watch(selectedConcreteGoodieValueListRef, (new_value, _old_value) => {
   lookupVariant(new_value);
 });
 

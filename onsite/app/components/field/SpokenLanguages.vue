@@ -5,7 +5,7 @@
       :id="componentId"
       v-model="spokenLanguagesRef"
       :class="fieldTextCSS"
-      :options="setupSpokenLanguages"
+      :options="metadataListForLanguage"
       display="chip"
       v-bind="$attrs"
       optionLabel="label"
@@ -27,7 +27,9 @@
             v-if="isRegistrationLanguage(slotProps.value)"
             :class="getLanguageFlagCSSClass(slotProps.value)"
           ></i>
-          {{ spokenLanguageMap.get(slotProps.value) || slotProps.value }}
+          {{
+            metadataRecordForLanguage[slotProps.value]?.label || slotProps.value
+          }}
         </Chip>
       </template>
     </MultiSelect>
@@ -40,15 +42,17 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
-import { convertListToMap } from "@/composables/collection_tools/convertListToMap";
+} from "@/components/field/common/common";
 import { resolveColor } from "@/composables/colors/resolveColor";
 import { getFlagCSSClass } from "@/composables/fields/country/getFlagCSSClass";
 import {
   type LanguageCode,
-  setupSpokenLanguages,
-} from "@/config/setupSpokenLanguages";
+  metadataListForLanguage,
+  metadataRecordForLanguage,
+} from "@/config/metadata/metadataForLanguage";
 import type { ModelRef } from "vue";
+import type { CountryCode } from "@/config/metadata/metadataForCountry";
+import { ColorsPalette } from "@/composables/theme/colors";
 
 function isRegistrationLanguage(value: LanguageCode): boolean {
   if (
@@ -61,21 +65,18 @@ function isRegistrationLanguage(value: LanguageCode): boolean {
 }
 
 function getLanguageFlagCSSClass(value: LanguageCode): string | null {
-  if (value == "en") return getFlagCSSClass("gb");
-  return getFlagCSSClass(value);
+  if (value == "en") {
+    return getFlagCSSClass("GB" as CountryCode);
+  }
+  return getFlagCSSClass(value as unknown as CountryCode);
 }
 
 function getLanguageColor(value: LanguageCode): string | null {
   if (isRegistrationLanguage(value)) {
-    return resolveColor("primary-500");
+    return resolveColor(ColorsPalette.primary_500);
   }
   return null;
 }
-
-const spokenLanguageMap: Map<LanguageCode, string> = convertListToMap(
-  setupSpokenLanguages,
-  "label"
-);
 
 const spokenLanguagesRef: ModelRef<LanguageCode[] | null> = defineModel<
   LanguageCode[] | null

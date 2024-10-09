@@ -20,12 +20,12 @@ import {
   fieldLabelCSS,
   fieldTextCSS,
   resolveColorEntry,
-} from "@/components/field/common";
-import { getConRoleChoice } from "@/composables/fields/conrole/getConRoleChoice";
-import { ConRole } from "@/config/setupConRoles";
-import type { FlagApiValue } from "@/types/external";
-import type { ConRoleInfo } from "@/types/internal";
+} from "@/components/field/common/common";
+import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRoleChoice";
 import type { ModelRef } from "vue";
+import { ConRole } from "@/config/metadata/flags/metadataForConRoles";
+import type { FlagApiValue } from "@/types/external/attsrv/attendees/attendee";
+import type { ConRoleInfo } from "@/types/internal/infos";
 
 const modelValue: ModelRef<FlagApiValue[] | null> = defineModel<
   FlagApiValue[] | null
@@ -43,7 +43,7 @@ function getConRoleChoiceIternal(): ConRoleInfo[] {
   if (modelValue.value === null || regNumber.value === null) {
     return [];
   }
-  const conRole: ConRoleInfo = getConRoleChoice(
+  const conRole: ConRoleInfo = getMainConRoleChoice(
     modelValue.value,
     regNumber.value
   );

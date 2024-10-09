@@ -6,8 +6,8 @@ import {
   getIdleWithDataSearchStatus,
   getSearchingSearchStatus,
 } from "@/composables/search_status/constructors";
-import type { SearchStatus } from "@/types/internal";
-import type { ToastServiceMethods } from "primevue/toastservice";
+import type { SearchStatus } from "@/types/internal/component/regnumsearch";
+import type { OnsiteToastService } from "@/composables/services/toastService";
 
 type TrackedSearchHandler = (
   regNumber: number,
@@ -17,8 +17,7 @@ type TrackedSearchHandler = (
 export async function doTrackedSearch(
   regNumber: number,
   searchStatus: Ref<SearchStatus>,
-  toast: ToastServiceMethods,
-  toastGroup: string,
+  toastService: OnsiteToastService,
   searchHandler: TrackedSearchHandler
 ): Promise<void> {
   if (regNumber === null) {
@@ -28,7 +27,7 @@ export async function doTrackedSearch(
   searchStatus.value = getSearchingSearchStatus(regNumber);
   const errorList: string[] = await searchHandler(
     regNumber,
-    getErrorHandlerFunction(toast, toastGroup)
+    getErrorHandlerFunction(toastService)
   );
   if (errorList.length > 0) {
     searchStatus.value = getErrorSearchStatus(regNumber, errorList);

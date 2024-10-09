@@ -1,7 +1,7 @@
 import { getPropertyFromCollection } from "@/composables/collection_tools/getPropertyFromCollection";
 import { getDiagramDataFromList } from "@/composables/statistics/getDiagramDataFromList";
-import type { ColoredLabeledValue } from "@/types/internal";
-import type { ChartData, StatsConfig } from "@/types/internal";
+import type { ColoredLabeledValue } from "@/types/internal/infos";
+import type { ChartData, StatsConfig } from "@/types/internal/statistics";
 
 export function getStatsFromProperty<Type, ConfigValueType extends string>(
   inputData: Type[],
@@ -12,9 +12,9 @@ export function getStatsFromProperty<Type, ConfigValueType extends string>(
   const propertyValueList: ConfigValueType[] = <ConfigValueType[]>(
     getPropertyFromCollection<Type>(inputData, key)
   );
-  const valueList: ConfigValueType[] = <ConfigValueType[]>(
-    (config?.flatten ? propertyValueList.flat() : propertyValueList)
-  );
+  const valueList: ConfigValueType[] = (
+    config?.flatten ? propertyValueList.flat() : propertyValueList
+  ) as ConfigValueType[];
   if (config?.color === undefined) {
     return getDiagramDataFromList(valueList, configItems, config);
   } else {

@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
-import type { ApiShippingAddInfo } from "@/types/external";
+import type { ApiShippingAddInfo } from "@/types/external/attsrv/additional-info/shipping";
 
 const attendeeInfoRef: ModelRef<ApiShippingAddInfo> =
   defineModel<ApiShippingAddInfo>({

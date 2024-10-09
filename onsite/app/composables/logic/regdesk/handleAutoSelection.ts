@@ -1,7 +1,5 @@
-import type {
-  AttendeeTableDisplayOptions,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { AttendeeTableDisplayOptions } from "@/types/internal/system/regdesk";
 
 const previousAutoSelectId: Ref<number | undefined> = ref(undefined);
 var previousTwinId: [number | null, number | null] | null = null;
@@ -26,9 +24,8 @@ function performAutoSelection(
     return;
   }
   if (transformedAttendeeInfoList.length === 1) {
-    const single: TransformedAttendeeInfo = <TransformedAttendeeInfo>(
-      transformedAttendeeInfoList[0]
-    );
+    const single: TransformedAttendeeInfo =
+      transformedAttendeeInfoList[0] as TransformedAttendeeInfo;
     if (
       previousAutoSelectId.value !== undefined &&
       previousTwinId &&
@@ -43,9 +40,8 @@ function performAutoSelection(
       single.id !== previousSelectId.value
     ) {
       previousAutoSelectId.value = single.id;
-      selectedAttendeeRef.value = <TransformedAttendeeInfo>(
-        transformedAttendeeInfoList[0]
-      );
+      selectedAttendeeRef.value =
+        transformedAttendeeInfoList[0] as TransformedAttendeeInfo;
     }
   }
 }

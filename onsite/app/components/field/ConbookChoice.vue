@@ -6,7 +6,7 @@
       :class="fieldTextCSS"
       v-model="conbookChoice"
       :pt:pc-toggle-button:root="getButtonStyle"
-      :options="setupConBookChoices"
+      :options="metadataListForConBookChoice"
       optionValue="value"
       optionLabel="label"
       v-bind="$attrs"
@@ -19,21 +19,25 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { computeFlagsChoice } from "@/composables/fields/flags/computeFlagsChoice";
 import { getSelectedButtonStyle } from "@/composables/fields/flags/getSelectedButtonStyle";
 import {
   type ConBookApiValue,
   type ConBookValue,
-  setupConBookChoices,
-} from "@/config/flags/setupConBookChoices";
-import type { FlagApiValue } from "@/types/external";
+  metadataListForConBookChoice,
+} from "@/config/metadata/flags/metadataForConBookChoice";
+import type { FlagApiValue } from "@/types/external/attsrv/attendees/attendee";
 import type { SelectButtonPassThroughMethodOptions } from "primevue/selectbutton";
 import type { ModelRef } from "vue";
 import type { WritableComputedRef } from "vue";
 
 function getButtonStyle(options: SelectButtonPassThroughMethodOptions) {
-  return getSelectedButtonStyle(conbookChoice, setupConBookChoices, options);
+  return getSelectedButtonStyle(
+    conbookChoice,
+    metadataListForConBookChoice,
+    options
+  );
 }
 
 const modelValue: ModelRef<FlagApiValue[] | null> = defineModel<
@@ -44,7 +48,7 @@ const modelValue: ModelRef<FlagApiValue[] | null> = defineModel<
 const conbookChoice: WritableComputedRef<ConBookValue | null> =
   computeFlagsChoice<FlagApiValue, ConBookApiValue>(
     modelValue,
-    setupConBookChoices
+    metadataListForConBookChoice
   );
 const componentId: string = generateId(useId());
 </script>

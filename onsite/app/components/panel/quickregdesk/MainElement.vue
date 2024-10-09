@@ -1,51 +1,42 @@
 <template>
-  <Toast :group="toastGroup" position="bottom-right" />
-  <LayoutOnsitePage :title="props.title">
-    <template #help>
-      Available hotkeys:
-      <ul>
-        <li>'Escape': Reset reg number input field</li>
-        <li>'Enter': Search for reg number</li>
-      </ul>
-    </template>
-    <div class="quickregdeskdesk w-screen p-px">
-      <Splitter stateKey="quickregdeskSplitter">
-        <SplitterPanel :size="25">
-          <PanelSponsordeskSearch @onSearchRegNumber="updateCurrentAttendee" />
-          <div class="pt-5">
-            <Message :severity="Severity.secondary" closable>
-              <div class="grid grid-cols-2 grid-flow-row items-center gap-1">
-                <div class="pb-5"><kbd class="kbc-button">Esc</kbd></div>
-                <div class="pb-5">Reset Input</div>
-                <div><kbd class="kbc-button">Enter</kbd></div>
-                <div>Search</div>
-              </div>
-            </Message>
-          </div>
-        </SplitterPanel>
-        <SplitterPanel :size="75">
-          <LayoutGroupPanel icon="pi-user" label="User Details">
-            <div class="flex flex-col gap-1">
-              <PanelRegdeskUserInfo
-                readonly
-                v-model="transformedAttendeeInfoAdapter"
-              />
-              <PanelRegdeskUserDetail
-                readonly
-                v-model="transformedAttendeeInfoAdapter"
-                v-model:searchStatus="searchStatusRef"
-                @onCheckin="onCheckin"
-                @onUndoCheckin="onUndoCheckin"
-                @updateCurrentAttendee="updateCurrentAttendee"
-              />
-              <LayoutRegNumberSearchStatus v-model:status="searchStatusRef" />
+  <Toast :group="toastService.toastGroup" position="bottom-right" />
+  <div class="quickregdeskdesk w-screen p-px">
+    <Splitter stateKey="quickregdeskSplitter">
+      <SplitterPanel :size="25">
+        <PanelSponsordeskSearch @onSearchRegNumber="updateCurrentAttendee" />
+        <div class="pt-5">
+          <Message :severity="MessageSeverity.secondary" closable>
+            <div class="grid grid-cols-2 grid-flow-row items-center gap-1">
+              <div class="pb-5"><kbd class="kbc-button">Esc</kbd></div>
+              <div class="pb-5">Reset Input</div>
+              <div><kbd class="kbc-button">Enter</kbd></div>
+              <div>Search</div>
             </div>
-          </LayoutGroupPanel>
-        </SplitterPanel>
-        <LayoutRegNumberSearchStatus :status="searchStatusRef" />
-      </Splitter>
-    </div>
-  </LayoutOnsitePage>
+          </Message>
+        </div>
+      </SplitterPanel>
+      <SplitterPanel :size="75">
+        <LayoutGroupPanel icon="pi-user" label="User Details">
+          <div class="flex flex-col gap-1">
+            <PanelRegdeskUserInfo
+              readonly
+              v-model="transformedAttendeeInfoAdapter"
+            />
+            <PanelRegdeskUserDetail
+              readonly
+              v-model="transformedAttendeeInfoAdapter"
+              v-model:searchStatus="searchStatusRef"
+              @onCheckin="onCheckin"
+              @onUndoCheckin="onUndoCheckin"
+              @updateCurrentAttendee="updateCurrentAttendee"
+            />
+            <LayoutRegNumberSearchStatus v-model:status="searchStatusRef" />
+          </div>
+        </LayoutGroupPanel>
+      </SplitterPanel>
+      <LayoutRegNumberSearchStatus :status="searchStatusRef" />
+    </Splitter>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -55,24 +46,20 @@ import { getIdleNoDataSearchStatus } from "@/composables/search_status/construct
 import { attendeeService } from "@/composables/services/attendeeService";
 import { authService } from "@/composables/services/authService";
 import { environmentSettings } from "@/composables/services/environmentService";
-import {
-  EnvName,
-  Severity,
-  type SearchStatus,
-  type TransformedAttendeeInfo,
-} from "@/types/internal";
-import type { ToastServiceMethods } from "primevue/toastservice";
 import type { WritableComputedRef } from "vue";
 import { handleSingleAttendeeSearch } from "@/composables/search_status/handleSingleAttendeeSearch";
 import { getOnCheckinFunction } from "@/composables/logic/getOnCheckinFunction";
+import { MessageSeverity } from "@/types/internal/primevue";
 import {
   keyboardService,
   ShortcutScope,
 } from "@/composables/services/keyboardService";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { SearchStatus } from "@/types/internal/component/regnumsearch";
+import { EnvName } from "@/types/internal/env";
+import { OnsiteToastService } from "@/composables/services/toastService";
 
 keyboardService.pushScope(ShortcutScope.regdesk);
-
-const toast: ToastServiceMethods = useToast();
 
 const transformedAttendeeInfoRef: Ref<TransformedAttendeeInfo | null> =
   ref<TransformedAttendeeInfo | null>(null);
@@ -90,14 +77,13 @@ function resetState(): void {
 authService.onLogout(resetState);
 
 const componentId: string = generateId(useId());
-const toastGroup: string = `quickregdesk${componentId}`;
+const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 
 const onCheckin = getOnCheckinFunction(
   updateCurrentAttendee,
   transformedAttendeeInfoRef,
   null,
-  toast,
-  toastGroup
+  toastService
 );
 
 async function onUndoCheckin(regNumber: number): Promise<void> {
@@ -105,7 +91,7 @@ async function onUndoCheckin(regNumber: number): Promise<void> {
     return;
   }
   await attendeeService.debugSetStatusToPaid(
-    getErrorHandlerFunction(toast, toastGroup),
+    getErrorHandlerFunction(toastService),
     regNumber
   );
   await updateCurrentAttendee(regNumber);
@@ -118,16 +104,10 @@ async function updateCurrentAttendee(
   transformedAttendeeInfoRef.value = await handleSingleAttendeeSearch(
     regNumber,
     searchStatusRef,
-    toast,
-    toastGroup
+    toastService
   );
   return transformedAttendeeInfoRef.value;
 }
-
-interface Props {
-  title: string;
-}
-const props: Props = defineProps<Props>();
 </script>
 
 <style>

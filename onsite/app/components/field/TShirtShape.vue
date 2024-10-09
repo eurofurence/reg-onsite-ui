@@ -4,19 +4,21 @@
     <SelectButton
       :id="componentId"
       v-model="modelValue"
-      :options="['Regular', 'Contoured']"
+      :options="metadataListForTShirtShape"
+      optionValue="value"
+      optionLabel="label"
       :allowEmpty="false"
     >
       <template #option="slotProps">
         <div class="flex flex-col">
-          {{ slotProps.option }}
+          {{ slotProps.option.label }}
           <div
             class="flex justify-center"
             style="width: 7.4rem; height: 7.4rem"
           >
             <img
               :class="invertOnDarkMode()"
-              :src="getTShirtShapeImageUrl(slotProps.option)"
+              :src="getTShirtShapeImageUrl(slotProps.option.value)"
               :placeholder="slotProps.option"
               unoptimized
             />
@@ -28,10 +30,13 @@
 </template>
 
 <script setup lang="ts">
-import { fieldCSS, fieldLabelCSS } from "@/components/field/common";
+import { fieldCSS, fieldLabelCSS } from "@/components/field/common/common";
 import { isDarkMode } from "@/composables/theme/isDarkMode";
-import type { TShirtShapeValue } from "@/config/setupTShirtShapes";
 import type { ModelRef } from "vue";
+import {
+  metadataListForTShirtShape,
+  type TShirtShapeValue,
+} from "@/config/metadata/tshirt/metadataForTShirtShapes";
 
 function invertOnDarkMode(): string {
   if (isDarkMode.value) {

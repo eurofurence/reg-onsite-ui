@@ -1,4 +1,4 @@
-import type { ColorsPaletteValue } from "@/config/theme";
+import type { ColorsPaletteValue } from "@/composables/theme/colors";
 
 export function getColorVariants(
   baseColorString: ColorsPaletteValue,

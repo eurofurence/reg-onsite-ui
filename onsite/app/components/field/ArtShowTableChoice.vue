@@ -1,39 +1,24 @@
 <template>
-  <div :class="fieldCSS + ' w-40'">
-    <label :for="componentId" :class="fieldLabelCSS">Art Show Tables</label>
-    <Select
-      :id="componentId"
-      :class="fieldTextCSS"
-      v-model="panelChoice"
-      :options="setupArtShowTables"
-      optionValue="value"
-      optionLabel="label"
-      :placeholder="setupArtShowTablesPlaceholder.label"
-      v-bind="$attrs"
-    />
-  </div>
+  <FieldCommonLabeledPackageSelect
+    v-model:model-value="modelValue"
+    label="Art Show Tables"
+    :width-in-rem="10"
+    :metadata-map="metadataRecordForArtShowTables"
+    :placeholderKey="ArtShowTable.none"
+  />
 </template>
 
 <script setup lang="ts">
 import {
-  fieldCSS,
-  fieldLabelCSS,
-  fieldTextCSS,
-} from "@/components/field/common";
-import { computePackageChoice } from "@/composables/fields/packages/computePackageChoice";
+  ArtShowTable,
+  metadataRecordForArtShowTables,
+} from "@/config/metadata/packages/metadataForArtShowTables";
 import {
-  type ArtShowTableValue,
-  setupArtShowTables,
-  setupArtShowTablesPlaceholder,
-} from "@/config/packages/setupArtShowTables";
-import type { PackageApiValue, PackageCountType } from "@/types/external";
-import type { WritableComputedRef } from "vue";
+  type PackageApiValue,
+  type PackageCountType,
+} from "@/types/external/attsrv/attendees/attendee";
 import type { ModelRef } from "vue";
 
-const modelValue: ModelRef<PackageCountType<PackageApiValue>[]> = defineModel<
-  PackageCountType<PackageApiValue>[]
->({ required: true });
-const panelChoice: WritableComputedRef<ArtShowTableValue | null> =
-  computePackageChoice(modelValue, setupArtShowTables);
-const componentId: string = generateId(useId());
+const modelValue: ModelRef<PackageCountType<PackageApiValue>[] | null> =
+  defineModel<PackageCountType<PackageApiValue>[] | null>({ required: true });
 </script>

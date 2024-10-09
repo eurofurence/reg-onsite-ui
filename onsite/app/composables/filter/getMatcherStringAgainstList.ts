@@ -1,5 +1,5 @@
 import type { DataTableFilterMetaData } from "primevue/datatable";
-import type { MatchStringAgainstList } from "@/types/internal";
+import type { MatchStringAgainstList } from "@/types/internal/filter";
 
 function getSupportedListMatchers(): Map<string, MatchStringAgainstList> {
   const result: Map<string, MatchStringAgainstList> = new Map();
@@ -16,7 +16,7 @@ export function getMatcherStringAgainstList(
   filter: DataTableFilterMetaData
 ): MatchStringAgainstList {
   const matcher: MatchStringAgainstList | undefined = supportedMatchers.get(
-    <string>filter.matchMode
+    filter.matchMode as string
   );
   if (matcher === undefined) {
     throw new Error(`Unknown matcher ${filter.matchMode}!`);

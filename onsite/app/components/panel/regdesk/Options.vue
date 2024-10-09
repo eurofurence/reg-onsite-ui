@@ -185,14 +185,19 @@
             >
             <Listbox
               id="globalSearchColumns"
-              v-model="dataOptionsRef.globalFilterFields"
-              :options="attendeeDataOptionChoices.globalFilterFields"
+              v-model="dataOptionsRef.filterConfig.globalFilterFields"
+              :options="
+                attendeeDataOptionChoices.filterConfig.globalFilterFields
+              "
               optionLabel="label"
               optionValue="fieldName"
               scrollHeight="35rem"
               multiple
             />
-            <small>To enable searching for the full name, please select both first and last name.</small>
+            <small>
+              To enable searching for the full name, please select both first
+              and last name.
+            </small>
           </div>
         </div>
       </TabPanel>
@@ -201,42 +206,52 @@
         <div class="flex flex-col gap-2">
           <div class="flex flex-col gap-1 h-5rem">
             <label for="country">Country Filter</label>
-            <CustomRegdeskTableSearchFieldCountry
+            <AttendeeTableSearchFieldCountry
               id="country"
-              v-model="dataOptionsRef.filters.country.value"
+              v-model="dataOptionsRef.filterConfig.filterValues.country.value"
               :columnDefinition="null"
               :filterCallback="() => {}"
             />
           </div>
           <div class="flex flex-col gap-1 h-5rem">
             <label for="status">Status Filter</label>
-            <CustomRegdeskTableSearchFieldTag
+            <AttendeeTableSearchFieldTag
               id="status"
-              v-model="dataOptionsRef.filters.status.value"
+              v-model="dataOptionsRef.filterConfig.filterValues.status.value"
               :columnDefinition="null"
               :filterCallback="() => {}"
-              :configItems="attendeeDataOptionChoices.filters.status"
+              :configItems="
+                attendeeDataOptionChoices.filterConfig.filterValues.status
+              "
             />
           </div>
           <div class="flex flex-col gap-1 h-5rem">
             <label for="roles">Role Filter</label>
-            <CustomRegdeskTableSearchFieldTag
+            <AttendeeTableSearchFieldTag
               id="roles"
-              v-model="dataOptionsRef.filters.transConRole.value"
+              v-model="
+                dataOptionsRef.filterConfig.filterValues.transConRole.value
+              "
               :columnDefinition="null"
               :filterCallback="() => {}"
-              :configItems="attendeeDataOptionChoices.filters.transConRole"
+              :configItems="
+                attendeeDataOptionChoices.filterConfig.filterValues.transConRole
+              "
             />
           </div>
           <div class="flex flex-col gap-1 h-5rem">
             <label for="sponsor">Sponsor Level Filter</label>
-            <CustomRegdeskTableSearchFieldTag
+            <AttendeeTableSearchFieldTag
               id="sponsor"
-              v-model="dataOptionsRef.filters.transSponsorChoice.value"
+              v-model="
+                dataOptionsRef.filterConfig.filterValues.transSponsorChoice
+                  .value
+              "
               :columnDefinition="null"
               :filterCallback="() => {}"
               :configItems="
-                attendeeDataOptionChoices.filters.transSponsorChoice
+                attendeeDataOptionChoices.filterConfig.filterValues
+                  .transSponsorChoice
               "
             />
           </div>
@@ -265,25 +280,32 @@ import type { ModelRef } from "vue";
 import {
   defaultAttendeeTableDisplayOptions,
   setupColumnDefinitionList,
-} from "@/config/app/regdesk";
-import { setupAttendeeQueryStrategy } from "@/config/app/regdesk";
-import { setupCheckinDisplay, setupTableFilterDisplay } from "@/config/app/regdesk";
-import { setupConRoles } from "@/config/setupConRoles";
-import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
-import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
-import { setupStatus } from "@/config/setupStatus";
+} from "@/config/system/regdesk";
+import { setupAttendeeQueryStrategy } from "@/config/system/regdesk";
 import {
-  type AttendeeDataOptions,
-  type AttendeeQueryStrategyValue,
-  type AttendeeTableDisplayOptions,
-  type CheckinDisplayValue,
-  type ColumnDefinition,
+  setupCheckinDisplay,
+  setupTableFilterDisplay,
+} from "@/config/system/regdesk";
+import type { GoodiesLevelValue } from "@/config/metadata/packages/metadataForPerks";
+import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
+import { metadataListForStatus } from "@/config/metadata/metadataForStatus";
+import {
   type ConRoleInfo,
   type LabeledValue,
   type PackageInfo,
   type StatusInfo,
-  type TableFilterDisplayValue,
-} from "@/types/internal";
+} from "@/types/internal/infos";
+import type {
+  ColumnDefinition,
+  TableFilterDisplayValue,
+} from "@/types/internal/component/table";
+import type {
+  AttendeeDataOptions,
+  AttendeeQueryStrategyValue,
+  AttendeeTableDisplayOptions,
+  CheckinDisplayValue,
+} from "@/types/internal/system/regdesk";
+import { metadataListForConRoles } from "@/config/metadata/flags/metadataForConRoles";
 
 interface AttendeeTableDisplayOptionChoices {
   displayRowsPerPage: number[];
@@ -300,24 +322,28 @@ const attendeeTableDisplayOptionChoices: AttendeeTableDisplayOptionChoices = {
 };
 
 interface AttendeeDataOptionChoices {
-  globalFilterFields: ColumnDefinition[];
   queryMode: LabeledValue<AttendeeQueryStrategyValue>[];
-  filters: {
-    status: StatusInfo[];
-    transConRole: ConRoleInfo[];
-    transSponsorChoice: PackageInfo<GoodiesLevelValue>[];
+  filterConfig: {
+    globalFilterFields: ColumnDefinition[];
+    filterValues: {
+      status: StatusInfo[];
+      transConRole: ConRoleInfo[];
+      transSponsorChoice: PackageInfo<GoodiesLevelValue>[];
+    };
   };
 }
 
 const attendeeDataOptionChoices: AttendeeDataOptionChoices = {
-  globalFilterFields: setupColumnDefinitionList.filter(
-    (item: ColumnDefinition) => item?.fieldCanBeUsedByGlobalSearch
-  ),
   queryMode: setupAttendeeQueryStrategy,
-  filters: {
-    status: setupStatus,
-    transConRole: setupConRoles,
-    transSponsorChoice: setupSponsorLevels,
+  filterConfig: {
+    globalFilterFields: setupColumnDefinitionList.filter(
+      (item: ColumnDefinition) => item?.fieldCanBeUsedByGlobalSearch
+    ),
+    filterValues: {
+      status: metadataListForStatus,
+      transConRole: metadataListForConRoles,
+      transSponsorChoice: metadataListForSponsorLevels,
+    },
   },
 };
 

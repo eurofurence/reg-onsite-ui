@@ -1,11 +1,11 @@
 import { getAllApiRoleItems } from "@/composables/fields/conrole/getAllApiRoleItems";
+import type { ConRoleInfo } from "@/types/internal/infos";
 import {
   ConRole,
   type ConRoleApiValue,
   type ConRoleValue,
-} from "@/config/setupConRoles";
-import type { FlagApiValue } from "@/types/external";
-import type { ConRoleInfo } from "@/types/internal";
+} from "@/config/metadata/flags/metadataForConRoles";
+import type { FlagApiValue } from "@/types/external/attsrv/attendees/attendee";
 
 export function getAllRoleValues(
   flagValueList: FlagApiValue[],
@@ -13,10 +13,10 @@ export function getAllRoleValues(
 ): ConRoleValue[] {
   const roleItems: ConRoleInfo[] = getAllApiRoleItems(flagValueList, id);
   const roleApiValues: ConRoleApiValue[] = roleItems.map(
-    (item: ConRoleInfo) => <ConRoleApiValue>item.value
+    (item: ConRoleInfo) => item.value as ConRoleApiValue
   );
   if (roleApiValues.length > 0) {
     return roleApiValues;
   }
-  return (<ConRoleValue[]>roleApiValues).concat([ConRole.none]);
+  return (roleApiValues as ConRoleValue[]).concat([ConRole.none]);
 }

@@ -1,4 +1,7 @@
-import type { AllFilterFieldValues, RawAttendeeFilter } from "@/types/internal";
+import type {
+  AllFilterFieldValues,
+  RawAttendeeFilter,
+} from "@/types/internal/filter";
 import { hasFilterContent } from "@/composables/sort_and_filter/hasFilterContent";
 import { isValidNameFilter } from "@/composables/sort_and_filter/isValidNameFilter";
 
@@ -8,7 +11,7 @@ export function hasMinimalFilter(filter: RawAttendeeFilter): boolean {
     return true;
   }
   if (
-    hasFilterContent(<string | null>filter.global.value) &&
+    hasFilterContent(filter.global.value as string | null) &&
     !isNaN(Number(filter.global.value))
   ) {
     // A raw number in the global field is likely just a badge ID and therefore sufficient

@@ -1,5 +1,5 @@
-import { deepCopy } from "@/composables/state/deepCopy";
-import type { TransformedAttendeeInfo } from "@/types/internal";
+import { deepCopy } from "@/composables/deepCopy";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { WritableComputedRef } from "vue";
 import { getPlaceholderAttendeeInfo } from "@/composables/fields/getPlaceholderAttendeeInfo";
 

@@ -22,13 +22,13 @@ import {
   fieldLabelCSS,
   fieldTextCSS,
   resolveColorEntry,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { getStatusItem } from "@/composables/fields/status/getStatusItem";
-import type { StatusValues } from "@/config/setupStatus";
 import type { ModelRef } from "vue";
+import type { AttendeeApiStatusValues } from "@/config/metadata/metadataForStatus";
 
-const modelValue: ModelRef<StatusValues | null> =
-  defineModel<StatusValues | null>({
+const modelValue: ModelRef<AttendeeApiStatusValues | null> =
+  defineModel<AttendeeApiStatusValues | null>({
     required: true,
   });
 const componentId: string = generateId(useId());

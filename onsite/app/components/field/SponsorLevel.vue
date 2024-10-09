@@ -6,7 +6,7 @@
       :class="fieldTextCSS"
       v-model="sponsorChoice"
       :pt:pc-toggle-button:root="getButtonStyle"
-      :options="setupSponsorLevels"
+      :options="metadataListForSponsorLevels"
       optionValue="value"
       optionLabel="label"
       v-bind="$attrs"
@@ -19,22 +19,29 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { computePackageChoice } from "@/composables/fields/packages/computePackageChoice";
 import { getSelectedButtonStyle } from "@/composables/fields/packages/getSelectedButtonStyle";
-import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
-import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
-import type { PackageApiValue, PackageCountType } from "@/types/external";
+import type { GoodiesLevelValue } from "@/config/metadata/packages/metadataForPerks";
+import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
+import type {
+  PackageApiValue,
+  PackageCountType,
+} from "@/types/external/attsrv/attendees/attendee";
 import type { SelectButtonPassThroughMethodOptions } from "primevue/selectbutton";
 import type { ModelRef, WritableComputedRef } from "vue";
 
 const modelValue: ModelRef<PackageCountType<PackageApiValue>[] | null> =
   defineModel<PackageCountType<PackageApiValue>[] | null>({ required: true });
 const sponsorChoice: WritableComputedRef<GoodiesLevelValue | null> =
-  computePackageChoice(modelValue, setupSponsorLevels);
+  computePackageChoice(modelValue, metadataListForSponsorLevels);
 const componentId: string = generateId(useId());
 
 function getButtonStyle(options: SelectButtonPassThroughMethodOptions) {
-  return getSelectedButtonStyle(sponsorChoice, setupSponsorLevels, options);
+  return getSelectedButtonStyle(
+    sponsorChoice,
+    metadataListForSponsorLevels,
+    options
+  );
 }
 </script>

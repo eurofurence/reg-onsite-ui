@@ -1,5 +1,5 @@
-import { darkModeClass, defaultUserSettings } from "../../config/theme";
-import { isDarkMode } from "./isDarkMode";
+import { darkModeClass, defaultUserSettings } from "@/config/theme/common";
+import { isDarkMode } from "@/composables/theme/isDarkMode";
 
 const themeSettings = useSmartCookie("onsiteTheme", defaultUserSettings);
 
@@ -8,19 +8,24 @@ function setStylesheetVariables(fontSize: number, headerSize: number): void {
   document.documentElement.style.setProperty("--header-size", `${headerSize}`);
 }
 
+function toggleGlobalStyleSheetClass(className: string, value: boolean): void {
+  const element = document.querySelector("html");
+  if (element !== null) {
+    if (value) {
+      element.classList.add(className);
+    } else {
+      element.classList.remove(className);
+    }
+  }
+}
+
 export function initTheme(): void {
   setStylesheetVariables(
     themeSettings.value.fontSize,
     themeSettings.value.headerSize
   );
-  const element = document.querySelector("html");
+  toggleGlobalStyleSheetClass(darkModeClass, themeSettings.value.isDarkMode);
   isDarkMode.value = themeSettings.value.isDarkMode;
-  if (element !== null) {
-    if (themeSettings.value.isDarkMode) {
-      element.classList.add(darkModeClass);
-    } else {
-      element.classList.remove(darkModeClass);
-    }
-  }
 }
+
 watch(themeSettings, initTheme, { immediate: true });

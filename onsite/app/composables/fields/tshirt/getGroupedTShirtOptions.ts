@@ -1,9 +1,12 @@
-import { TShirtShape, type TShirtShapeValue } from "@/config/setupTShirtShapes";
+import {
+  TShirtShape,
+  type TShirtShapeValue,
+} from "@/config/metadata/tshirt/metadataForTShirtShapes";
 import {
   type TShirtInfo,
   setupTShirtTypePlaceholder,
-  setupTShirtTypes,
-} from "@/config/tshirt/setupTShirtTypes";
+  metadataListForTShirtTypes,
+} from "@/config/metadata/tshirt/metadataForTShirtTypes";
 
 type FlexibleTShirtInfo = TShirtInfo | typeof setupTShirtTypePlaceholder;
 
@@ -21,7 +24,7 @@ export function getGroupedTShirtOptions(): TShirtGroup[] {
     (tshirtShape: TShirtShapeValue) => {
       return {
         label: tshirtShape,
-        children: setupTShirtTypes.filter(
+        children: metadataListForTShirtTypes.filter(
           (tshirtInfo: FlexibleTShirtInfo) => tshirtInfo.shape == tshirtShape
         ),
       };

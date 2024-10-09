@@ -1,5 +1,8 @@
 import { setupEventListener } from "@/composables/events/setupEventListener";
-import type { KeyMatchFunction, KeyboardCallback } from "@/types/internal";
+import type {
+  KeyMatchFunction,
+  KeyboardCallback,
+} from "@/types/internal/keyboard";
 
 export function setupKeyEvents(
   eventName: string,

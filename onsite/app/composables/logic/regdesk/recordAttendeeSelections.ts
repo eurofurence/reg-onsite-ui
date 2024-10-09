@@ -1,4 +1,4 @@
-import type { TransformedAttendeeInfo } from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 export function recordAttendeeSelections(
   selectedAttendeeRef: Ref<TransformedAttendeeInfo | null>,

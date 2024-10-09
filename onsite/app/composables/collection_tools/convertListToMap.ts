@@ -8,9 +8,9 @@ export function convertListToMap<ItemValueType, MapValueType>(
   >();
   inputList.forEach((item: { value: ItemValueType; [key: string]: any }) => {
     if (lookup === null) {
-      resultMap.set(item.value, <MapValueType>item);
+      resultMap.set(item.value, item as MapValueType);
     } else {
-      resultMap.set(item.value, <MapValueType>item[lookup]);
+      resultMap.set(item.value, item[lookup] as MapValueType);
     }
   });
   return resultMap;

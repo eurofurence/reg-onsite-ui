@@ -1,5 +1,6 @@
 import { getAllApiRoleItems } from "@/composables/fields/conrole/getAllApiRoleItems";
-import type { ConRoleInfo, TransformedAttendeeInfo } from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { ConRoleInfo } from "@/types/internal/infos";
 
 export function hasRoles(attendee: TransformedAttendeeInfo): boolean {
   const roleItems: ConRoleInfo[] = getAllApiRoleItems(

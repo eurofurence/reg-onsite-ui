@@ -20,10 +20,10 @@ import {
   fieldCSS,
   fieldLabelCSS,
   fieldTextCSS,
-} from "@/components/field/common";
+} from "@/components/field/common/common";
 import { getCountryName } from "@/composables/fields/country/getCountryName";
 import { getFlagCSSClass } from "@/composables/fields/country/getFlagCSSClass";
-import type { CountryCode } from "@/config/setupCountries";
+import type { CountryCode } from "@/config/metadata/metadataForCountry";
 import type { ModelRef } from "vue";
 
 const modelValue: ModelRef<CountryCode | null> =

@@ -1,12 +1,10 @@
-import type { ToastServiceMethods } from "primevue/toastservice";
-import Status from "@/components/field/Status.vue";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { attendeeService } from "@/composables/services/attendeeService";
-import {
-  Severity,
-  type AttendeeTableDisplayOptions,
-  type TransformedAttendeeInfo,
-} from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { AttendeeTableDisplayOptions } from "@/types/internal/system/regdesk";
+import { ToastSeverity } from "@/types/internal/primevue";
+import type { OnsiteToastService } from "@/composables/services/toastService";
+import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 
 export function getOnCheckinFunction(
   updateAttendee: (
@@ -14,20 +12,18 @@ export function getOnCheckinFunction(
   ) => Promise<TransformedAttendeeInfo | null>,
   selectedAttendeeRef: Ref<TransformedAttendeeInfo | null>,
   displayOptionsRef: Ref<AttendeeTableDisplayOptions> | null,
-  toast: ToastServiceMethods,
-  toastGroup: string
+  toastService: OnsiteToastService
 ): (regNumber: number) => Promise<void> {
   return async (regNumber: number): Promise<void> => {
     await attendeeService.checkinAttendee(
-      getErrorHandlerFunction(toast, toastGroup),
+      getErrorHandlerFunction(toastService),
       regNumber
     );
     const updatedAttendee: TransformedAttendeeInfo | null =
       await updateAttendee(regNumber);
-    if (updatedAttendee?.status === Status.checked_in) {
-      toast.add({
-        group: toastGroup,
-        severity: Severity.info,
+    if (updatedAttendee?.status === AttendeeApiStatus.checked_in) {
+      toastService.add({
+        severity: ToastSeverity.info,
         summary: `Checked in attendee ${regNumber}`,
         life: 2000,
       });

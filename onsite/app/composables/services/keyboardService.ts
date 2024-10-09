@@ -1,5 +1,8 @@
 import { setupKeyEvents } from "@/composables/events/setupKeyEvents";
-import type { KeyMatchFunction, KeyboardCallback } from "@/types/internal";
+import type {
+  KeyboardCallback,
+  KeyMatchFunction,
+} from "@/types/internal/keyboard";
 
 export const enum ShortcutScope {
   debug = "debug",
@@ -72,9 +75,12 @@ function pushScope(scope: ShortcutScope): void {
 }
 
 function popScope(scope: ShortcutScope): void {
-  const checkScope: ShortcutScope | undefined = shortCutScopeStackRef.value.pop();
+  const checkScope: ShortcutScope | undefined =
+    shortCutScopeStackRef.value.pop();
   if (scope != checkScope) {
-    console.log(`Inconsistent scopes! ${scope}: ${shortCutScopeStackRef.value}`);
+    console.log(
+      `Inconsistent scopes! ${scope}: ${shortCutScopeStackRef.value}`
+    );
   }
 }
 
@@ -88,10 +94,10 @@ function getCurrentScope(): ShortcutScope | undefined {
 
 interface KeyboardService {
   registerShortcuts: typeof registerShortcuts;
-  pushScope: typeof pushScope,
-  popScope: typeof popScope,
-  resetScope: typeof resetScope,
-  getCurrentScope: typeof getCurrentScope,
+  pushScope: typeof pushScope;
+  popScope: typeof popScope;
+  resetScope: typeof resetScope;
+  getCurrentScope: typeof getCurrentScope;
 }
 
 export const keyboardService: KeyboardService = {
@@ -102,13 +108,19 @@ export const keyboardService: KeyboardService = {
   getCurrentScope: getCurrentScope,
 };
 
-export function watchDialogVisibility(visiblityRef: Ref<boolean>, scope: ShortcutScope): void {
-  watch(() => visiblityRef.value, (value: boolean, oldValue: boolean | undefined) => {
-    if (value) {
-      pushScope(scope);
-    } else if (oldValue !== undefined) {
-      popScope(scope);
-    }
-  }, { immediate: true }
+export function watchDialogVisibility(
+  visiblityRef: Ref<boolean>,
+  scope: ShortcutScope
+): void {
+  watch(
+    () => visiblityRef.value,
+    (value: boolean, oldValue: boolean | undefined) => {
+      if (value) {
+        pushScope(scope);
+      } else if (oldValue !== undefined) {
+        popScope(scope);
+      }
+    },
+    { immediate: true }
   );
 }

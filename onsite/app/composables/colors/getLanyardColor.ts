@@ -1,20 +1,20 @@
-import { getConRoleChoice } from "@/composables/fields/conrole/getConRoleChoice";
+import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRoleChoice";
 import { computePackageChoice } from "@/composables/fields/packages/computePackageChoice";
-import type { GoodiesLevelValue } from "@/config/packages/setupPackages";
-import { ConRole } from "@/config/setupConRoles";
-import { setupSponsorLevels } from "@/config/packages/setupSponsorLevels";
-import { ColorsPalette, type ColorsPaletteValue } from "@/config/theme";
-import type {
-  ConRoleInfo,
-  PackageInfo,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
+import type { GoodiesLevelValue } from "@/config/metadata/packages/metadataForPerks";
+import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
+import {
+  ColorsPalette,
+  type ColorsPaletteValue,
+} from "@/composables/theme/colors";
 import type { WritableComputedRef } from "vue";
+import { ConRole } from "@/config/metadata/flags/metadataForConRoles";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { ConRoleInfo, PackageInfo } from "@/types/internal/infos";
 
 export function getLanyardColor(
   attendeeInfo: TransformedAttendeeInfo
 ): ColorsPaletteValue {
-  const ConRoleInfo: ConRoleInfo = getConRoleChoice(
+  const ConRoleInfo: ConRoleInfo = getMainConRoleChoice(
     attendeeInfo.flags_list,
     attendeeInfo.id
   );
@@ -22,9 +22,12 @@ export function getLanyardColor(
     return ConRoleInfo.color;
   }
   const sponsorChoice: WritableComputedRef<GoodiesLevelValue | null> =
-    computePackageChoice(ref(attendeeInfo.packages_list), setupSponsorLevels);
+    computePackageChoice(
+      ref(attendeeInfo.packages_list),
+      metadataListForSponsorLevels
+    );
   const sponsorItem: PackageInfo<GoodiesLevelValue> | undefined =
-    setupSponsorLevels.find(
+    metadataListForSponsorLevels.find(
       (entry: PackageInfo<GoodiesLevelValue>) =>
         entry.value === sponsorChoice.value
     );

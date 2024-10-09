@@ -1,5 +1,5 @@
-import type { ApiError } from "@/types/external";
-import type { RestErrorInfo } from "@/types/internal";
+import type { ApiError } from "@/types/external/error";
+import type { RestErrorInfo } from "@/types/internal/rest";
 
 type DetailRetriever = (data: ApiError) => string | null;
 

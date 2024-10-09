@@ -1,7 +1,10 @@
 import { computeSubsetList } from "@/composables/collection_tools/computeSubsetList";
 import { computePurePackageList } from "@/composables/fields/packages/computePurePackageList";
-import type { PackageApiValue, PackageCountType } from "@/types/external";
-import type { LabeledValue } from "@/types/internal";
+import type {
+  PackageApiValue,
+  PackageCountType,
+} from "@/types/external/attsrv/attendees/attendee";
+import type { LabeledValue } from "@/types/internal/infos";
 import type { WritableComputedRef } from "vue";
 
 export function computePackageSubset<Type extends PackageApiValue>(

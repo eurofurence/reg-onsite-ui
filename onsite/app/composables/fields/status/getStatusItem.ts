@@ -1,14 +1,8 @@
-import { convertListToMap } from "@/composables/collection_tools/convertListToMap";
-import { type StatusValues, setupStatus } from "@/config/setupStatus";
-import type { StatusInfo } from "@/types/internal";
+import { metadataRecordForStatus } from "@/config/metadata/metadataForStatus";
+import type { StatusInfo } from "@/types/internal/infos";
+import { getMetadataEntry } from "@/composables/collection_tools/getMetadataEntry";
+import type { AttendeeApiStatusValues } from "@/config/metadata/metadataForStatus";
 
-const propertyMap: Map<StatusValues, StatusInfo> =
-  convertListToMap(setupStatus);
-
-export function getStatusItem(value: StatusValues): StatusInfo {
-  const result: StatusInfo | undefined = propertyMap.get(value);
-  if (result === undefined) {
-    throw new Error(`Invalid status ${value}`);
-  }
-  return result;
+export function getStatusItem(value: AttendeeApiStatusValues): StatusInfo {
+  return getMetadataEntry<StatusInfo>(value, metadataRecordForStatus);
 }

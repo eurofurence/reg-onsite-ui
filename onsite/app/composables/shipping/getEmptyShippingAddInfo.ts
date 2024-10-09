@@ -1,7 +1,11 @@
-import { deepCopy } from "@/composables/state/deepCopy";
-import { TShirtShape } from "@/config/setupTShirtShapes";
-import { TShirtSize } from "@/config/tshirt/setupTShirtSizes";
-import { type ApiShippingAddInfo, ShippingEmailUse } from "@/types/external";
+import { TShirtSize } from "@/config/metadata/tshirt/metadataForTShirtSizes";
+import TShirtShape from "@/components/field/TShirtShape.vue";
+import type { CountryCode } from "@/config/metadata/metadataForCountry";
+import {
+  ShippingEmailUse,
+  type ApiShippingAddInfo,
+} from "@/types/external/attsrv/additional-info/shipping";
+import { deepCopy } from "@/composables/deepCopy";
 
 const emptyShippingAddInfo: ApiShippingAddInfo = {
   id: 0,
@@ -12,7 +16,7 @@ const emptyShippingAddInfo: ApiShippingAddInfo = {
   zip: "",
   city: "",
   email: "",
-  country: "DE",
+  country: "DE" as CountryCode,
   state: "",
   comments: "",
   tshirt_size: TShirtSize.size_m,

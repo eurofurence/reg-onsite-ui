@@ -1,4 +1,7 @@
-import type { PackageApiValue, PackageCountType } from "@/types/external";
+import type {
+  PackageApiValue,
+  PackageCountType,
+} from "@/types/external/attsrv/attendees/attendee";
 
 export function getPurePackageList(
   data: PackageCountType<PackageApiValue>[] | null

@@ -1,5 +1,5 @@
 <template>
-  <Toast :group="toastGroup" position="bottom-right" />
+  <Toast :group="toastService.toastGroup" position="bottom-right" />
   <Panel header="Issued Items">
     <template #icons>
       <CustomSponsordeskSelectAvailableItemsButton
@@ -17,16 +17,16 @@
     </template>
     <div class="flex flex-col gap-3">
       <Message
-        severity="error"
+        :severity="MessageSeverity.error"
         v-if="
-          transformedAttendeeInfoRef?.status !== Status.checked_in &&
+          transformedAttendeeInfoRef?.status !== AttendeeApiStatus.checked_in &&
           transformedAttendeeInfoRef?.status !== null
         "
       >
         The attendee is in status
         <CustomTagControl
           v-model="transformedAttendeeInfoRef.status"
-          :configItems="setupStatus"
+          :configItems="metadataListForStatus"
         />
         <br />
         The attendee needs to check in at the registration desk before receiving
@@ -50,7 +50,7 @@ import { getSubsetList } from "@/composables/collection_tools/getSubsetList";
 import { isDirty } from "@/composables/dirty/isDirty";
 import { getAllConcreteItems } from "@/composables/items/getAllConcreteItems";
 import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
-import { getTrinketItemsSubset } from "@/composables/items/getTrinketItemsSubset";
+import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
 import { attendeeService } from "@/composables/services/attendeeService";
 import {
   ShortcutEvent,
@@ -58,40 +58,36 @@ import {
   ShortcutScope,
   keyboardService,
 } from "@/composables/services/keyboardService";
-import { deepCopy } from "@/composables/state/deepCopy";
-import { Status, setupStatus } from "@/config/setupStatus";
-import { defaultSponsorDeskSettings } from "@/config/sponsordesk";
+import { metadataListForStatus } from "@/config/metadata/metadataForStatus";
 import type {
-  AbstractTrinketValue,
-  ConcreteTrinketValue,
+  AbstractGoodieValue,
+  ConcreteGoodieValue,
 } from "@/setupEFIteration";
-import type { ApiSponsorDeskAddInfo } from "@/types/external";
-import {
-  Severity,
-  type SponsorDeskSettings,
-  type TransformedAttendeeInfo,
-} from "@/types/internal";
-import type { ToastServiceMethods } from "primevue/toastservice";
 import type { ModelRef } from "vue";
 import type { CookieRef } from "#app";
+import { MessageSeverity, ToastSeverity } from "@/types/internal/primevue";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
+import { defaultSponsorDeskSettings } from "@/config/system/sponsordesk";
+import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
+import { deepCopy } from "@/composables/deepCopy";
+import { OnsiteToastService } from "@/composables/services/toastService";
+import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 
-const toast: ToastServiceMethods = useToast();
 const savingItemsFlag: Ref<boolean> = ref<boolean>(false);
 
 async function saveItems() {
   if (transformedAttendeeInfoRef.value.id === null) {
-    toast.add({
-      group: toastGroup,
-      severity: Severity.warn,
+    toastService.add({
+      severity: ToastSeverity.warn,
       summary: "Invalid attendee Infos",
       life: 3000,
     });
     return;
   }
   if (!isDirty.value) {
-    toast.add({
-      group: toastGroup,
-      severity: Severity.warn,
+    toastService.add({
+      severity: ToastSeverity.warn,
       summary: "Items have not changed",
       life: 3000,
     });
@@ -99,15 +95,14 @@ async function saveItems() {
   }
   savingItemsFlag.value = true;
   const putSponsorResult: null | undefined =
-    await attendeeService.putSponsorDeskAddInfo(
-      getErrorHandlerFunction(toast, toastGroup),
+    await attendeeService.addInfos.putSponsorDeskAddInfo(
+      getErrorHandlerFunction(toastService),
       transformedAttendeeInfoRef.value.id,
       apiSDAddInfoRef.value
     );
   if (putSponsorResult !== undefined) {
-    toast.add({
-      group: toastGroup,
-      severity: Severity.info,
+    toastService.add({
+      severity: ToastSeverity.info,
       summary: "Stored issued items",
       life: 500,
     });
@@ -119,15 +114,15 @@ async function saveItems() {
 }
 
 async function selectAvailable(event: KeyboardEvent): Promise<void> {
-  const concreteItems: ConcreteTrinketValue[] = getOwedConcreteItems(
+  const concreteItems: ConcreteGoodieValue[] = getOwedConcreteItems(
     transformedAttendeeInfoRef.value,
     apiSDAddInfoRef.value
   );
-  const availableOwedItems: ConcreteTrinketValue[] | null = getSubsetList(
+  const availableOwedItems: ConcreteGoodieValue[] | null = getSubsetList(
     concreteItems,
     sponsorDeskSettings.value.available
   );
-  const keepIssuedItems: ConcreteTrinketValue[] = [
+  const keepIssuedItems: ConcreteGoodieValue[] = [
     ...new Set([
       ...(availableOwedItems || []),
       ...apiSDAddInfoRef.value.issuedItems,
@@ -165,7 +160,7 @@ const apiSDAddInfoComparisonRef: ModelRef<ApiSponsorDeskAddInfo | null> =
 
 interface Props {
   deskName: string;
-  deskItemSubset: AbstractTrinketValue[];
+  deskItemSubset: AbstractGoodieValue[];
 }
 const props: Props = defineProps<Props>();
 
@@ -175,18 +170,18 @@ const sponsorDeskSettings: CookieRef<SponsorDeskSettings> = useSmartCookie(
     ...defaultSponsorDeskSettings,
     ...{
       available: getAllConcreteItems(
-        getTrinketItemsSubset(props.deskItemSubset)
+        getGoodieItemsSubset(props.deskItemSubset)
       ),
     },
   }
 );
 
 const componentId: string = generateId(useId());
-const toastGroup: string = `items${componentId}`;
+const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 </script>
 
 <style>
-.issued-items .ef-field-label {
+.issued-items .onsite-field-label {
   display: none;
 }
 </style>

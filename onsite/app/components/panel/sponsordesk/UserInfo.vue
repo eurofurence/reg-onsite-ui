@@ -32,8 +32,9 @@
 
 <script setup lang="ts">
 import { hasRoles } from "@/composables/fields/conrole/hasRoles";
-import type { SearchStatus, TransformedAttendeeInfo } from "@/types/internal";
 import type { ModelRef } from "vue";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { SearchStatus } from "@/types/internal/component/regnumsearch";
 
 interface Props {
   searchStatus: SearchStatus;

@@ -1,12 +1,13 @@
 import { getPurePackageList } from "@/composables/fields/packages/getPurePackageList";
-import type { DayAttendanceValue } from "@/config/packages/setupDayAttendance";
+import type { AttendanceApiValue } from "@/config/metadata/packages/metadataForAttendance";
 import { configDayAttendanceItems } from "@/setupEFIteration";
-import type { PackageApiValue } from "@/types/external";
-import type { LabeledValue, TransformedAttendeeInfo } from "@/types/internal";
+import type { PackageApiValue } from "@/types/external/attsrv/attendees/attendee";
+import type { LabeledValue } from "@/types/internal/infos";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
-const dayAttendanceSet: Set<DayAttendanceValue> = new Set(
+const dayAttendanceSet: Set<AttendanceApiValue> = new Set(
   configDayAttendanceItems.map(
-    (entry: LabeledValue<DayAttendanceValue>) => entry.value
+    (entry: LabeledValue<AttendanceApiValue>) => entry.value
   )
 );
 
@@ -19,7 +20,7 @@ export function hasDayAttendance(attendee: TransformedAttendeeInfo): boolean {
   }
   return (
     purePackages.some((entry: PackageApiValue) =>
-      dayAttendanceSet.has(<DayAttendanceValue>entry)
+      dayAttendanceSet.has(entry as AttendanceApiValue)
     ) || false
   );
 }

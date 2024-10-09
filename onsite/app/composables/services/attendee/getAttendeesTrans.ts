@@ -1,13 +1,13 @@
 import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
-import { getAttendees } from "@/composables/api/getAttendees";
+import { getAttendees } from "@/composables/api/attsrv/attendees/getAttendees";
 import { transformAttendee } from "@/composables/services/attendee/transformAttendee";
 import type {
   ApiAttendeeInfo,
   ApiSearchType,
   FlagApiValue,
   PackageApiValue,
-} from "@/types/external";
-import type { TransformedAttendeeInfo } from "@/types/internal";
+} from "@/types/external/attsrv/attendees/attendee";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 export async function getAttendeesTrans(
   errorHandler: RestErrorHandler,

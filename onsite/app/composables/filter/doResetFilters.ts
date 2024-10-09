@@ -1,7 +1,9 @@
-import { defaultAttendeeDataOptions } from "@/config/app/regdesk";
-import type { AttendeeDataOptions } from "@/types/internal";
-import { deepCopy } from "@/composables/state/deepCopy";
+import { defaultAttendeeDataOptions } from "@/config/system/regdesk";
+import { deepCopy } from "@/composables/deepCopy";
+import type { AttendeeDataOptions } from "@/types/internal/system/regdesk";
 
 export function doResetFilters(dataOptionsRef: Ref<AttendeeDataOptions>): void {
-  dataOptionsRef.value.filters = deepCopy(defaultAttendeeDataOptions.filters);
+  dataOptionsRef.value.filterConfig.filterValues = deepCopy(
+    defaultAttendeeDataOptions.filterConfig.filterValues
+  );
 }

@@ -1,7 +1,8 @@
 <template>
   <div v-if="displayOptionsRef.displayRunner.enabled">
     <Toast
-      :group="toastGroup"
+      :group="toastService.toastGroup"
+      pt:root:class="runner-toast"
       :position="displayOptionsRef.displayRunner.location"
       unstyled
     >
@@ -21,14 +22,14 @@
 </template>
 
 <script setup lang="ts">
-import type { ToastServiceMethods } from "primevue/toastservice";
-import { useToast } from "primevue/usetoast";
 import type { ModelRef } from "vue";
 import { getLanyardColor } from "@/composables/colors/getLanyardColor";
 import { resolveColor } from "@/composables/colors/resolveColor";
-import type { ColorsPaletteValue } from "@/config/theme";
-import type { TransformedAttendeeInfo } from "@/types/internal";
-import { Severity, type AttendeeTableDisplayOptions } from "@/types/internal";
+import type { ColorsPaletteValue } from "@/composables/theme/colors";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { OnsiteToastService } from "@/composables/services/toastService";
+import { ToastSeverity } from "@/types/internal/primevue";
+import type { AttendeeTableDisplayOptions } from "@/types/internal/system/regdesk";
 
 function getStyle(attendee: TransformedAttendeeInfo): any {
   const color: ColorsPaletteValue = getLanyardColor(attendee);
@@ -39,12 +40,10 @@ function getStyle(attendee: TransformedAttendeeInfo): any {
     ["font-size"]: `${displayOptionsRef.value.displayRunner.size}rem`,
     ["padding-left"]: `${paddingSize}rem`,
     ["padding-right"]: `${paddingSize}rem`,
-    background: resolveColor(color),
-    color: "white",
+    ["background"]: resolveColor(color),
+    ["color"]: "white",
   };
 }
-
-const toast: ToastServiceMethods = useToast();
 
 const displayOptionsRef: ModelRef<AttendeeTableDisplayOptions> =
   defineModel<AttendeeTableDisplayOptions>("displayOptions", {
@@ -57,16 +56,15 @@ const selectedAttendeeRef: ModelRef<TransformedAttendeeInfo | null> =
   });
 
 const componentId: string = generateId(useId());
-const toastGroup: string = `runnerToast${componentId}`;
+const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 
 async function onSelectionChange() {
   if (
     selectedAttendeeRef.value !== null &&
     selectedAttendeeRef.value.transCanCheckin
   ) {
-    toast.add({
-      group: toastGroup,
-      severity: Severity.success,
+    toastService.add({
+      severity: ToastSeverity.success,
       summary: `#${selectedAttendeeRef.value.id}`,
       detail: JSON.stringify(selectedAttendeeRef.value),
       life: displayOptionsRef.value.displayRunner.duration,
@@ -76,3 +74,11 @@ async function onSelectionChange() {
 
 watch(() => selectedAttendeeRef.value?.badge_id, onSelectionChange);
 </script>
+
+<style lang="css">
+.runner-toast {
+  /* Ensure the runner toast messages are on top */
+  z-index: 100;
+  position: relative;
+}
+</style>

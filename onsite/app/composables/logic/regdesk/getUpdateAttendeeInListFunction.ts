@@ -1,6 +1,7 @@
-import type { ToastServiceMethods } from "primevue/toastservice";
 import { handleSingleAttendeeSearch } from "@/composables/search_status/handleSingleAttendeeSearch";
-import type { SearchStatus, TransformedAttendeeInfo } from "@/types/internal";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { SearchStatus } from "@/types/internal/component/regnumsearch";
+import type { OnsiteToastService } from "@/composables/services/toastService";
 
 function hasAttendeeChanged(
   regNumber: number,
@@ -17,16 +18,14 @@ export function getUpdateAttendeeInListFunction(
   listRef: Ref<TransformedAttendeeInfo[]>,
   selectedRef: Ref<TransformedAttendeeInfo | null>,
   searchStatusRef: Ref<SearchStatus>,
-  toast: ToastServiceMethods,
-  toastGroup: string
+  toastService: OnsiteToastService
 ): (regNumber: number) => Promise<TransformedAttendeeInfo | null> {
   return async (regNumber: number): Promise<TransformedAttendeeInfo | null> => {
     const result: TransformedAttendeeInfo | null =
       await handleSingleAttendeeSearch(
         regNumber,
         searchStatusRef,
-        toast,
-        toastGroup
+        toastService
       );
     if (result == null) {
       return null;

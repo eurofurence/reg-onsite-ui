@@ -6,27 +6,31 @@
     <template #icons>
       <div class="flex flex-row">
         <ProgressBar v-if="cooldownActive" indeterminate />
-        <InputGroup>
+        <ButtonGroup>
           <Button
             v-tooltip.left="'Checkin attendee'"
             label="Checkin"
             @click="triggerCheckin()"
             :disabled="checkinDisabled()"
+            raised
             autofocus
           />
-          <Button
-            v-if="environmentSettings.envName === EnvName.dev"
-            v-tooltip="'Undo Checkin'"
-            icon="pi pi-exclamation-circle"
-            @click="$emit('onUndoCheckin', modelValue.id)"
-          />
+          <DevOnly>
+            <Button
+              v-tooltip="'Undo Checkin'"
+              icon="pi pi-exclamation-circle"
+              @click="$emit('onUndoCheckin', modelValue.id)"
+              raised
+            />
+          </DevOnly>
           <Button
             v-tooltip.left="'Refresh data'"
             icon="pi pi-refresh"
             @click="$emit('onSearchRegNumber', attendeeInfoRef.id)"
             :disabled="props.searchStatus.mode === SearchStatusMode.searching"
+            raised
           />
-        </InputGroup>
+        </ButtonGroup>
       </div>
     </template>
     <div class="flex flex-row flex-wrap gap-3">
@@ -42,26 +46,29 @@
 
 <script setup lang="ts">
 import { canCheckin } from "@/composables/fields/status/canCheckin";
-import { environmentSettings } from "@/composables/services/environmentService";
-import type { TransformedAttendeeInfo } from "@/types/internal";
-import { EnvName, SearchStatusMode } from "@/types/internal";
-import type { SearchStatus } from "@/types/internal";
 import type { ModelRef } from "vue";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import {
+  SearchStatusMode,
+  type SearchStatus,
+} from "@/types/internal/component/regnumsearch";
 
 interface Props {
   searchStatus: SearchStatus;
 }
 const props: Props = defineProps<Props>();
-const cooldownActive: Ref<boolean> = ref<boolean>(false); 
+const cooldownActive: Ref<boolean> = ref<boolean>(false);
 
 function checkinDisabled() {
   return !canCheckin(attendeeInfoRef.value) || cooldownActive.value;
 }
 
 function triggerCheckin() {
-  emit('onCheckin', attendeeInfoRef.value.id);
+  emit("onCheckin", attendeeInfoRef.value.id);
   cooldownActive.value = true;
-  setTimeout(() => {cooldownActive.value = false;}, 2000);
+  setTimeout(() => {
+    cooldownActive.value = false;
+  }, 2000);
 }
 
 const attendeeInfoRef: ModelRef<TransformedAttendeeInfo> =

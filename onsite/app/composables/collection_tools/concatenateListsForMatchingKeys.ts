@@ -7,11 +7,11 @@ export function concatenateListsForMatchingKeys<InputType, ReturnType>(
   const concatenatedLists: ReturnType[] = [];
   for (const [matchKey, matchValue] of getRecordEntries(dictionary)) {
     if (matchKey.startsWith("!")) {
-      if (!keysToMatch.includes(<InputType>matchKey.slice(1))) {
+      if (!keysToMatch.includes(matchKey.slice(1) as InputType)) {
         concatenatedLists.push(...matchValue);
       }
     } else {
-      if (keysToMatch.includes(<InputType>matchKey)) {
+      if (keysToMatch.includes(matchKey as InputType)) {
         concatenatedLists.push(...matchValue);
       }
     }

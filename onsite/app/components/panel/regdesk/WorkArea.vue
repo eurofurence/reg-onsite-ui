@@ -32,13 +32,16 @@
         @onSearchRegNumber="$emit('onSearchRegNumber', $event)"
       />
     </div>
-    <CustomRegdeskAttendeeTable
+    <AttendeeTableElement
       readonly
       v-model="transformedAttendeeListRef"
-      v-model:autoCompleteData="autoCompleteDataRef"
       v-model:dataOptions="dataOptionsRef"
       v-model:selected="selectedAttendeeRef"
       v-model:displayOptions="displayOptionsRef"
+      v-bind:autoCompleteData="autoCompleteDataRef"
+      v-bind:activeColumns="
+        getActiveColumnDefinitionList(displayOptionsRef.displayColumns)
+      "
       @onPage="$emit('onPage', $event)"
       @onSort="$emit('onSort', $event)"
       @onFilter="$emit('onFilter', $event)"
@@ -69,7 +72,7 @@
               />
               <CustomStatisticsDisplayButton
                 v-model:modelValue="transformedAttendeeListRef"
-                :filters="dataOptions.filters"
+                :filters="dataOptions.filterConfig.filterValues"
               />
               <CustomRegdeskSettingsButton
                 v-model:displayOptions="displayOptionsRef"
@@ -81,7 +84,7 @@
       </template>
 
       <template #empty> </template>
-    </CustomRegdeskAttendeeTable>
+    </AttendeeTableElement>
     <CustomRegdeskFilterHelp
       :dataOptions="dataOptionsRef"
       :displayOptions="displayOptionsRef"
@@ -102,14 +105,6 @@
 </template>
 
 <script setup lang="ts">
-import { CheckinDisplay } from "@/types/internal";
-import type {
-  AttendeeDataOptions,
-  AttendeeTableDisplayOptions,
-  CheckinDisplayValue,
-  SearchStatus,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
 import { computeAttendeePlaceholder } from "@/composables/fields/computeAttendeePlaceholder";
 import type { WritableComputedRef } from "vue";
 import type { ModelRef } from "vue";
@@ -122,8 +117,19 @@ import {
   ShortcutScope,
   keyboardService,
 } from "@/composables/services/keyboardService";
-import type { ConfirmServiceMethods } from "@/types/external";
 import { doResetFilters } from "@/composables/filter/doResetFilters";
+import { getInputElement } from "@/composables/getInputElement";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import {
+  CheckinDisplay,
+  type AttendeeDataOptions,
+  type AttendeeTableDisplayOptions,
+  type CheckinDisplayValue,
+} from "@/types/internal/system/regdesk";
+import type { SearchStatus } from "@/types/internal/component/regnumsearch";
+import type { ColumnDefinition } from "@/types/internal/component/table";
+import { setupColumnDefinitionList } from "@/config/system/regdesk";
+import { OnsiteConfirmService } from "@/composables/services/confirmService";
 
 function isCheckinDisplayType(location: CheckinDisplayValue): boolean {
   return displayOptionsRef.value.displayCheckinLocation === location;
@@ -140,6 +146,14 @@ const dialogVisibleIfSelectedRef: WritableComputedRef<boolean> = computed({
     }
   },
 });
+
+function getActiveColumnDefinitionList(
+  displayColumns: (keyof TransformedAttendeeInfo)[]
+): ColumnDefinition[] {
+  return setupColumnDefinitionList.filter((item) =>
+    displayColumns.includes(item.fieldName)
+  );
+}
 
 const selectedAttendeeRef: ModelRef<TransformedAttendeeInfo | null> =
   defineModel<TransformedAttendeeInfo | null>("selectedAttendee", {
@@ -184,9 +198,9 @@ handleAutoSelection(
 
 const componentId: string = generateId(useId());
 const globaSearchInputId: string = `globalSearchInputId${componentId}`;
-const confirmGroup: string = `confirmCheckin${componentId}`;
-const confirm: ConfirmServiceMethods = useConfirm();
-
+const confirmService: OnsiteConfirmService = new OnsiteConfirmService(
+  componentId
+);
 watchDialogVisibility(dialogVisibleIfSelectedRef, ShortcutScope.dialog_checkin);
 
 function focusGlobalFilterInputAndResetFilter() {
@@ -216,10 +230,7 @@ keyboardService.registerShortcuts(
 
 async function onEnter(event: KeyboardEvent): Promise<void> {
   if (keyboardService.getCurrentScope() === ShortcutScope.dialog_checkin) {
-    keyboardService.pushScope(ShortcutScope.confirm_checkin);
-    // Ask user for confirmation
-    confirm.require({
-      group: confirmGroup,
+    confirmService.require(ShortcutScope.confirm_checkin, {
       message: "Please confirm checkin of attendee!",
       header: "Confirm",
       icon: "pi pi-question-circle",
@@ -229,7 +240,6 @@ async function onEnter(event: KeyboardEvent): Promise<void> {
         focusGlobalFilterInputAndResetFilter();
       },
     });
-    keyboardService.popScope(ShortcutScope.confirm_checkin);
     event.preventDefault();
   }
 }

@@ -1,7 +1,7 @@
 import { computeFirstElementFromList } from "@/composables/collection_tools/computeFirstElementFromList";
 import { computeSubsetList } from "@/composables/collection_tools/computeSubsetList";
-import type { FlagApiValue } from "@/types/external";
-import type { LabeledValue } from "@/types/internal";
+import type { FlagApiValue } from "@/types/external/attsrv/attendees/attendee";
+import type { LabeledValue } from "@/types/internal/infos";
 import type { WritableComputedRef } from "vue";
 
 export function computeFlagsChoice<

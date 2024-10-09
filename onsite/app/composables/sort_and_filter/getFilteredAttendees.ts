@@ -1,12 +1,12 @@
-import type {
-  FilterFieldValue,
-  RawAttendeeFilter,
-  TransformedAttendeeInfo,
-} from "@/types/internal";
 import {
   getFilterFunctorContainerList,
   type FilterFunctorContainer,
 } from "@/composables/sort_and_filter/getFilterFunctorContainerList";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type {
+  FilterFieldValue,
+  RawAttendeeFilter,
+} from "@/types/internal/filter";
 
 export function getFilteredAttendees<Type extends TransformedAttendeeInfo>(
   unsortedList: Type[],

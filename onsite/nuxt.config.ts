@@ -1,5 +1,5 @@
-import { EFThemeNora } from "./app/composables/theme/presets";
-import { darkModeClass } from "./app/config/theme";
+import { EFThemeNora } from "./app/config/theme/themeEF";
+import { darkModeClass } from "./app/config/theme/common";
 
 export default defineNuxtConfig({
   future: {

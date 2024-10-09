@@ -1,5 +1,5 @@
 <template>
-  <Toast :group="toastGroup" position="bottom-right" />
+  <Toast :group="toastService.toastGroup" position="bottom-right" />
   <Toolbar class="auth-toolbar">
     <template #start>
       <HeaderLogo :title="props.title" />
@@ -14,7 +14,7 @@
         </div>
         <div style="padding-right: 5px">
           <HeaderLinkButton
-            href="https://help.eurofurence.org/legal/privacy"
+            :href="conventionSetup.privacyLink"
             outlined
             class="contact-button"
             icon="pi pi-eye-slash"
@@ -23,7 +23,7 @@
         </div>
         <div style="padding-right: 5px">
           <HeaderLinkButton
-            href="https://help.eurofurence.org/legal/imprint"
+            :href="conventionSetup.imprintLink"
             outlined
             class="contact-button"
             icon="pi pi-info-circle"
@@ -50,11 +50,10 @@ import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerF
 import { scheduleRegularTask } from "@/composables/events/scheduleRegularTask";
 import { authService } from "@/composables/services/authService";
 import { authState } from "@/composables/state/authState";
-import type { ApiFrontendUserInfo } from "@/types/external";
-import type { ToastServiceMethods } from "primevue/toastservice";
-import { useToast } from "primevue/usetoast";
-import { Severity } from "@/types/internal";
-const toast: ToastServiceMethods = useToast();
+import type { ApiFrontendUserInfo } from "@/types/external/authsrv/frontenduserinfo";
+import { ToastSeverity } from "@/types/internal/primevue";
+import { OnsiteToastService } from "@/composables/services/toastService";
+import { conventionSetup } from "@/config/convention";
 
 const isLoading: Ref<boolean> = ref(true);
 
@@ -62,15 +61,14 @@ async function checkUserAccess(): Promise<void> {
   isLoading.value = true;
   const data: ApiFrontendUserInfo | undefined =
     await authService.getFrontendUserInfo(
-      getErrorHandlerFunction(toast, toastGroup)
+      getErrorHandlerFunction(toastService)
     );
   if (data !== undefined) {
     authState.value.userName = data.name;
     authState.value.userGroups = data.groups;
     authState.value.sessionActive = true;
-    toast.add({
-      group: toastGroup,
-      severity: Severity.success,
+    toastService.add({
+      severity: ToastSeverity.success,
       summary: "Logged in as: " + data.name,
       life: 2000,
     });
@@ -81,7 +79,7 @@ async function checkUserAccess(): Promise<void> {
 async function checkUserAccessSilent(): Promise<void> {
   if (authState.value.sessionActive) {
     await authService.getFrontendUserInfo(
-      getErrorHandlerFunction(toast, toastGroup)
+      getErrorHandlerFunction(toastService)
     );
   }
 }
@@ -92,7 +90,7 @@ interface Props {
 }
 const props: Props = defineProps<Props>();
 const componentId: string = generateId(useId());
-const toastGroup: string = `login${componentId}`;
+const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 
 onMounted(async () => {
   await checkUserAccess();

@@ -1,9 +1,12 @@
 import { convertListToMap } from "@/composables/collection_tools/convertListToMap";
 import { lookupInMap } from "@/composables/collection_tools/lookupInMap";
-import { type CountryCode, setupCountries } from "@/config/setupCountries";
+import {
+  type CountryCode,
+  metadataListForCountry,
+} from "@/config/metadata/metadataForCountry";
 
 const countryCodeToNameMap: Map<CountryCode, string> = convertListToMap(
-  setupCountries,
+  metadataListForCountry,
   "label"
 );
 

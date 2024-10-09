@@ -1,10 +1,10 @@
-import { SearchStatusMode } from "@/types/internal";
-import type {
-  ErrorSearchStatus,
-  IdleNoDataSearchStatus,
-  IdleWithDataSearchStatus,
-  SearchingSearchStatus,
-} from "@/types/internal";
+import {
+  SearchStatusMode,
+  type ErrorSearchStatus,
+  type IdleNoDataSearchStatus,
+  type IdleWithDataSearchStatus,
+  type SearchingSearchStatus,
+} from "@/types/internal/component/regnumsearch";
 
 export function getIdleNoDataSearchStatus(): IdleNoDataSearchStatus {
   return {

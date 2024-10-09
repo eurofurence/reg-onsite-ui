@@ -1,17 +1,15 @@
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
-import { getTrinketFromConcreteItem } from "@/composables/items/getTrinketFromConcreteItem";
-import type { TShirtTypeValue } from "@/config/tshirt/setupTShirtTypes";
+import { getGoodieFromConcreteItem } from "@/composables/items/getGoodieFromConcreteItem";
+import type { TShirtTypeValue } from "@/config/metadata/tshirt/metadataForTShirtTypes";
 import {
-  type ConcreteTrinketValue,
-  type TrinketConfig,
+  type ConcreteGoodieValue,
+  type GoodieConfig,
   configTinketItems,
 } from "@/setupEFIteration";
-import type { ApiSponsorDeskAddInfo } from "@/types/external";
-import type {
-  TransformedAttendeeInfo,
-  DefaultVariantValues,
-  LabeledValue,
-} from "@/types/internal";
+import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { DefaultVariantValues } from "@/types/internal/goodies";
+import type { LabeledValue } from "@/types/internal/infos";
 
 type LocalDefaultVariantValues = Map<string, string | null>;
 
@@ -19,10 +17,10 @@ function overrideDefaultFromTShirtSizes(
   defaultValues: LocalDefaultVariantValues,
   tshirtSize: TShirtTypeValue | null | undefined
 ): void {
-  const tshirt_trinkets: TrinketConfig[] = configTinketItems.filter(
-    (value: TrinketConfig) => value.value.startsWith("tshirt_")
+  const tshirt_goodies: GoodieConfig[] = configTinketItems.filter(
+    (value: GoodieConfig) => value.value.startsWith("tshirt_")
   );
-  tshirt_trinkets.forEach((value: TrinketConfig) => {
+  tshirt_goodies.forEach((value: GoodieConfig) => {
     defaultValues.set(
       value.value,
       tshirtSize !== undefined ? tshirtSize : null
@@ -32,18 +30,18 @@ function overrideDefaultFromTShirtSizes(
 
 function overrideDefaultFromConcreteItems(
   defaultValues: LocalDefaultVariantValues,
-  concreteItems: ConcreteTrinketValue[]
+  concreteItems: ConcreteGoodieValue[]
 ): void {
-  const itemConfigList: (TrinketConfig | null)[] = concreteItems.map(
-    getTrinketFromConcreteItem
+  const itemConfigList: (GoodieConfig | null)[] = concreteItems.map(
+    getGoodieFromConcreteItem
   );
-  itemConfigList.forEach((trinketConfig: TrinketConfig | null) => {
-    trinketConfig?.variants?.forEach(
+  itemConfigList.forEach((goodieConfig: GoodieConfig | null) => {
+    goodieConfig?.variants?.forEach(
       (possibleVariantInfo: LabeledValue<string>) => {
-        const possibleConcreteItemValue: ConcreteTrinketValue =
-          getConcreteItemValue(trinketConfig, possibleVariantInfo);
+        const possibleConcreteItemValue: ConcreteGoodieValue =
+          getConcreteItemValue(goodieConfig, possibleVariantInfo);
         if (concreteItems.includes(possibleConcreteItemValue)) {
-          defaultValues.set(trinketConfig.value, possibleVariantInfo.value);
+          defaultValues.set(goodieConfig.value, possibleVariantInfo.value);
         }
       }
     );

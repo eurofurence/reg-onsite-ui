@@ -1,5 +1,5 @@
 import type { CookieRef } from "#app";
-import { deepCopy } from "@/composables/state/deepCopy";
+import { deepCopy } from "@/composables/deepCopy";
 
 interface CookieInterface<Type> {
   hash: number;

@@ -12,10 +12,10 @@
 
 <script setup lang="ts">
 import Message from "primevue/message";
-import type { SeverityValue } from "@/types/internal";
+import type { MessageSeverityValue } from "@/types/internal/primevue";
 
 interface Props {
-  severity: SeverityValue;
+  severity: MessageSeverityValue;
   title: string;
 }
 const props: Props = defineProps<Props>();
