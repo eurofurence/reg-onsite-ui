@@ -1,5 +1,5 @@
-import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
 import type { LabeledValue } from "@/types/internal/infos";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
 
 export function getConcreteVariantItemValue<Type>(
   goodieConfig: GoodieConfig,

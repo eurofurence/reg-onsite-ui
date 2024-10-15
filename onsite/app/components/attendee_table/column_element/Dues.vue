@@ -12,9 +12,10 @@
 import { getDuesFlag } from "@/composables/fields/money/getDuesFlag";
 import { getDuesNote } from "@/composables/fields/money/getDuesNote";
 import { getDuesStyle } from "@/composables/fields/money/getDuesStyle";
+import type { MoneyInCent } from "@/types/external/attsrv/attendees/attendee";
 
 interface Props {
-  modelValue: number | null;
+  modelValue: MoneyInCent | null;
 }
 const props: Props = defineProps<Props>();
 </script>

@@ -5,11 +5,14 @@ import {
   type ConRoleApiValue,
   type ConRoleValue,
 } from "@/config/metadata/flags/metadataForConRoles";
-import type { FlagApiValue } from "@/types/external/attsrv/attendees/attendee";
+import type {
+  FlagApiValue,
+  RegNumber,
+} from "@/types/external/attsrv/attendees/attendee";
 
 export function getAllRoleValues(
   flagValueList: FlagApiValue[],
-  id: number
+  id: RegNumber
 ): ConRoleValue[] {
   const roleItems: ConRoleInfo[] = getAllApiRoleItems(flagValueList, id);
   const roleApiValues: ConRoleApiValue[] = roleItems.map(

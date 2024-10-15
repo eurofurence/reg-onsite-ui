@@ -5,12 +5,3 @@ import type {
 
 export type PackageValue = PackageApiValue | "";
 export type FlagValue = FlagApiValue | "";
-
-export interface ConventionSettings {
-  maxRegNumber: number;
-  minAge: number;
-  logoLink: string;
-  idpDashboardLink: string;
-  privacyLink: string;
-  imprintLink: string;
-}

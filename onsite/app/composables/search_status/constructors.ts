@@ -5,6 +5,7 @@ import {
   type IdleWithDataSearchStatus,
   type SearchingSearchStatus,
 } from "@/types/internal/component/regnumsearch";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 export function getIdleNoDataSearchStatus(): IdleNoDataSearchStatus {
   return {
@@ -19,7 +20,7 @@ export function getIdleWithDataSearchStatus(): IdleWithDataSearchStatus {
 }
 
 export function getSearchingSearchStatus(
-  regNumber: number
+  regNumber: RegNumber
 ): SearchingSearchStatus {
   return {
     mode: SearchStatusMode.searching,
@@ -28,7 +29,7 @@ export function getSearchingSearchStatus(
 }
 
 export function getErrorSearchStatus(
-  regNumber: number,
+  regNumber: RegNumber,
   errorList: string[]
 ): ErrorSearchStatus {
   return {

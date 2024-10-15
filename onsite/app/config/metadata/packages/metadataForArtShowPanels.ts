@@ -1,6 +1,5 @@
 import type { LabeledValue } from "@/types/internal/infos";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 
 const enum ArtShowApiPanel {
   asp_old_1 = "artshow-panel",
@@ -42,6 +41,3 @@ export const metadataRecordForArtShowPanels: MetadataRecord<
   [ArtShowPanel.asp_3p5]: { label: "AS Table 3.5" },
   [ArtShowPanel.asp_4p0]: { label: "AS Table 4.0" },
 };
-
-export const metadataListForArtShowPanels: LabeledValue<ArtShowPanelValue>[] =
-  getMetadataList(metadataRecordForArtShowPanels);

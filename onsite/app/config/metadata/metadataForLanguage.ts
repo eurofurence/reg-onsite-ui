@@ -1,7 +1,5 @@
-import { sortByLabel } from "@/composables/collection_tools/sortByLabel";
 import type { LabeledValue } from "@/types/internal/infos";
 import type { Branded } from "@/composables/brand";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
 
 export type LanguageCode = Branded<string, "LanguageCode">;
@@ -100,6 +98,3 @@ export const metadataRecordForLanguage: MetadataRecord<
   ["yi" as LanguageCode]: { label: "Yiddish" },
   ["zh" as LanguageCode]: { label: "Chinese" },
 };
-
-export const metadataListForLanguage: LabeledValue<LanguageCode>[] =
-  sortByLabel<LanguageCode>(getMetadataList(metadataRecordForLanguage));

@@ -30,12 +30,13 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import { OnsiteToastService } from "@/composables/services/toastService";
 import { ToastSeverity } from "@/types/internal/primevue";
 import type { AttendeeTableDisplayOptions } from "@/types/internal/system/regdesk";
+import type { FontSize } from "@/types/internal/system/theme";
 
 function getStyle(attendee: TransformedAttendeeInfo): any {
   const color: ColorsPaletteValue = getLanyardColor(attendee);
-  const paddingSize: number = Math.floor(
+  const paddingSize: FontSize = Math.floor(
     displayOptionsRef.value.displayRunner.size / 3
-  );
+  ) as FontSize;
   return {
     ["font-size"]: `${displayOptionsRef.value.displayRunner.size}rem`,
     ["padding-left"]: `${paddingSize}rem`,

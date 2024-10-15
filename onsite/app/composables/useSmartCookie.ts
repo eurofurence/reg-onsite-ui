@@ -1,15 +1,17 @@
 import type { CookieRef } from "#app";
 import { deepCopy } from "@/composables/deepCopy";
 
+type HashValue = Branded<number, "HashValue">;
+
 interface CookieInterface<Type> {
-  hash: number;
+  hash: HashValue;
   data: Type;
 }
 
-function hash(s: string): number {
+function hash(s: string): HashValue {
   return s.split("").reduce(function (hash, c) {
     return ((hash << 5) - hash + c.charCodeAt(0)) | 0;
-  }, 0);
+  }, 0) as HashValue;
 }
 
 function decodeCookie<Type>(value: string, defaultValue: Type): Type {
@@ -21,7 +23,7 @@ function decodeCookie<Type>(value: string, defaultValue: Type): Type {
 }
 
 function encodeCookie<Type>(value: Type, defaultValue: Type): string {
-  const defaultHash: number = hash(JSON.stringify(defaultValue));
+  const defaultHash: HashValue = hash(JSON.stringify(defaultValue));
   const tmp: CookieInterface<Type> = {
     hash: defaultHash,
     data: value,

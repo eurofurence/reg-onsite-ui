@@ -1,5 +1,5 @@
 import { getConcreteItemsForGoodie } from "@/composables/items/getConcreteItemsForGoodie";
-import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
 
 export function getAllConcreteItems(
   goodieConfigList: GoodieConfig[]

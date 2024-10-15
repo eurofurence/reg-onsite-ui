@@ -1,4 +1,5 @@
 import { type WritableComputedRef, computed } from "vue";
+import type { MoneyInCent } from "@/types/external/attsrv/attendees/attendee";
 
 const moneyFormatter: Intl.NumberFormat = Intl.NumberFormat("en-UK", {
   style: "currency",
@@ -12,11 +13,11 @@ const decimalSeparator: string = moneyFormatter
   .format(1.1)
   .replace(/\p{Number}/gu, "");
 
-export function getMoney(data: number): string {
+export function getMoney(data: MoneyInCent): string {
   return moneyFormatter.format(data / 100);
 }
 
-function setMoney(moneyValue: string): number {
+function setMoney(moneyValue: string): MoneyInCent {
   const moneyValueOnly: string = moneyValue.replace(/[^0-9,.-]+/g, "");
   const moneyValueNoTSep: string = moneyValueOnly.replace(
     new RegExp("\\" + thousandSeparator, "g"),
@@ -26,14 +27,14 @@ function setMoney(moneyValue: string): number {
     new RegExp("\\" + decimalSeparator),
     "."
   );
-  return Number.parseFloat(moneyValueUniform) * 100;
+  return (Number.parseFloat(moneyValueUniform) * 100) as MoneyInCent;
 }
 
 export function computeMoney(
   dataRef: Ref<number | null>
 ): WritableComputedRef<string> {
   return computed<string>({
-    get: () => getMoney(dataRef?.value || 0),
+    get: () => getMoney((dataRef?.value as MoneyInCent) || (0 as MoneyInCent)),
     set: (new_value: string) => {
       dataRef.value = setMoney(new_value);
     },

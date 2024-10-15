@@ -1,6 +1,5 @@
 import type { LabeledValue } from "@/types/internal/infos";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 
 const enum DealerTableApi {
   dt0p5x1 = "dealer-half",
@@ -32,6 +31,3 @@ export const metadataRecordForDealerPackages: MetadataRecord<
   [DealerTable.dt2p0x1]: { label: "DD 2.0" },
   [DealerTable.dt2p0x2]: { label: "DD 2x2" },
 };
-
-export const metadataListForDealerPackages: LabeledValue<DealerTableValue>[] =
-  getMetadataList(metadataRecordForDealerPackages);

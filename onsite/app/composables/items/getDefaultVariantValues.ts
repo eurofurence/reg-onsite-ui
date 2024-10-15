@@ -1,15 +1,12 @@
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import { getGoodieFromConcreteItem } from "@/composables/items/getGoodieFromConcreteItem";
 import type { TShirtTypeValue } from "@/config/metadata/tshirt/metadataForTShirtTypes";
-import {
-  type ConcreteGoodieValue,
-  type GoodieConfig,
-  configTinketItems,
-} from "@/setupEFIteration";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type { LabeledValue } from "@/types/internal/infos";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
 
 type LocalDefaultVariantValues = Map<string, string | null>;
 
@@ -17,9 +14,10 @@ function overrideDefaultFromTShirtSizes(
   defaultValues: LocalDefaultVariantValues,
   tshirtSize: TShirtTypeValue | null | undefined
 ): void {
-  const tshirt_goodies: GoodieConfig[] = configTinketItems.filter(
-    (value: GoodieConfig) => value.value.startsWith("tshirt_")
-  );
+  const tshirt_goodies: GoodieConfig[] =
+    getConventionSetup().metadata.forAbstractGoodies.list.filter(
+      (value: GoodieConfig) => value.value.startsWith("tshirt_")
+    );
   tshirt_goodies.forEach((value: GoodieConfig) => {
     defaultValues.set(
       value.value,

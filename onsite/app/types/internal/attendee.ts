@@ -13,12 +13,15 @@ type RemovedFieldsFromAttendeeInfo =
   | "options"
   | "packages";
 
+export type AgeInYears = Branded<number, "AgeInYears">;
+export type TrimmedBirthdayStr = Branded<string, "TrimmedBirthdayStr">;
+
 export interface TransformedAttendeeInfoInternal
   extends Required<Omit<ApiAttendeeInfo, RemovedFieldsFromAttendeeInfo>> {
   readonly transId: string;
-  readonly transAge: number;
+  readonly transAge: AgeInYears;
   readonly transFullName: string;
-  readonly transBirthday: string;
+  readonly transBirthday: TrimmedBirthdayStr;
   readonly transConRole: ConRoleValue;
   readonly transCountryName: string;
   readonly transConbookChoice: ConBookValue;

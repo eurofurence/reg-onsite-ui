@@ -18,7 +18,7 @@ interface Props {
 const props: Props = defineProps<Props>();
 </script>
 
-<style>
+<style lang="css">
 /*
 .group-panel > .p-fieldset {
   padding: 0.25em;

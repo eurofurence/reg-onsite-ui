@@ -74,19 +74,20 @@
 import { fieldTextCSS } from "@/components/field/common/common";
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import { getDefaultVariantValuesValue } from "@/composables/items/getDefaultVariantValuesValue";
-import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
 import type { SelectChangeEvent } from "primevue/select";
 import type { ModelRef } from "vue";
 import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type { LabeledValue } from "@/types/internal/infos";
 import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
+import type { FontSize } from "@/types/internal/system/theme";
 
 function getSelectHeight(): string {
   if (!props.goodieConfig?.variants) {
     return "1rem";
   }
   const showItems: number = Math.min(props.goodieConfig.variants.length, 10);
-  const selectHeight: number = showItems * 2.5;
+  const selectHeight: FontSize = (showItems * 2.5) as FontSize;
   return `${selectHeight}rem`;
 }
 
@@ -200,7 +201,7 @@ const componentId: string = generateId(useId());
 const labelId: string = `itemLabelId${componentId}`;
 </script>
 
-<style>
+<style lang="css">
 .items-checkbox .p-checkbox {
   width: calc(var(--p-select-dropdown-width) + 1px);
   height: calc(var(--p-select-dropdown-width) + 1px);

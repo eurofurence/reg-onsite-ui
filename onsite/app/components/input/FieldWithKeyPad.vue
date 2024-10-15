@@ -46,6 +46,7 @@ import {
 import type { ModelRef } from "vue";
 import { getInputElement } from "@/composables/getInputElement";
 import type { ButtonSeverityValue } from "@/types/internal/primevue";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 var resetOnNextNumber: Ref<boolean> = ref<boolean>(true);
 
@@ -76,8 +77,9 @@ async function resetRegNumber(): Promise<void> {
 async function onNumberSubmit(): Promise<void> {
   resetOnNextNumber.value = true;
   getInputElement(inputElementId).blur();
-  const number: number | null =
-    Number.parseInt(getInputElement(inputElementId).value) || null;
+  const number: RegNumber | null =
+    (Number.parseInt(getInputElement(inputElementId).value) as RegNumber) ||
+    null;
   emit("numberSubmit", number);
 }
 
@@ -113,13 +115,13 @@ keyboardService.registerShortcuts(
 );
 
 interface Props {
-  maxNumber: number;
+  maxNumber: RegNumber;
   severitySubmitButton: ButtonSeverityValue | null;
 }
 const props: Props = withDefaults(defineProps<Props>(), {
   severitySubmitButton: null,
 });
-const modelValue: ModelRef<number | null> = defineModel<number | null>({
+const modelValue: ModelRef<RegNumber | null> = defineModel<RegNumber | null>({
   required: true,
 });
 const emit: CallableFunction = defineEmits(["numberSubmit"]);
@@ -127,7 +129,7 @@ const componentId: string = generateId(useId());
 const inputElementId: string = `inputElement${componentId}`;
 </script>
 
-<style>
+<style lang="css">
 .keypad-input-field i {
   font-size: 2.5rem;
   padding-left: 1rem;

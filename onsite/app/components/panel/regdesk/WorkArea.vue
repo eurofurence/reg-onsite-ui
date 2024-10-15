@@ -151,7 +151,7 @@ function getActiveColumnDefinitionList(
   displayColumns: (keyof TransformedAttendeeInfo)[]
 ): ColumnDefinition[] {
   return setupColumnDefinitionList.filter((item) =>
-    displayColumns.includes(item.fieldName)
+    displayColumns.includes(item.value)
   );
 }
 

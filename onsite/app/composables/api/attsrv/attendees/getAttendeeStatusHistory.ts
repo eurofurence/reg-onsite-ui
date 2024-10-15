@@ -7,9 +7,10 @@ import {
 import type { ApiError } from "@/types/external/error";
 import type { ApiAttendeeStatusHistory } from "@/types/external/attsrv/attendees/others";
 import type { FetchResultPromise } from "@/types/internal/rest";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 async function fetchAttendeeStatusHistory(
-  regNumber: number
+  regNumber: RegNumber
 ): FetchResultPromise<ApiAttendeeStatusHistory, ApiError> {
   const response: Response = await getApi(
     `attsrv/api/rest/v1/attendees/${regNumber}/status-history`
@@ -19,7 +20,7 @@ async function fetchAttendeeStatusHistory(
 
 export async function getAttendeeStatusHistory(
   errorHandler: RestErrorHandler,
-  regNumber: number
+  regNumber: RegNumber
 ): Promise<ApiAttendeeStatusHistory | undefined> {
   return await restErrorWrapper<ApiAttendeeStatusHistory>(
     "Attendee Items Service",

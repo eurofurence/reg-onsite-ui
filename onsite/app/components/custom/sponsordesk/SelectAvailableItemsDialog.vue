@@ -25,17 +25,13 @@
 
 <script setup lang="ts">
 import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
+import type { ModelRef } from "vue";
+import { ShortcutScope } from "@/composables/services/keyboardService";
+import { OnsiteConfirmService } from "@/composables/services/confirmService";
 import type {
   AbstractGoodieValue,
   ConcreteGoodieValue,
-} from "@/setupEFIteration";
-import { useConfirm } from "primevue/useconfirm";
-import type { ModelRef } from "vue";
-import {
-  keyboardService,
-  ShortcutScope,
-} from "@/composables/services/keyboardService";
-import { OnsiteConfirmService } from "@/composables/services/confirmService";
+} from "@/config/convention";
 
 function run() {
   availableItemsRef.value = modelValue.value;
@@ -78,7 +74,7 @@ const confirmService: OnsiteConfirmService = new OnsiteConfirmService(
 );
 </script>
 
-<style>
+<style lang="css">
 .select-items-config {
   font-size: 2rem;
 }

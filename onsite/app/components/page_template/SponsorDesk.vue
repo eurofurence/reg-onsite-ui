@@ -31,7 +31,7 @@
               v-model="transformedAttendeeInfoAdapter"
               v-model:apiSDAddInfo="apiSDAddInfoRef"
               v-model:apiSDAddInfoComparison="apiSDAddInfoComparisonRef"
-              v-bind:deskItemSubset="props.deskItemSubset"
+              v-bind:deskItemSubset="deskItemSubset"
               v-bind:deskName="props.deskName"
             />
           </div>
@@ -52,7 +52,6 @@ import { authService } from "@/composables/services/authService";
 import { deepCopy } from "@/composables/deepCopy";
 import { dirtyState } from "@/composables/state/dirtyState";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
-import type { AbstractGoodieValue } from "@/setupEFIteration";
 import {
   keyboardService,
   ShortcutScope,
@@ -62,6 +61,10 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { SearchStatus } from "@/types/internal/component/regnumsearch";
 import type { RestErrorInfo } from "@/types/internal/rest";
 import { OnsiteToastService } from "@/composables/services/toastService";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import type { ConventionInventorySettings } from "@/types/internal/convention";
+import type { AbstractGoodieValue } from "@/config/convention";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 keyboardService.pushScope(ShortcutScope.regdesk);
 
@@ -104,7 +107,7 @@ function resetState(): void {
 authService.onLogout(resetState);
 
 async function handleSearch(
-  regNumber: number,
+  regNumber: RegNumber,
   errorHandler: RestErrorHandler
 ): Promise<string[]> {
   var errorList: string[] = [];
@@ -145,21 +148,24 @@ async function handleSearch(
   return [];
 }
 
-async function onSearchRegNumber(regNumber: number): Promise<void> {
+async function onSearchRegNumber(regNumber: RegNumber): Promise<void> {
   resetState();
   await doTrackedSearch(regNumber, searchStatusRef, toastService, handleSearch);
 }
 
 interface Props {
-  deskName: string;
-  deskItemSubset: AbstractGoodieValue[];
+  deskName: keyof ConventionInventorySettings;
 }
 const props: Props = defineProps<Props>();
+
+const deskItemSubset: AbstractGoodieValue[] =
+  getConventionSetup().inventory[props.deskName];
+
 const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 </script>
 
-<style>
+<style lang="css">
 .sponsordesk .p-splitter {
   border: none;
 }

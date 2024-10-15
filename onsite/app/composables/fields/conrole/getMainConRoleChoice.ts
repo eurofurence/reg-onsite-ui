@@ -2,15 +2,18 @@ import { getAllApiRoleItems } from "@/composables/fields/conrole/getAllApiRoleIt
 import type { ConRoleInfo } from "@/types/internal/infos";
 import {
   ConRole,
-  metadataRecordForConRoles,
   type ConRoleValue,
 } from "@/config/metadata/flags/metadataForConRoles";
-import type { FlagApiValue } from "@/types/external/attsrv/attendees/attendee";
+import type {
+  FlagApiValue,
+  RegNumber,
+} from "@/types/external/attsrv/attendees/attendee";
 import { getMetadataEntry } from "@/composables/collection_tools/getMetadataEntry";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 export function getMainConRoleChoice(
   flagValueList: FlagApiValue[] | null,
-  id: number | null
+  id: RegNumber | null
 ): ConRoleInfo {
   const allRoles: ConRoleInfo[] = getAllApiRoleItems(flagValueList, id);
   const overrideList: ConRoleValue[] = allRoles.flatMap(
@@ -24,7 +27,7 @@ export function getMainConRoleChoice(
   if (reducedRoles.length == 0) {
     return getMetadataEntry<ConRoleInfo>(
       ConRole.none,
-      metadataRecordForConRoles
+      getConventionSetup().metadata.forConRole.record
     );
   }
   const highestRole: ConRoleInfo = reducedRoles.slice(-1)[0] as ConRoleInfo;

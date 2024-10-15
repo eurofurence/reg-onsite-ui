@@ -26,7 +26,10 @@ import {
   resolveColorEntry,
 } from "@/components/field/common/common";
 import { getAllApiRoleItems } from "@/composables/fields/conrole/getAllApiRoleItems";
-import type { FlagApiValue } from "@/types/external/attsrv/attendees/attendee";
+import type {
+  FlagApiValue,
+  RegNumber,
+} from "@/types/external/attsrv/attendees/attendee";
 import type { ModelRef } from "vue";
 
 const modelValue: ModelRef<FlagApiValue[] | null> = defineModel<
@@ -34,7 +37,7 @@ const modelValue: ModelRef<FlagApiValue[] | null> = defineModel<
 >({
   required: true,
 });
-const regNumber: ModelRef<number | null> = defineModel<number | null>(
+const regNumber: ModelRef<RegNumber | null> = defineModel<RegNumber | null>(
   "regNumber",
   {
     required: true,
@@ -43,7 +46,7 @@ const regNumber: ModelRef<number | null> = defineModel<number | null>(
 const componentId: string = generateId(useId());
 </script>
 
-<style>
+<style lang="css">
 .role-field .p-chip {
   color: white;
 }

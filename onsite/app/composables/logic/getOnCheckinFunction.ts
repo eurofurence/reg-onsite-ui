@@ -5,16 +5,17 @@ import type { AttendeeTableDisplayOptions } from "@/types/internal/system/regdes
 import { ToastSeverity } from "@/types/internal/primevue";
 import type { OnsiteToastService } from "@/composables/services/toastService";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 export function getOnCheckinFunction(
   updateAttendee: (
-    regNumber: number
+    regNumber: RegNumber
   ) => Promise<TransformedAttendeeInfo | null>,
   selectedAttendeeRef: Ref<TransformedAttendeeInfo | null>,
   displayOptionsRef: Ref<AttendeeTableDisplayOptions> | null,
   toastService: OnsiteToastService
-): (regNumber: number) => Promise<void> {
-  return async (regNumber: number): Promise<void> => {
+): (regNumber: RegNumber) => Promise<void> {
+  return async (regNumber: RegNumber): Promise<void> => {
     await attendeeService.checkinAttendee(
       getErrorHandlerFunction(toastService),
       regNumber

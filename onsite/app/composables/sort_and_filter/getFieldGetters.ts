@@ -2,13 +2,11 @@ import { getCountryName } from "@/composables/fields/country/getCountryName";
 import { getSubsetChoice } from "@/composables/collection_tools/getSubsetChoice";
 import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRoleChoice";
 import { getPackageChoice } from "@/composables/fields/packages/getPackageChoice";
-import { metadataListForConBookChoice } from "@/config/metadata/flags/metadataForConBookChoice";
-import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
 import { getAttendeeDummyFun } from "@/composables/sort_and_filter/getAttendeeDummyFun";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
-import { metadataListForGoodiesLevels } from "@/config/metadata/packages/metadataForGoodiesLevels";
 import type { ValueGetter } from "@/types/internal/sort";
 import type { CountryCode } from "@/config/metadata/metadataForCountry";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 function getAttendeeCountry<Type extends TransformedAttendeeInfo>(
   attendee: Type
@@ -24,7 +22,10 @@ function getAttendeeConbook<Type extends TransformedAttendeeInfo>(
 ): string {
   return (
     attendee.transConbookChoice ||
-    getSubsetChoice(attendee.flags_list || [], metadataListForConBookChoice) ||
+    getSubsetChoice(
+      attendee.flags_list || [],
+      getConventionSetup().metadata.forConBook.list
+    ) ||
     ""
   );
 }
@@ -44,7 +45,7 @@ function getAttendeeSponsor<Type extends TransformedAttendeeInfo>(
   return (
     getPackageChoice(
       attendee.packages_list || [],
-      metadataListForSponsorLevels
+      getConventionSetup().metadata.forSponsorLevels.list
     ) || ""
   );
 }
@@ -55,7 +56,7 @@ function getAttendeeGoodies<Type extends TransformedAttendeeInfo>(
   return (
     getPackageChoice(
       attendee.packages_list || [],
-      metadataListForGoodiesLevels
+      getConventionSetup().metadata.forGoodiesLevels.list
     ) || ""
   );
 }

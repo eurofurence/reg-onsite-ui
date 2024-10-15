@@ -1,15 +1,17 @@
 import { getGoodieFromConcreteItem } from "@/composables/items/getGoodieFromConcreteItem";
 import { getEmptyShippingAddInfo } from "@/composables/shipping/getEmptyShippingAddInfo";
 import {
+  type PlaceHolderTShirtType,
   type TShirtInfo,
   type TShirtTypeValue,
-  metadataListForTShirtTypesInternal,
 } from "@/config/metadata/tshirt/metadataForTShirtTypes";
 import { TShirtType } from "@/config/metadata/tshirt/metadataForTShirtTypes";
-import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
 import type { ApiShippingAddInfo } from "@/types/external/attsrv/additional-info/shipping";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { CountryCode } from "@/config/metadata/metadataForCountry";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 function getTShirtTypeFromMissingItems(
   missingItems: ConcreteGoodieValue[]
@@ -32,7 +34,7 @@ export function getPrefilledShippingInfo<Type extends TransformedAttendeeInfo>(
   missingItems: ConcreteGoodieValue[]
 ): ApiShippingAddInfo {
   var result = getEmptyShippingAddInfo();
-  result.id = storedAttendeeInfo.id || 0;
+  result.id = storedAttendeeInfo.id || (0 as RegNumber);
   result.nickname = storedAttendeeInfo.nickname || "";
   result.first_name = storedAttendeeInfo.first_name || "";
   result.last_name = storedAttendeeInfo.last_name || "";
@@ -47,11 +49,17 @@ export function getPrefilledShippingInfo<Type extends TransformedAttendeeInfo>(
     getTShirtTypeFromMissingItems(missingItems) ||
     storedAttendeeInfo?.tshirt_size ||
     TShirtType.regular_m;
-  metadataListForTShirtTypesInternal.forEach((item: TShirtInfo) => {
-    if (item.value === tshirtType) {
-      result.tshirt_shape = item.shape;
-      result.tshirt_size = item.size;
+  getConventionSetup().metadata.forTShirtTypes.list.forEach(
+    (item: TShirtInfo | PlaceHolderTShirtType) => {
+      if (item.value === null) {
+        return;
+      }
+      const tshirtItem: TShirtInfo = item as TShirtInfo;
+      if (tshirtItem.value === tshirtType) {
+        result.tshirt_shape = tshirtItem.shape;
+        result.tshirt_size = tshirtItem.size;
+      }
     }
-  });
+  );
   return result;
 }

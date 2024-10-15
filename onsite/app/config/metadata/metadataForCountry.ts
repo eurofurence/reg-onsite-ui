@@ -1,7 +1,5 @@
-import { sortByLabel } from "@/composables/collection_tools/sortByLabel";
 import type { LabeledValue } from "@/types/internal/infos";
 import type { Branded } from "@/composables/brand";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
 
 export type CountryCode = Branded<string, "CountryCode">;
@@ -267,6 +265,3 @@ export const metadataRecordForCountry: MetadataRecord<
   ["ZM" as CountryCode]: { label: "Zambia" },
   ["ZW" as CountryCode]: { label: "Zimbabwe" },
 };
-
-export const metadataListForCountry: LabeledValue<CountryCode>[] =
-  sortByLabel<CountryCode>(getMetadataList(metadataRecordForCountry));

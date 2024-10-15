@@ -58,6 +58,7 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { SearchStatus } from "@/types/internal/component/regnumsearch";
 import { EnvName } from "@/types/internal/env";
 import { OnsiteToastService } from "@/composables/services/toastService";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 keyboardService.pushScope(ShortcutScope.regdesk);
 
@@ -86,7 +87,7 @@ const onCheckin = getOnCheckinFunction(
   toastService
 );
 
-async function onUndoCheckin(regNumber: number): Promise<void> {
+async function onUndoCheckin(regNumber: RegNumber): Promise<void> {
   if (environmentSettings.envName !== EnvName.dev) {
     return;
   }
@@ -98,7 +99,7 @@ async function onUndoCheckin(regNumber: number): Promise<void> {
 }
 
 async function updateCurrentAttendee(
-  regNumber: number
+  regNumber: RegNumber
 ): Promise<TransformedAttendeeInfo | null> {
   transformedAttendeeInfoRef.value = null;
   transformedAttendeeInfoRef.value = await handleSingleAttendeeSearch(
@@ -110,7 +111,7 @@ async function updateCurrentAttendee(
 }
 </script>
 
-<style>
+<style lang="css">
 .quickregdeskdesk .p-splitter {
   border: none;
 }

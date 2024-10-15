@@ -60,7 +60,7 @@ const autoCompleteDataRef: ModelRef<TransformedAttendeeInfo[] | undefined> =
   defineModel<TransformedAttendeeInfo[] | undefined>("autoCompleteData");
 </script>
 
-<style>
+<style lang="css">
 .tfheader:before {
   content: "Select all:";
   padding-right: 1.25rem;

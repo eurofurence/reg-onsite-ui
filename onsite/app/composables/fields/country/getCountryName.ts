@@ -1,15 +1,9 @@
-import { convertListToMap } from "@/composables/collection_tools/convertListToMap";
-import { lookupInMap } from "@/composables/collection_tools/lookupInMap";
-import {
-  type CountryCode,
-  metadataListForCountry,
-} from "@/config/metadata/metadataForCountry";
-
-const countryCodeToNameMap: Map<CountryCode, string> = convertListToMap(
-  metadataListForCountry,
-  "label"
-);
+import { type CountryCode } from "@/config/metadata/metadataForCountry";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 export function getCountryName(country_code: CountryCode): string {
-  return lookupInMap(countryCodeToNameMap, country_code, country_code);
+  return (
+    getConventionSetup().metadata.forCountry.record[country_code]?.label ||
+    country_code
+  );
 }

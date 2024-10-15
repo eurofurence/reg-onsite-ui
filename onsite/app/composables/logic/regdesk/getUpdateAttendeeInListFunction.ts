@@ -2,9 +2,10 @@ import { handleSingleAttendeeSearch } from "@/composables/search_status/handleSi
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { SearchStatus } from "@/types/internal/component/regnumsearch";
 import type { OnsiteToastService } from "@/composables/services/toastService";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 function hasAttendeeChanged(
-  regNumber: number,
+  regNumber: RegNumber,
   oldValue: TransformedAttendeeInfo | null,
   newValue: TransformedAttendeeInfo
 ) {
@@ -19,8 +20,10 @@ export function getUpdateAttendeeInListFunction(
   selectedRef: Ref<TransformedAttendeeInfo | null>,
   searchStatusRef: Ref<SearchStatus>,
   toastService: OnsiteToastService
-): (regNumber: number) => Promise<TransformedAttendeeInfo | null> {
-  return async (regNumber: number): Promise<TransformedAttendeeInfo | null> => {
+): (regNumber: RegNumber) => Promise<TransformedAttendeeInfo | null> {
+  return async (
+    regNumber: RegNumber
+  ): Promise<TransformedAttendeeInfo | null> => {
     const result: TransformedAttendeeInfo | null =
       await handleSingleAttendeeSearch(
         regNumber,

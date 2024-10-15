@@ -74,11 +74,11 @@ export const metadataListForTShirtTypesInternal: TShirtInfo[] = [
   getTShirtInfo(TShirtSize.size_4xl, TShirtShape.contoured),
 ];
 
-type PlaceHolderTShirtType = Omit<Nullable<TShirtInfo>, "label"> & {
+export type PlaceHolderTShirtType = Omit<Nullable<TShirtInfo>, "label"> & {
   label: string;
 };
 
-export const setupTShirtTypePlaceholder: PlaceHolderTShirtType = {
+export const metadataForTShirtTypePlaceholder: PlaceHolderTShirtType = {
   label: "Not Specified",
   size: null,
   value: null,
@@ -88,4 +88,4 @@ export const setupTShirtTypePlaceholder: PlaceHolderTShirtType = {
 export const metadataListForTShirtTypes: (
   | TShirtInfo
   | PlaceHolderTShirtType
-)[] = [setupTShirtTypePlaceholder, ...metadataListForTShirtTypesInternal];
+)[] = [metadataForTShirtTypePlaceholder, ...metadataListForTShirtTypesInternal];

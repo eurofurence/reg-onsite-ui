@@ -10,7 +10,7 @@
 defineEmits(["click"]);
 </script>
 
-<style>
+<style lang="css">
 .header-button button.p-button-icon-only {
   width: calc(var(--header-size) * 50px);
 }

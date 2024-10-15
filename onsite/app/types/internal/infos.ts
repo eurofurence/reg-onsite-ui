@@ -2,6 +2,7 @@ import type {
   ApiSearchType,
   FlagApiValue,
   PackageApiValue,
+  RegNumber,
 } from "@/types/external/attsrv/attendees/attendee";
 import type {
   ConBookApiValue,
@@ -14,6 +15,7 @@ import type {
 import type { ColorsPaletteValue } from "@/composables/theme/colors";
 import type { AttendeeApiStatusValues } from "@/config/metadata/metadataForStatus";
 import type { PackageValue } from "@/types/internal/fields";
+import type { AttendeeApiAttendance } from "@/config/metadata/packages/metadataForAttendance";
 
 export interface LabeledValue<ValueType> {
   value: ValueType;
@@ -40,7 +42,7 @@ export interface StatusInfo
   extends ColoredIconLabeledValue<AttendeeApiStatusValues> {}
 
 export interface ConRoleInfo extends ColoredLabeledValue<ConRoleValue> {
-  idList: number[];
+  idList: RegNumber[];
   search: ApiSearchType<PackageApiValue, ConRoleApiValue>;
   overrides: ConRoleValue[];
 }
@@ -59,4 +61,8 @@ export interface PackageInfo<ValueType extends PackageValue>
 
 export interface ConBookInfo extends ColoredLabeledValue<ConBookValue> {
   search: ApiSearchType<PackageApiValue, ConBookApiValue>;
+}
+
+export interface AttendanceInfo extends LabeledValue<AttendeeApiAttendance> {
+  weekday: number | null;
 }

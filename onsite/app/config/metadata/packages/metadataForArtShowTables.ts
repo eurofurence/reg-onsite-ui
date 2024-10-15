@@ -1,6 +1,5 @@
 import type { LabeledValue } from "@/types/internal/infos";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 
 const enum ArtShowTableApi {
   ast_old_1 = "artshow-table",
@@ -30,6 +29,3 @@ export const metadataRecordForArtShowTables: MetadataRecord<
   [ArtShowTable.ast_2p0]: { label: "AS Table 2" },
   [ArtShowTable.ast_3p0]: { label: "AS Table 3" },
 };
-
-export const metadataListForArtShowTables: LabeledValue<ArtShowTableValue>[] =
-  getMetadataList(metadataRecordForArtShowTables);

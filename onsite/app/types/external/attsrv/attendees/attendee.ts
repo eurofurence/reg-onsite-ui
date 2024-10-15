@@ -61,20 +61,24 @@ export interface ApiSearchType<
   PackageApiValueType extends PackageValue,
   FlagApiValueType extends FlagValue
 > {
-  ids?: number[];
+  ids?: RegNumber[];
   packages?: Partial<Record<Exclude<PackageApiValueType, "">, number>>;
   flags?: Partial<Record<Exclude<FlagApiValueType, "">, number>>;
   nickname?: string;
 }
 
+export type RegNumber = Branded<number, "RegNumber">;
+export type MoneyInCent = Branded<number, "MoneyInCent">;
+export type IsoBirthdayStr = Branded<string, "IsoBirthdayStr">;
+
 export interface ApiAttendeeInfo {
-  id: number;
+  id: RegNumber;
   badge_id: string;
   nickname: string;
   first_name: string;
   last_name: string;
   country: CountryCode;
-  birthday: string;
+  birthday: IsoBirthdayStr;
   pronouns?: string;
   tshirt_size?: TShirtTypeValue;
   spoken_languages: string;
@@ -87,9 +91,9 @@ export interface ApiAttendeeInfo {
   packages: string;
   packages_list: PackageCountType<PackageApiValue>[];
   status: AttendeeApiStatusValues;
-  total_dues: number;
-  payment_balance: number;
-  current_dues: number;
+  total_dues: MoneyInCent;
+  payment_balance: MoneyInCent;
+  current_dues: MoneyInCent;
   street?: string;
   zip?: string;
   city?: string;

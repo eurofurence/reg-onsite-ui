@@ -6,10 +6,11 @@ import {
 } from "@/composables/api/base/restErrorWrapper";
 import type { ApiError } from "@/types/external/error";
 import type { FetchResultPromise } from "@/types/internal/rest";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 async function postAddInfo<AddInfoType>(
   addInfoArea: string,
-  regNumber: number,
+  regNumber: RegNumber,
   itemData: AddInfoType
 ): FetchResultPromise<any, ApiError> {
   const response: Response = await postApi(
@@ -24,7 +25,7 @@ export async function putAddInfo<AddInfoType>(
   serviceName: string,
   addInfoArea: string,
   errorHandler: RestErrorHandler,
-  regNumber: number,
+  regNumber: RegNumber,
   itemData: AddInfoType
 ): Promise<null | undefined> {
   const result: any | undefined = await restErrorWrapper<null>(

@@ -34,7 +34,7 @@ const modelValue: ModelRef<AttendeeApiStatusValues | null> =
 const componentId: string = generateId(useId());
 </script>
 
-<style>
+<style lang="css">
 .status-field .p-chip {
   color: white;
 }

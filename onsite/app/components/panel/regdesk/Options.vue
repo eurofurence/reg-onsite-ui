@@ -18,24 +18,14 @@
               :options="attendeeTableDisplayOptionChoices.displayRowsPerPage"
             />
           </div>
-          <div class="flex flex-col gap-1">
-            <label for="autoSelect">
-              Auto-select if there is just one match
-            </label>
-            <ToggleSwitch
-              id="autoSelect"
-              v-model="displayOptionsRef.filterAutoSelect"
-            />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="autoSelect">
-              Close dialog / deselect attendee when checking in
-            </label>
-            <ToggleSwitch
-              id="autoSelect"
-              v-model="displayOptionsRef.checkinAutoClose"
-            />
-          </div>
+          <CustomLabeledToggleSwitch
+            label="Auto-select if there is just one match"
+            v-model="displayOptionsRef.filterAutoSelect"
+          />
+          <CustomLabeledToggleSwitch
+            label="Close dialog / deselect attendee when checking in"
+            v-model="displayOptionsRef.checkinAutoClose"
+          />
           <div class="flex flex-col gap-1">
             <label for="filterDisplay">Layout of the filter elements</label>
             <SelectButton
@@ -63,51 +53,34 @@
 
       <TabPanel value="1">
         <div class="flex flex-col gap-2 w-full">
-          <div class="flex flex-col gap-1">
-            Enable runner window on selection
-            <ToggleSwitch
-              id="autoSelect"
-              v-model="displayOptionsRef.displayRunner.enabled"
-            />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="labelRunnerSize">
-              Duration of the runner window
-              {{
-                Math.round(displayOptionsRef.displayRunner.duration / 100) / 10
-              }}s ({{
-                Math.round(
-                  (displayOptionsRef.displayRunner.duration * 100) /
-                    defaultAttendeeTableDisplayOptions.displayRunner.duration
-                )
-              }}%)
-            </label>
-            <Slider
-              id="labelRunnerSize"
-              v-model="displayOptionsRef.displayRunner.duration"
-              :step="500"
-              :min="500"
-              :max="20000"
-            />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="labelRunnerSize">
-              Font Size:
-              {{
-                Math.round(
-                  (displayOptionsRef.displayRunner.size * 100) /
-                    defaultAttendeeTableDisplayOptions.displayRunner.size
-                )
-              }}%
-            </label>
-            <Slider
-              id="labelRunnerSize"
-              v-model="displayOptionsRef.displayRunner.size"
-              :step="2"
-              :min="2"
-              :max="20"
-            />
-          </div>
+          <CustomLabeledToggleSwitch
+            label="Enable runner window on selection"
+            v-model="displayOptionsRef.displayRunner.enabled"
+          />
+          <CustomLabeledRelativeSlider
+            :label="`Duration of the runner window: ${
+              Math.round(displayOptionsRef.displayRunner.duration / 100) / 10
+            }s`"
+            :withParens="true"
+            v-model="displayOptionsRef.displayRunner.duration"
+            :baseValue="
+              defaultAttendeeTableDisplayOptions.displayRunner.duration
+            "
+            :step="500"
+            :min="500"
+            :max="20000"
+          />
+          <CustomLabeledRelativeSlider
+            :label="`Font Size: ${
+              Math.round(displayOptionsRef.displayRunner.duration / 100) / 10
+            }s`"
+            :withParens="true"
+            v-model="displayOptionsRef.displayRunner.size"
+            :baseValue="defaultAttendeeTableDisplayOptions.displayRunner.size"
+            :step="2"
+            :min="2"
+            :max="20"
+          />
           <div class="flex flex-col gap-1">
             Location of the runner window on the screen
             <span class="capitalize">{{
@@ -287,8 +260,6 @@ import {
   setupTableFilterDisplay,
 } from "@/config/system/regdesk";
 import type { GoodiesLevelValue } from "@/config/metadata/packages/metadataForPerks";
-import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
-import { metadataListForStatus } from "@/config/metadata/metadataForStatus";
 import {
   type ConRoleInfo,
   type LabeledValue,
@@ -305,7 +276,7 @@ import type {
   AttendeeTableDisplayOptions,
   CheckinDisplayValue,
 } from "@/types/internal/system/regdesk";
-import { metadataListForConRoles } from "@/config/metadata/flags/metadataForConRoles";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 interface AttendeeTableDisplayOptionChoices {
   displayRowsPerPage: number[];
@@ -337,12 +308,12 @@ const attendeeDataOptionChoices: AttendeeDataOptionChoices = {
   queryMode: setupAttendeeQueryStrategy,
   filterConfig: {
     globalFilterFields: setupColumnDefinitionList.filter(
-      (item: ColumnDefinition) => item?.fieldCanBeUsedByGlobalSearch
+      (item: ColumnDefinition) => item.filterConfig?.canBeGlobalFilter
     ),
     filterValues: {
-      status: metadataListForStatus,
-      transConRole: metadataListForConRoles,
-      transSponsorChoice: metadataListForSponsorLevels,
+      status: getConventionSetup().metadata.forStatus.list,
+      transConRole: getConventionSetup().metadata.forConRole.list,
+      transSponsorChoice: getConventionSetup().metadata.forSponsorLevels.list,
     },
   },
 };
@@ -355,7 +326,7 @@ const dataOptionsRef: ModelRef<AttendeeDataOptions> =
   defineModel<AttendeeDataOptions>("dataOptions", { required: true });
 </script>
 
-<style>
+<style lang="css">
 .p-listbox .p-listbox-list .p-listbox-item.p-highlight {
   background: var(--primary-300);
   color: white;

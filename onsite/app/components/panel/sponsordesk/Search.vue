@@ -11,7 +11,7 @@
     <InputFieldWithKeyPad
       v-model="inputRegNumber"
       @numberSubmit="onSearchRegNumber"
-      :maxNumber="conventionSetup.maxRegNumber"
+      :maxNumber="getConventionSetup().maxRegNumber"
       :severitySubmitButton="
         inputRegNumber !== null && isDirty ? ButtonSeverity.secondary : null
       "
@@ -24,25 +24,26 @@ import { confirmIfDirty } from "@/composables/dirty/confirmIfDirty";
 import { isDirty } from "@/composables/dirty/isDirty";
 import { getRegNumberFromRoute } from "@/composables/route/getRegNumberFromRoute";
 import { authService } from "@/composables/services/authService";
-import { conventionSetup } from "@/config/convention";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import { getDialogBreakPoints } from "@/config/theme/common";
 import type { RouteLocationNormalizedLoaded } from "vue-router";
 import { ButtonSeverity } from "@/types/internal/primevue";
 import { OnsiteConfirmService } from "@/composables/services/confirmService";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 const route: RouteLocationNormalizedLoaded = useRoute();
 
-const inputRegNumber: Ref<number | null> = ref<number | null>(null);
+const inputRegNumber: Ref<RegNumber | null> = ref<RegNumber | null>(null);
 
 watch(
   () => route.hash,
   async (_new_value, _old_value) => {
-    const regNumber: number | null = getRegNumberFromRoute();
+    const regNumber: RegNumber | null = getRegNumberFromRoute();
     emit("onSearchRegNumber", regNumber);
   }
 );
 
-async function setRegNumberRoute(regNumber: number | null): Promise<void> {
+async function setRegNumberRoute(regNumber: RegNumber | null): Promise<void> {
   if (regNumber === null) {
     await navigateTo(route.path);
   } else {
@@ -51,7 +52,7 @@ async function setRegNumberRoute(regNumber: number | null): Promise<void> {
 }
 
 async function ensureValidRoute(): Promise<void> {
-  const regNumber: number | null = getRegNumberFromRoute();
+  const regNumber: RegNumber | null = getRegNumberFromRoute();
   await setRegNumberRoute(regNumber);
   emit("onSearchRegNumber", regNumber);
 }
@@ -60,9 +61,9 @@ onMounted(ensureValidRoute);
 authService.onLogin(ensureValidRoute);
 
 async function onSearchRegNumber(): Promise<void> {
-  const regNumberFromRoute: number | null = getRegNumberFromRoute();
+  const regNumberFromRoute: RegNumber | null = getRegNumberFromRoute();
   if (regNumberFromRoute !== inputRegNumber.value) {
-    const regNumber: number | null = inputRegNumber.value;
+    const regNumber: RegNumber | null = inputRegNumber.value;
     confirmIfDirty(confirmService, async () => {
       await setRegNumberRoute(regNumber);
     });

@@ -23,10 +23,11 @@ import {
   type AttendeeDataOptions,
 } from "@/types/internal/system/regdesk";
 import { scheduleRegularTask } from "@/composables/events/scheduleRegularTask";
+import type { DurationInMS } from "@/types/internal/common";
 
-const scheduledInterval: number = 5 * 60; // Every 5 minuts
-const scheduledIntervalVariance: number = 60; // Introduce a variance of 1 minute
-const cooldownDuration: number = 3; // Cooldown of 10 seconds between refreshs
+const scheduledInterval: DurationInMS = (5 * 60 * 1000) as DurationInMS; // Every 5 minuts
+const scheduledIntervalVariance: DurationInMS = (60 * 1000) as DurationInMS; // Introduce a variance of 1 minute
+const cooldownDuration: DurationInMS = (3 * 1000) as DurationInMS; // Cooldown of 10 seconds between refreshs
 
 const currentTimeRef: Ref<Date> = ref<Date>(new Date());
 const preloadTimeRef: Ref<Date | null> = ref<Date | null>(null);
@@ -48,7 +49,7 @@ function canReload(): boolean {
   }
   return (
     currentTimeRef.value.valueOf() - preloadTimeRef.value.valueOf() >
-    cooldownDuration * 1000
+    cooldownDuration
   );
 }
 
@@ -61,14 +62,10 @@ async function triggerLoad() {
 
 scheduleRegularTask(() => {
   currentTimeRef.value = new Date();
-}, 1000);
+}, 1000 as DurationInMS);
 
 onMounted(triggerLoad);
-scheduleRegularTask(
-  triggerLoad,
-  scheduledInterval * 1000,
-  scheduledIntervalVariance * 1000
-);
+scheduleRegularTask(triggerLoad, scheduledInterval, scheduledIntervalVariance);
 
 const dataOptionsRef: ModelRef<AttendeeDataOptions> =
   defineModel<AttendeeDataOptions>({ required: true });

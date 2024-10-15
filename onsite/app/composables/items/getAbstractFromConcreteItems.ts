@@ -3,7 +3,7 @@ import type {
   AbstractGoodieValue,
   ConcreteGoodieValue,
   GoodieConfig,
-} from "@/setupEFIteration";
+} from "@/config/convention";
 
 export function getAbstractFromConcreteItems(
   concreteItems: ConcreteGoodieValue[]

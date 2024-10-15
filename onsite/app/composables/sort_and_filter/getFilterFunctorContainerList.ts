@@ -231,14 +231,15 @@ export function getFilterFunctorContainerList<
     (filter.global.value || "").trim().length > 0;
 
   setupColumnDefinitionList.forEach((columnDefintion: ColumnDefinition) => {
-    const cmpType: FilterCmpTypeValue | undefined = columnDefintion?.filterType;
+    const cmpType: FilterCmpTypeValue | undefined =
+      columnDefintion.filterConfig?.cmpType;
     const fieldName: FilterFieldValue =
-      columnDefintion.fieldName as FilterFieldValue;
-    const filterKey: keyof RawAttendeeFilter =
-      columnDefintion.fieldName as keyof RawAttendeeFilter;
+      columnDefintion.value as FilterFieldValue;
+    const filterKey: FilterFieldValue =
+      columnDefintion.value as FilterFieldValue;
     const isActiveGlobalColumn: boolean =
       isGlobalFilterActive &&
-      (columnDefintion?.fieldCanBeUsedByGlobalSearch || false) &&
+      (columnDefintion.filterConfig?.canBeGlobalFilter || false) &&
       globalFilterColumns.includes(fieldName);
     const params: AddFilterInterface<Type> = {
       result: result,

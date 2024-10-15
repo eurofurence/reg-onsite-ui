@@ -66,6 +66,7 @@ import type {
 import { OnsiteToastService } from "@/composables/services/toastService";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 import { OnsiteConfirmService } from "@/composables/services/confirmService";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
@@ -119,7 +120,7 @@ const displayOptionsRef: CookieRef<AttendeeTableDisplayOptions> =
 
 keyboardService.pushScope(ShortcutScope.regdesk);
 
-const onCheckin: (regNumber: number) => Promise<void> = getOnCheckinFunction(
+const onCheckin: (regNumber: RegNumber) => Promise<void> = getOnCheckinFunction(
   updateAttendee,
   selectedAttendeeRef,
   displayOptionsRef,

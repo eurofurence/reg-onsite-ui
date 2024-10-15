@@ -51,8 +51,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ConcreteGoodieValue } from "@/setupEFIteration";
-
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
 import { getEmptySponsorDeskAddInfo } from "@/composables/items/getEmptySponsorDeskAddInfo";
@@ -71,6 +69,8 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 import type { ApiShippingAddInfo } from "@/types/external/attsrv/additional-info/shipping";
 import { OnsiteToastService } from "@/composables/services/toastService";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
+import type { ConcreteGoodieValue } from "@/config/convention";
 
 keyboardService.pushScope(ShortcutScope.shipping);
 
@@ -110,7 +110,7 @@ async function determineMissingItems(
   }
 }
 
-async function initShippingFields(regNumber: number): Promise<void> {
+async function initShippingFields(regNumber: RegNumber): Promise<void> {
   const storedAttendeeInfo: TransformedAttendeeInfo | null | undefined = <
     TransformedAttendeeInfo | null | undefined
   >await attendeeService.getAttendeeByRegNumber(errorHandler, regNumber);
@@ -146,7 +146,7 @@ async function initShippingFields(regNumber: number): Promise<void> {
 }
 
 interface Props {
-  regNumber: number;
+  regNumber: RegNumber;
 }
 const props: Props = defineProps<Props>();
 const attendeeMissingItems: Ref<ConcreteGoodieValue[]> = ref([]);

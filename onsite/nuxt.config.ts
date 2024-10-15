@@ -1,4 +1,4 @@
-import { EFThemeNora } from "./app/config/theme/themeEF";
+import { EFThemeNora } from "./app/config/convention/eurofurence/theme";
 import { darkModeClass } from "./app/config/theme/common";
 
 export default defineNuxtConfig({

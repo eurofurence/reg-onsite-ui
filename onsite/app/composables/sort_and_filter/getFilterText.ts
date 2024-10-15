@@ -1,7 +1,6 @@
 import { getActiveFilters } from "@/composables/sort_and_filter/getActiveFilters";
 import { FilterMatchMode } from "@primevue/core/api";
 import type { DataTableFilterMetaData } from "primevue/datatable";
-import { getSponsorItem } from "@/composables/fields/packages/getSponsorItem";
 import { getStatusItem } from "@/composables/fields/status/getStatusItem";
 import { getCountryName } from "@/composables/fields/country/getCountryName";
 import type { CountryCode } from "@/config/metadata/metadataForCountry";
@@ -11,10 +10,10 @@ import type {
   CustomFilterMetaData,
   RawAttendeeFilter,
 } from "@/types/internal/filter";
-import {
-  metadataRecordForConRoles,
-  type ConRoleValue,
-} from "@/config/metadata/flags/metadataForConRoles";
+import { type ConRoleValue } from "@/config/metadata/flags/metadataForConRoles";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import type { SponsorLevelValue } from "@/config/metadata/packages/metadataForPerks";
+import type { ConBookValue } from "@/config/metadata/flags/metadataForConBookChoice";
 
 const matchModeMap: Record<string, string> = {
   [FilterMatchMode.STARTS_WITH]: "starts with",
@@ -86,10 +85,16 @@ function getValueLabelGetter(): Record<
     birthday: castToString,
     country: getCountryValueLabelGetter,
     status: createCastAfterLabelMap(getStatusItem),
-    transConbookChoice: (value: string | string[]) => "",
-    transSponsorChoice: createCastAfterLabelMap(getSponsorItem),
+    transConbookChoice: (value: string | string[]) =>
+      getConventionSetup().metadata.forConBook.record[value as ConBookValue]
+        .label,
+    transSponsorChoice: (value: string | string[]) =>
+      getConventionSetup().metadata.forSponsorLevels.record[
+        value as SponsorLevelValue
+      ].label,
     transConRole: (value: string | string[]) =>
-      metadataRecordForConRoles[value as ConRoleValue].label,
+      getConventionSetup().metadata.forConRole.record[value as ConRoleValue]
+        .label,
   };
 }
 

@@ -1,7 +1,6 @@
 import { ColorsPalette } from "@/composables/theme/colors";
 import type { ConBookInfo } from "@/types/internal/infos";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 
 const enum ConBookApi {
   digital = "digi-book",
@@ -27,6 +26,3 @@ export const metadataRecordForConBookChoice: MetadataRecord<ConBookInfo> = {
     search: { flags: { [ConBookApi.digital]: 1 } },
   },
 };
-
-export const metadataListForConBookChoice: ConBookInfo[] =
-  getMetadataList<ConBookInfo>(metadataRecordForConBookChoice);

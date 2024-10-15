@@ -1,12 +1,12 @@
 import { getPurePackageList } from "@/composables/fields/packages/getPurePackageList";
 import type { AttendanceApiValue } from "@/config/metadata/packages/metadataForAttendance";
-import { configDayAttendanceItems } from "@/setupEFIteration";
 import type { PackageApiValue } from "@/types/external/attsrv/attendees/attendee";
 import type { LabeledValue } from "@/types/internal/infos";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 const dayAttendanceSet: Set<AttendanceApiValue> = new Set(
-  configDayAttendanceItems.map(
+  getConventionSetup().metadata.forDayAttendance.list.map(
     (entry: LabeledValue<AttendanceApiValue>) => entry.value
   )
 );

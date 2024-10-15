@@ -28,7 +28,6 @@ import { getConcreteVariantItemValue } from "@/composables/items/getConcreteVari
 import { getEmptySponsorDeskAddInfo } from "@/composables/items/getEmptySponsorDeskAddInfo";
 import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
 import { attendeeService } from "@/composables/services/attendeeService";
-import type { ConcreteGoodieValue, GoodieConfig } from "@/setupEFIteration";
 import type { ModelRef } from "vue";
 import type { WritableComputedRef } from "vue";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
@@ -37,12 +36,14 @@ import type { GoodieTreeNode } from "@/types/internal/goodies";
 import type { LabeledValue } from "@/types/internal/infos";
 import { OnsiteToastService } from "@/composables/services/toastService";
 import type { ApiAllAddInfo } from "@/types/external/attsrv/additional-info/common";
+import type { ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 const isLoadingSponsorStats = ref(false);
 
 interface SponsorStats {
   rawData: ApiAllAddInfo<ApiSponsorDeskAddInfo>;
-  allServedAttendees: number[];
+  allServedAttendees: RegNumber[];
   allIssuedItems: string[];
   allPastItems: string[];
   allReservedItems: string[];

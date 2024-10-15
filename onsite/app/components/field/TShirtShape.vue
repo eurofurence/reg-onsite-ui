@@ -4,7 +4,7 @@
     <SelectButton
       :id="componentId"
       v-model="modelValue"
-      :options="metadataListForTShirtShape"
+      :options="getConventionSetup().metadata.forTShirtShapes.list"
       optionValue="value"
       optionLabel="label"
       :allowEmpty="false"
@@ -18,7 +18,7 @@
           >
             <img
               :class="invertOnDarkMode()"
-              :src="getTShirtShapeImageUrl(slotProps.option.value)"
+              :src="getTShirtShapeImageUrl(slotProps.option.value).toString()"
               :placeholder="slotProps.option"
               unoptimized
             />
@@ -33,10 +33,9 @@
 import { fieldCSS, fieldLabelCSS } from "@/components/field/common/common";
 import { isDarkMode } from "@/composables/theme/isDarkMode";
 import type { ModelRef } from "vue";
-import {
-  metadataListForTShirtShape,
-  type TShirtShapeValue,
-} from "@/config/metadata/tshirt/metadataForTShirtShapes";
+import { type TShirtShapeValue } from "@/config/metadata/tshirt/metadataForTShirtShapes";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import type { AssetPath, AssetURL } from "@/composables/getAsset";
 
 function invertOnDarkMode(): string {
   if (isDarkMode.value) {
@@ -45,12 +44,9 @@ function invertOnDarkMode(): string {
   return "t-shirt-img";
 }
 
-const nuxtConfig = useRuntimeConfig();
-
-function getTShirtShapeImageUrl(tshirtShape: TShirtShapeValue): string {
+function getTShirtShapeImageUrl(tshirtShape: TShirtShapeValue): AssetURL {
   const shapeFilePath = `${tshirtShape.toLowerCase()}`;
-  const baseUrl = nuxtConfig.app.baseURL;
-  return `${baseUrl}/tshirt/${shapeFilePath}.svg`;
+  return getAsset(`tshirt/${shapeFilePath}.svg` as AssetPath);
 }
 
 const modelValue: ModelRef<TShirtShapeValue | undefined> = defineModel<
@@ -60,7 +56,7 @@ const modelValue: ModelRef<TShirtShapeValue | undefined> = defineModel<
 const componentId: string = generateId(useId());
 </script>
 
-<style>
+<style lang="css">
 .t-shirt-img {
   width: 6.5rem;
 }

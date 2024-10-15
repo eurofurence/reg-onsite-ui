@@ -45,78 +45,79 @@
       <Column
         v-for="columnDefinition of props.activeColumns"
         :sortable="columnDefinition?.sortEnabled || true"
-        :field="columnDefinition.fieldName"
+        :field="columnDefinition.value"
         :header="columnDefinition.label"
-        :columnKey="columnDefinition.fieldName"
-        :sortField="columnDefinition.fieldName"
-        :filterField="columnDefinition.fieldName"
-        :dataType="columnDefinition?.dataType"
+        :columnKey="columnDefinition.value"
+        :sortField="columnDefinition.value"
+        :filterField="columnDefinition.value"
+        :dataType="columnDefinition.dataType"
         :showFilterMenu="showFilterMenu(columnDefinition)"
         :showFilterOperator="false"
         :showClearButton="false"
         :showAddButton="false"
       >
         <template #filter="{ filterModel, filterCallback }">
-          <div v-if="!filterModel"></div>
-          <AttendeeTableSearchFieldBirthday
-            v-else-if="columnDefinition?.filterComponentType === 'birthday'"
-            v-model="filterModel.value"
-            :columnDefinition="columnDefinition"
-            :filterCallback="filterCallback"
-          />
-          <AttendeeTableSearchFieldCountry
-            v-else-if="columnDefinition?.filterComponentType === 'country'"
-            v-model="filterModel.value"
-            :columnDefinition="columnDefinition"
-            :filterCallback="filterCallback"
-            :autoCompleteData="props.autoCompleteData"
-          />
-          <AttendeeTableSearchFieldTag
-            v-else-if="columnDefinition?.filterComponentType === 'tag'"
-            v-model="filterModel.value"
-            :columnDefinition="columnDefinition"
-            :filterCallback="filterCallback"
-            :configItems="columnDefinition?.configItems || []"
-            :autoCompleteData="props.autoCompleteData"
-            :autoCompleteField="columnDefinition.fieldName"
-          />
-          <AttendeeTableSearchFieldStandard
-            v-else-if="columnDefinition?.filterComponentType !== undefined"
-            v-model="filterModel.value"
-            :columnDefinition="columnDefinition"
-            :filterCallback="filterCallback"
-            :autoCompleteData="props.autoCompleteData"
-            :autoCompleteField="columnDefinition.fieldName"
-            placeholder="Search"
-          />
+          <div v-if="columnDefinition.filterConfig !== undefined">
+            <AttendeeTableSearchFieldBirthday
+              v-if="columnDefinition.columnType === ColumnType.birthday"
+              v-model="filterModel.value"
+              :columnDefinition="columnDefinition"
+              :filterCallback="filterCallback"
+            />
+            <AttendeeTableSearchFieldCountry
+              v-else-if="columnDefinition.columnType === ColumnType.country"
+              v-model="filterModel.value"
+              :columnDefinition="columnDefinition"
+              :filterCallback="filterCallback"
+              :autoCompleteData="props.autoCompleteData"
+            />
+            <AttendeeTableSearchFieldTag
+              v-else-if="columnDefinition.columnType === ColumnType.tag"
+              v-model="filterModel.value"
+              :columnDefinition="columnDefinition"
+              :filterCallback="filterCallback"
+              :configItems="columnDefinition.configItems"
+              :autoCompleteData="props.autoCompleteData"
+              :autoCompleteField="columnDefinition.value"
+            />
+            <AttendeeTableSearchFieldStandard
+              v-else-if="columnDefinition.columnType === ColumnType.standard"
+              v-model="filterModel.value"
+              :columnDefinition="columnDefinition"
+              :filterCallback="filterCallback"
+              :autoCompleteData="props.autoCompleteData"
+              :autoCompleteField="columnDefinition.value"
+              placeholder="Search"
+            />
+          </div>
         </template>
         <template #body="{ data }">
-          <span :class="`table-field-${columnDefinition.fieldName}`">
+          <span :class="`table-field-${columnDefinition.value}`">
             <AttendeeTableColumnElementCountry
-              v-if="columnDefinition.columnComponentType === 'country'"
+              v-if="columnDefinition.columnType === ColumnType.country"
               :modelValue="data"
             />
             <AttendeeTableColumnElementBirthday
-              v-else-if="columnDefinition.columnComponentType === 'birthday'"
+              v-else-if="columnDefinition.columnType === ColumnType.birthday"
               :modelValue="data"
             />
             <CustomTagControl
-              v-else-if="columnDefinition.columnComponentType === 'tag'"
-              :modelValue="data[columnDefinition.fieldName]"
-              :configItems="columnDefinition?.configItems || []"
+              v-else-if="columnDefinition.columnType === ColumnType.tag"
+              :modelValue="data[columnDefinition.value]"
+              :configItems="columnDefinition.configItems"
             />
             <AttendeeTableColumnElementCheckin
-              v-else-if="columnDefinition.columnComponentType === 'checkin'"
+              v-else-if="columnDefinition.columnType === ColumnType.checkin"
               :modelValue="data"
             />
             <AttendeeTableColumnElementDues
-              v-else-if="columnDefinition.columnComponentType === 'dues'"
-              :modelValue="data[columnDefinition.fieldName]"
+              v-else-if="columnDefinition.columnType === ColumnType.dues"
+              :modelValue="data[columnDefinition.value]"
             />
             <AttendeeTableColumnElementStandard
               v-else
-              :modelValue="data[columnDefinition.fieldName]"
-              :maxLength="columnDefinition?.maxLength || 0"
+              :modelValue="data[columnDefinition.value]"
+              :maxLength="columnDefinition.maxLength"
             />
           </span>
         </template>
@@ -127,7 +128,10 @@
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
-import type { ColumnDefinition } from "@/types/internal/component/table";
+import {
+  ColumnType,
+  type ColumnDefinition,
+} from "@/types/internal/component/table";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type {
   AttendeeDataOptions,
@@ -135,11 +139,10 @@ import type {
 } from "@/types/internal/system/regdesk";
 
 function showFilterMenu(columnDefinition: ColumnDefinition): boolean {
-  if (columnDefinition.filterComponentType === undefined) {
+  if (columnDefinition.filterConfig === undefined) {
     return false;
   }
-  const result: boolean | undefined = columnDefinition?.showFilterMenu;
-  return result === undefined ? true : result;
+  return columnDefinition.filterConfig.canChangeMatcher;
 }
 
 const dataOptionsRef: ModelRef<AttendeeDataOptions> =
@@ -178,7 +181,7 @@ const attendeeInfosRef: ModelRef<TransformedAttendeeInfo[]> = defineModel<
 defineEmits(["onSort", "onPage", "onFilter"]);
 </script>
 
-<style>
+<style lang="css">
 /* Hide N/A Tag for Con Role */
 .attendee-table .table-field-transConRole .tag-value- {
   display: none;

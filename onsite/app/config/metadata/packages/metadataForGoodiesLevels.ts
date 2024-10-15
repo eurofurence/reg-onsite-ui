@@ -8,7 +8,6 @@ import {
 } from "@/config/metadata/packages/metadataForPerks";
 import type { PackageInfo } from "@/types/internal/infos";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 
 export const metadataRecordForGoodiesLevels: MetadataRecord<
   PackageInfo<GoodiesLevelValue>
@@ -21,8 +20,3 @@ export const metadataRecordForGoodiesLevels: MetadataRecord<
   [GoodiesLevel.sponsor]: packageSponsor,
   [GoodiesLevel.super_sponsor]: packageSuperSponsor,
 };
-
-export const metadataListForGoodiesLevels: PackageInfo<GoodiesLevelValue>[] =
-  getMetadataList<PackageInfo<GoodiesLevelValue>>(
-    metadataRecordForGoodiesLevels
-  );

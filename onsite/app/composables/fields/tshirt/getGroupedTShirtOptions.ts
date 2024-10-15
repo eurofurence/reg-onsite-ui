@@ -4,11 +4,11 @@ import {
 } from "@/config/metadata/tshirt/metadataForTShirtShapes";
 import {
   type TShirtInfo,
-  setupTShirtTypePlaceholder,
-  metadataListForTShirtTypes,
+  metadataForTShirtTypePlaceholder,
 } from "@/config/metadata/tshirt/metadataForTShirtTypes";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
-type FlexibleTShirtInfo = TShirtInfo | typeof setupTShirtTypePlaceholder;
+type FlexibleTShirtInfo = TShirtInfo | typeof metadataForTShirtTypePlaceholder;
 
 interface TShirtGroup {
   label: string;
@@ -24,7 +24,7 @@ export function getGroupedTShirtOptions(): TShirtGroup[] {
     (tshirtShape: TShirtShapeValue) => {
       return {
         label: tshirtShape,
-        children: metadataListForTShirtTypes.filter(
+        children: getConventionSetup().metadata.forTShirtTypes.list.filter(
           (tshirtInfo: FlexibleTShirtInfo) => tshirtInfo.shape == tshirtShape
         ),
       };
@@ -33,7 +33,7 @@ export function getGroupedTShirtOptions(): TShirtGroup[] {
   return tshirtGroups.concat([
     {
       label: "-",
-      children: [setupTShirtTypePlaceholder],
+      children: [metadataForTShirtTypePlaceholder],
     },
   ]);
 }

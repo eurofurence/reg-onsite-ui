@@ -1,6 +1,7 @@
 import type { CountryCode } from "@/config/metadata/metadataForCountry";
 import type { TShirtShapeValue } from "@/config/metadata/tshirt/metadataForTShirtShapes";
 import type { TShirtSizeValue } from "@/config/metadata/tshirt/metadataForTShirtSizes";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 export const enum ShippingEmailUse {
   email_can_be_shared_with_logistics = "status",
@@ -10,7 +11,7 @@ export const enum ShippingEmailUse {
 export type ShippingEmailUseValue = `${ShippingEmailUse}`;
 
 export interface ApiShippingAddInfo {
-  id: number;
+  id: RegNumber;
   nickname: string;
   first_name: string;
   last_name: string;

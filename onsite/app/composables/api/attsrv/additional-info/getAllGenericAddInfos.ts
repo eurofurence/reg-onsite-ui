@@ -11,6 +11,7 @@ import type {
   ApiAllAddInfo,
   ApiAllAddInfoRaw,
 } from "@/types/external/attsrv/additional-info/common";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 async function fetchAllAddInfo(
   addInfoArea: string
@@ -36,14 +37,17 @@ export async function getAllAddInfos<AddInfoType>(
   if (result === undefined) {
     return undefined;
   } else {
-    var addInfoMap: Map<number, AddInfoType> = new Map<number, AddInfoType>();
+    var addInfoMap: Map<RegNumber, AddInfoType> = new Map<
+      RegNumber,
+      AddInfoType
+    >();
     getRecordEntries(result.values).forEach(
       ([key, value]: [string, string]) => {
         const addInfoEntry = {
           ...emptyAddInfo,
           ...JSON.parse(value),
         };
-        addInfoMap.set(Number.parseInt(key), addInfoEntry);
+        addInfoMap.set(Number.parseInt(key) as RegNumber, addInfoEntry);
       }
     );
     return {

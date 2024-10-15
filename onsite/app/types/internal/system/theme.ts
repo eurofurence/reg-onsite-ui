@@ -1,5 +1,8 @@
+export type FontSize = Branded<number, "FontSize">;
+export type RelativeSize = Branded<number, "RelativeSize">;
+
 export interface UserThemeSettings {
   isDarkMode: boolean;
-  fontSize: number;
-  headerSize: number;
+  fontSize: FontSize;
+  headerSize: RelativeSize;
 }

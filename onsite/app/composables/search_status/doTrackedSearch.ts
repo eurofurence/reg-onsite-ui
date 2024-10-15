@@ -8,14 +8,15 @@ import {
 } from "@/composables/search_status/constructors";
 import type { SearchStatus } from "@/types/internal/component/regnumsearch";
 import type { OnsiteToastService } from "@/composables/services/toastService";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 type TrackedSearchHandler = (
-  regNumber: number,
+  regNumber: RegNumber,
   errorHandler: RestErrorHandler
 ) => Promise<string[]>;
 
 export async function doTrackedSearch(
-  regNumber: number,
+  regNumber: RegNumber,
   searchStatus: Ref<SearchStatus>,
   toastService: OnsiteToastService,
   searchHandler: TrackedSearchHandler

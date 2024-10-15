@@ -13,7 +13,7 @@ export function getActiveFilters(
     fieldName: AllFilterFieldValues
   ): ColumnDefinition {
     const result: ColumnDefinition | undefined = setupColumnDefinitionList.find(
-      (value: ColumnDefinition) => value.fieldName == fieldName
+      (entry: ColumnDefinition) => entry.value == fieldName
     );
     if (result !== undefined) {
       return result;
@@ -30,10 +30,14 @@ export function getActiveFilters(
     .map(([filterField, filterItem]) => {
       const newFieldName: AllFilterFieldValues =
         filterField as AllFilterFieldValues;
-      return {
+      var result: CustomFilterMetaData = {
         ...filterItem,
         ...lookupColumnDefinition(newFieldName),
-        ...{ fieldName: newFieldName },
+        ...{
+          fieldName: newFieldName,
+          filterValue: filterItem.value,
+        },
       };
+      return result;
     });
 }

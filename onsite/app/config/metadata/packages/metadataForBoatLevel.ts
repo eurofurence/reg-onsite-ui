@@ -1,6 +1,5 @@
 import type { LabeledValue } from "@/types/internal/infos";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 
 const enum BoatLevel {
   benefactor = "boat-benefactor",
@@ -17,6 +16,3 @@ export const metadataRecordForBoatLevel: MetadataRecord<
   [BoatLevel.trip]: { label: "Boat Trip" },
   [BoatLevel.vip]: { label: "Boat VIP" },
 };
-
-export const metadataListForBoatLevel: LabeledValue<BoatLevelValue>[] =
-  getMetadataList(metadataRecordForBoatLevel);

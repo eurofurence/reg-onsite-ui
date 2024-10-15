@@ -1,3 +1,5 @@
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
+
 export const enum SearchStatusMode {
   idle_no_data = "idle_no_data",
   idle_with_data = "idle_with_data",
@@ -15,12 +17,12 @@ export interface IdleNoDataSearchStatus {
 
 export interface SearchingSearchStatus {
   mode: SearchStatusMode.searching;
-  regNumber: number;
+  regNumber: RegNumber;
 }
 
 export interface ErrorSearchStatus {
   mode: SearchStatusMode.error;
-  regNumber: number;
+  regNumber: RegNumber;
   message: string;
 }
 

@@ -1,13 +1,13 @@
 import { getRecordEntries } from "@/composables/collection_tools/getRecordEntries";
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import type { TShirtTypeValue } from "@/config/metadata/tshirt/metadataForTShirtTypes";
+import type { WritableComputedRef } from "vue";
+import type { LabeledValue } from "@/types/internal/infos";
 import type {
   AbstractGoodieValue,
   ConcreteGoodieValue,
   GoodieConfig,
-} from "@/setupEFIteration";
-import type { WritableComputedRef } from "vue";
-import type { LabeledValue } from "@/types/internal/infos";
+} from "@/config/convention";
 
 interface CheckedItemData {
   checked: boolean;

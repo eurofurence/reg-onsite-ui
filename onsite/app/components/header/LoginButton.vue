@@ -23,7 +23,7 @@ import { getDialogBreakPoints } from "@/config/theme/common";
 import { ButtonSeverity } from "@/types/internal/primevue";
 import { ShortcutScope } from "@/composables/services/keyboardService";
 import { OnsiteConfirmService } from "@/composables/services/confirmService";
-import { conventionSetup } from "@/config/convention";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 function doLogout() {
   // the /logout endpoint should not be used - instead people should get directed at the IDP dashboard for logout
@@ -36,7 +36,8 @@ function doLogout() {
     header: "Confirmation",
     icon: "pi pi-exclamation-triangle",
     accept: () => {
-      window.location.href = conventionSetup.idpDashboardLink;
+      window.location.href =
+        getConventionSetup().links.idpDashboardLink.toString();
     },
     reject: () => {},
   });

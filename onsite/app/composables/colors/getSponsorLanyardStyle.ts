@@ -2,11 +2,11 @@ import { getColorVariants } from "@/composables/colors/getColorVariants";
 import { getGradientStyle } from "@/composables/colors/getGradientStyle";
 import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRoleChoice";
 import type { GoodiesLevelValue } from "@/config/metadata/packages/metadataForPerks";
-import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
 import type { ColorsPaletteValue } from "@/composables/theme/colors";
 import { ConRole } from "@/config/metadata/flags/metadataForConRoles";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { ConRoleInfo, PackageInfo } from "@/types/internal/infos";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 export function getSponsorLanyardStyle(
   attendeeInfo: TransformedAttendeeInfo | null
@@ -15,7 +15,7 @@ export function getSponsorLanyardStyle(
     return {};
   }
   const sponsorItem: PackageInfo<GoodiesLevelValue> | undefined =
-    metadataListForSponsorLevels.find(
+    getConventionSetup().metadata.forSponsorLevels.list.find(
       (entry: PackageInfo<GoodiesLevelValue>) =>
         entry.value === attendeeInfo.transSponsorChoice
     );

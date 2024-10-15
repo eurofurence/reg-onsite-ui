@@ -6,9 +6,10 @@ import {
   type ApiShippingAddInfo,
 } from "@/types/external/attsrv/additional-info/shipping";
 import { deepCopy } from "@/composables/deepCopy";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 const emptyShippingAddInfo: ApiShippingAddInfo = {
-  id: 0,
+  id: 0 as RegNumber,
   nickname: "",
   first_name: "",
   last_name: "",

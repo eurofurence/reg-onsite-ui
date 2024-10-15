@@ -1,6 +1,5 @@
 import type { LabeledValue } from "@/types/internal/infos";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 
 export const enum TShirtSize {
   size_xs = "XS",
@@ -27,6 +26,3 @@ export const metadataRecordForTShirtSizes: MetadataRecord<
   [TShirtSize.size_3xl]: { label: "3X-Large" },
   [TShirtSize.size_4xl]: { label: "4X-Large" },
 };
-
-export const metadataListForTShirtSizes: LabeledValue<TShirtSizeValue>[] =
-  getMetadataList<LabeledValue<TShirtSizeValue>>(metadataRecordForTShirtSizes);

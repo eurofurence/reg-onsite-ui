@@ -3,41 +3,48 @@ import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRol
 import { getCountryName } from "@/composables/fields/country/getCountryName";
 import { getPackageChoice } from "@/composables/fields/packages/getPackageChoice";
 import { canCheckin } from "@/composables/fields/status/canCheckin";
-import {
-  type ConBookValue,
-  metadataListForConBookChoice,
-} from "@/config/metadata/flags/metadataForConBookChoice";
+import { type ConBookValue } from "@/config/metadata/flags/metadataForConBookChoice";
 import type {
   GoodiesLevelValue,
   SponsorLevelValue,
 } from "@/config/metadata/packages/metadataForPerks";
-import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
 import { getAge } from "@/composables/fields/birthday/getAge";
-import type { ApiAttendeeInfo } from "@/types/external/attsrv/attendees/attendee";
-import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
-import { metadataListForGoodiesLevels } from "@/config/metadata/packages/metadataForGoodiesLevels";
+import type {
+  ApiAttendeeInfo,
+  IsoBirthdayStr,
+} from "@/types/external/attsrv/attendees/attendee";
+import type {
+  TransformedAttendeeInfo,
+  TrimmedBirthdayStr,
+} from "@/types/internal/attendee";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
-function removeLeadingZerosFromDate(value: string): string {
+function removeLeadingZerosFromDate(value: IsoBirthdayStr): TrimmedBirthdayStr {
   const dateComponents: number[] = value.split("-").map(Number);
   if (dateComponents.length !== 3) {
     throw new Error(`Invalid date encountered: ${value}`);
   }
   const [year, month, day] = <[number, number, number]>dateComponents;
-  return `${year}-${month.toString()}-${day.toString()}`;
+  return `${year}-${month.toString()}-${day.toString()}` as TrimmedBirthdayStr;
 }
 
 export function transformAttendee(
   attendee: ApiAttendeeInfo
 ): TransformedAttendeeInfo {
   const conbookChoice: ConBookValue =
-    getSubsetChoice(attendee.flags_list, metadataListForConBookChoice) || "";
+    getSubsetChoice(
+      attendee.flags_list,
+      getConventionSetup().metadata.forConBook.list
+    ) || "";
   const sponsorChoice: SponsorLevelValue = (getPackageChoice(
     attendee.packages_list,
-    metadataListForSponsorLevels
+    getConventionSetup().metadata.forSponsorLevels.list
   ) || "") as SponsorLevelValue;
   const goodieChoice: GoodiesLevelValue =
-    getPackageChoice(attendee.packages_list, metadataListForGoodiesLevels) ||
-    "";
+    getPackageChoice(
+      attendee.packages_list,
+      getConventionSetup().metadata.forGoodiesLevels.list
+    ) || "";
   var transAttendee: TransformedAttendeeInfo = {
     ...{
       pronouns: attendee?.pronouns || null,

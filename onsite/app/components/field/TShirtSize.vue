@@ -6,10 +6,10 @@
       :class="fieldTextCSS"
       class="w-40"
       v-model="modelValue"
-      :options="metadataListForTShirtSizes"
+      :options="getConventionSetup().metadata.forTShirtSizes.list"
       optionValue="value"
       optionLabel="label"
-      :placeholder="setupTShirtTypePlaceholder.label"
+      :placeholder="metadataForTShirtTypePlaceholder.label"
       v-bind="$attrs"
     >
     </Select>
@@ -22,12 +22,10 @@ import {
   fieldLabelCSS,
   fieldTextCSS,
 } from "@/components/field/common/common";
-import {
-  type TShirtSizeValue,
-  metadataListForTShirtSizes,
-} from "@/config/metadata/tshirt/metadataForTShirtSizes";
-import { setupTShirtTypePlaceholder } from "@/config/metadata/tshirt/metadataForTShirtTypes";
+import { type TShirtSizeValue } from "@/config/metadata/tshirt/metadataForTShirtSizes";
+import { metadataForTShirtTypePlaceholder } from "@/config/metadata/tshirt/metadataForTShirtTypes";
 import type { ModelRef } from "vue";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 const modelValue: ModelRef<TShirtSizeValue | undefined> = defineModel<
   TShirtSizeValue | undefined

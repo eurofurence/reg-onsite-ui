@@ -2,7 +2,7 @@
   <div class="flex flex-rows">
     <img
       class="header-logo"
-      :src="conventionSetup.logoLink"
+      :src="getAsset(getConventionSetup().links.logoLink).toString()"
       @click="onLogoClick"
       v-tooltip="{
         value: versionInfo,
@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import { version } from "@/config/buildInfo";
-import { conventionSetup } from "@/config/convention";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 const versionInfo: string = `Version: ${version}`;
 
 function onLogoClick(): void {
@@ -32,7 +32,7 @@ const props: Props = defineProps<Props>();
 const emit: CallableFunction = defineEmits(["on-logo-click"]);
 </script>
 
-<style>
+<style lang="css">
 .header-logo {
   padding-right: calc(var(--header-size) * 10px);
   height: calc(var(--header-size) * 50px);

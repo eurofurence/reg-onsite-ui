@@ -8,7 +8,7 @@
         :class="fieldTextCSS"
         class="w-56"
         v-model="modelValue"
-        :options="metadataListForCountry"
+        :options="getConventionSetup().metadata.forCountry.list"
         optionValue="value"
         optionLabel="label"
         v-bind="$attrs"
@@ -46,9 +46,9 @@ import {
 } from "@/components/field/common/common";
 import { getCountryName } from "@/composables/fields/country/getCountryName";
 import { getFlagCSSClass } from "@/composables/fields/country/getFlagCSSClass";
-import { metadataListForCountry } from "@/config/metadata/metadataForCountry";
 import type { CountryCode } from "@/config/metadata/metadataForCountry";
 import type { ModelRef } from "vue";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 const modelValue: ModelRef<CountryCode | null> =
   defineModel<CountryCode | null>({

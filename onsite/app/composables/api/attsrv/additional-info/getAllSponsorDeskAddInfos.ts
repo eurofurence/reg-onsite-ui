@@ -1,7 +1,7 @@
 import { type RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
 import { getEmptySponsorDeskAddInfo } from "@/composables/items/getEmptySponsorDeskAddInfo";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
-import { getAllAddInfos } from "./getAllGenericAddInfos";
+import { getAllAddInfos } from "@/composables/api/attsrv/additional-info/getAllGenericAddInfos";
 import type { ApiAllAddInfo } from "@/types/external/attsrv/additional-info/common";
 
 export async function getAllSponsorDeskAddInfos(

@@ -7,9 +7,10 @@ import {
 import type { ApiError } from "@/types/external/error";
 import type { FetchResultPromise } from "@/types/internal/rest";
 import type { AttendeeApiStatusValues } from "@/config/metadata/metadataForStatus";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 async function postAttendeeStatus(
-  regNumber: number,
+  regNumber: RegNumber,
   status: AttendeeApiStatusValues,
   comment: string
 ): FetchResultPromise<null, ApiError> {
@@ -28,7 +29,7 @@ async function postAttendeeStatus(
 
 export async function putAttendeeStatus(
   errorHandler: RestErrorHandler,
-  regNumber: number,
+  regNumber: RegNumber,
   status: AttendeeApiStatusValues,
   comment: string
 ): Promise<null | undefined> {

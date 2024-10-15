@@ -1,9 +1,13 @@
 import { darkModeClass, defaultUserSettings } from "@/config/theme/common";
 import { isDarkMode } from "@/composables/theme/isDarkMode";
+import type { FontSize, RelativeSize } from "@/types/internal/system/theme";
 
 const themeSettings = useSmartCookie("onsiteTheme", defaultUserSettings);
 
-function setStylesheetVariables(fontSize: number, headerSize: number): void {
+function setStylesheetVariables(
+  fontSize: FontSize,
+  headerSize: RelativeSize
+): void {
   document.documentElement.style.fontSize = `${fontSize}px`;
   document.documentElement.style.setProperty("--header-size", `${headerSize}`);
 }

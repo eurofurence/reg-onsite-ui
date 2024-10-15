@@ -26,7 +26,7 @@
         The attendee is in status
         <CustomTagControl
           v-model="transformedAttendeeInfoRef.status"
-          :configItems="metadataListForStatus"
+          :configItems="getConventionSetup().metadata.forStatus.list"
         />
         <br />
         The attendee needs to check in at the registration desk before receiving
@@ -58,11 +58,6 @@ import {
   ShortcutScope,
   keyboardService,
 } from "@/composables/services/keyboardService";
-import { metadataListForStatus } from "@/config/metadata/metadataForStatus";
-import type {
-  AbstractGoodieValue,
-  ConcreteGoodieValue,
-} from "@/setupEFIteration";
 import type { ModelRef } from "vue";
 import type { CookieRef } from "#app";
 import { MessageSeverity, ToastSeverity } from "@/types/internal/primevue";
@@ -73,6 +68,11 @@ import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
 import { deepCopy } from "@/composables/deepCopy";
 import { OnsiteToastService } from "@/composables/services/toastService";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import type {
+  AbstractGoodieValue,
+  ConcreteGoodieValue,
+} from "@/config/convention";
 
 const savingItemsFlag: Ref<boolean> = ref<boolean>(false);
 
@@ -180,7 +180,7 @@ const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 </script>
 
-<style>
+<style lang="css">
 .issued-items .onsite-field-label {
   display: none;
 }

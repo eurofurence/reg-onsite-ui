@@ -24,7 +24,10 @@ import {
 import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRoleChoice";
 import type { ModelRef } from "vue";
 import { ConRole } from "@/config/metadata/flags/metadataForConRoles";
-import type { FlagApiValue } from "@/types/external/attsrv/attendees/attendee";
+import type {
+  FlagApiValue,
+  RegNumber,
+} from "@/types/external/attsrv/attendees/attendee";
 import type { ConRoleInfo } from "@/types/internal/infos";
 
 const modelValue: ModelRef<FlagApiValue[] | null> = defineModel<
@@ -32,7 +35,7 @@ const modelValue: ModelRef<FlagApiValue[] | null> = defineModel<
 >({
   required: true,
 });
-const regNumber: ModelRef<number | null> = defineModel<number | null>(
+const regNumber: ModelRef<RegNumber | null> = defineModel<RegNumber | null>(
   "regNumber",
   {
     required: true,
@@ -56,7 +59,7 @@ function getConRoleChoiceIternal(): ConRoleInfo[] {
 const componentId: string = generateId(useId());
 </script>
 
-<style>
+<style lang="css">
 .role-field .p-chip {
   color: white;
 }

@@ -1,4 +1,4 @@
-import type { ConcreteGoodieValue } from "@/setupEFIteration";
+import type { ConcreteGoodieValue } from "@/config/convention";
 
 export type DefaultSponsorDeskSettings = {};
 

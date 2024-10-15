@@ -3,6 +3,8 @@ import type { FilterConfig } from "@/types/internal/filter";
 import type { DataTableSortMeta } from "primevue/datatable";
 import type { ToastProps } from "primevue/toast";
 import type { TableFilterDisplayValue } from "@/types/internal/component/table";
+import type { FontSize } from "@/types/internal/system/theme";
+import type { DurationInMS } from "@/types/internal/common";
 
 export const enum AttendeeQueryStrategy {
   manual = "manual",
@@ -39,7 +41,7 @@ export interface AttendeeTableDisplayOptions {
   displayRunner: {
     enabled: boolean;
     location: ToastProps["position"];
-    size: number;
-    duration: number;
+    size: FontSize;
+    duration: DurationInMS;
   };
 }

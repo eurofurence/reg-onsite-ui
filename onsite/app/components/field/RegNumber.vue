@@ -20,8 +20,9 @@ import {
   fieldTextCSS,
 } from "@/components/field/common/common";
 import type { ModelRef } from "vue";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
-const modelValue: ModelRef<number | null> = defineModel<number | null>({
+const modelValue: ModelRef<RegNumber | null> = defineModel<RegNumber | null>({
   required: true,
 });
 const componentId: string = generateId(useId());

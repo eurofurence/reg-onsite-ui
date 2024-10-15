@@ -10,7 +10,7 @@
       optionGroupChildren="children"
       optionValue="value"
       optionLabel="label"
-      :placeholder="setupTShirtTypePlaceholder.label"
+      :placeholder="metadataForTShirtTypePlaceholder.label"
       v-bind="$attrs"
     >
     </Select>
@@ -26,7 +26,7 @@ import {
 import { getGroupedTShirtOptions } from "@/composables/fields/tshirt/getGroupedTShirtOptions";
 import {
   type TShirtTypeValue,
-  setupTShirtTypePlaceholder,
+  metadataForTShirtTypePlaceholder,
 } from "@/config/metadata/tshirt/metadataForTShirtTypes";
 import type { ModelRef } from "vue";
 

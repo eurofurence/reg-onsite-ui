@@ -1,7 +1,6 @@
 import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRoleChoice";
 import { computePackageChoice } from "@/composables/fields/packages/computePackageChoice";
 import type { GoodiesLevelValue } from "@/config/metadata/packages/metadataForPerks";
-import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
 import {
   ColorsPalette,
   type ColorsPaletteValue,
@@ -10,6 +9,7 @@ import type { WritableComputedRef } from "vue";
 import { ConRole } from "@/config/metadata/flags/metadataForConRoles";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { ConRoleInfo, PackageInfo } from "@/types/internal/infos";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 export function getLanyardColor(
   attendeeInfo: TransformedAttendeeInfo
@@ -24,10 +24,10 @@ export function getLanyardColor(
   const sponsorChoice: WritableComputedRef<GoodiesLevelValue | null> =
     computePackageChoice(
       ref(attendeeInfo.packages_list),
-      metadataListForSponsorLevels
+      getConventionSetup().metadata.forSponsorLevels.list
     );
   const sponsorItem: PackageInfo<GoodiesLevelValue> | undefined =
-    metadataListForSponsorLevels.find(
+    getConventionSetup().metadata.forSponsorLevels.list.find(
       (entry: PackageInfo<GoodiesLevelValue>) =>
         entry.value === sponsorChoice.value
     );

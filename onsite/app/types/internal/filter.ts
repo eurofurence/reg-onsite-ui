@@ -48,11 +48,10 @@ export const enum FilterCmpType {
 
 export type FilterCmpTypeValue = `${FilterCmpType}`;
 
-export interface CustomFilterMetaData
-  extends Omit<
-    DataTableFilterMetaData & ColumnDefinition,
-    "fieldName" | "value"
-  > {
+type CustomFilterMetaDataBase = Omit<DataTableFilterMetaData, "value"> &
+  Omit<ColumnDefinition, "value">;
+
+export interface CustomFilterMetaData extends CustomFilterMetaDataBase {
   fieldName: AllFilterFieldValues;
   value: null | string | string[];
 }

@@ -14,7 +14,7 @@
         </div>
         <div style="padding-right: 5px">
           <HeaderLinkButton
-            :href="conventionSetup.privacyLink"
+            :href="getConventionSetup().links.privacyLink"
             outlined
             class="contact-button"
             icon="pi pi-eye-slash"
@@ -23,7 +23,7 @@
         </div>
         <div style="padding-right: 5px">
           <HeaderLinkButton
-            :href="conventionSetup.imprintLink"
+            :href="getConventionSetup().links.imprintLink"
             outlined
             class="contact-button"
             icon="pi pi-info-circle"
@@ -53,7 +53,8 @@ import { authState } from "@/composables/state/authState";
 import type { ApiFrontendUserInfo } from "@/types/external/authsrv/frontenduserinfo";
 import { ToastSeverity } from "@/types/internal/primevue";
 import { OnsiteToastService } from "@/composables/services/toastService";
-import { conventionSetup } from "@/config/convention";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import type { DurationInMS } from "@/types/internal/common";
 
 const isLoading: Ref<boolean> = ref(true);
 
@@ -95,10 +96,14 @@ const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 onMounted(async () => {
   await checkUserAccess();
 });
-scheduleRegularTask(checkUserAccessSilent, 1000 * 120, 1000 * 10);
+scheduleRegularTask(
+  checkUserAccessSilent,
+  (1000 * 120) as DurationInMS,
+  (1000 * 10) as DurationInMS
+);
 </script>
 
-<style>
+<style lang="css">
 .auth-toolbar {
   padding: 5px;
 }

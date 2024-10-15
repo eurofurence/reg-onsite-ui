@@ -1,5 +1,5 @@
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import type { LabeledValue } from "@/types/internal/infos";
+import type { AttendanceInfo } from "@/types/internal/infos";
 
 export const enum AttendeeApiAttendance {
   full = "attendance",
@@ -13,10 +13,6 @@ export const enum AttendeeApiAttendance {
 }
 
 export type AttendanceApiValue = `${AttendeeApiAttendance}`;
-
-interface AttendanceInfo extends LabeledValue<AttendeeApiAttendance> {
-  weekday: number | null;
-}
 
 export const metadataRecordForAttendance: MetadataRecord<AttendanceInfo> = {
   [AttendeeApiAttendance.full]: {

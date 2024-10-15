@@ -34,22 +34,24 @@ import { getDuesFlag } from "@/composables/fields/money/getDuesFlag";
 import { getDuesNote } from "@/composables/fields/money/getDuesNote";
 import type { ModelRef } from "vue";
 import type { WritableComputedRef } from "vue";
+import type { MoneyInCent } from "@/types/external/attsrv/attendees/attendee";
 
-function getDuesFieldTextCSS(dues: number): string {
+function getDuesFieldTextCSS(dues: MoneyInCent): string {
   if (dues > 0) {
     return fieldTextCSS + " p-invalid";
   }
   return fieldTextCSS;
 }
 
-const modelValue: ModelRef<number | null> = defineModel<number | null>({
-  required: true,
-});
+const modelValue: ModelRef<MoneyInCent | null> =
+  defineModel<MoneyInCent | null>({
+    required: true,
+  });
 const moneyValue: WritableComputedRef<string> = computeMoney(modelValue);
 const componentId: string = generateId(useId());
 </script>
 
-<style>
+<style lang="css">
 small.dues-note-field {
   font-size: 1rem;
   font-weight: bold;

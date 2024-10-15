@@ -14,12 +14,12 @@
 
 <script setup lang="ts">
 import type SelectAvailableItemsDialog from "@/components/custom/sponsordesk/SelectAvailableItemsDialog.vue";
+import type { MenuItem } from "primevue/menuitem";
+import type { ModelRef } from "vue";
 import type {
   AbstractGoodieValue,
   ConcreteGoodieValue,
-} from "@/setupEFIteration";
-import type { MenuItem } from "primevue/menuitem";
-import type { ModelRef } from "vue";
+} from "@/config/convention";
 
 const availableItemsDialogRef = useTemplateRef<
   typeof SelectAvailableItemsDialog

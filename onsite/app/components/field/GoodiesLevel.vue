@@ -6,7 +6,7 @@
       :class="fieldTextCSS"
       v-model="goodieChoice"
       :pt:pc-toggle-button:root="getButtonStyle"
-      :options="metadataListForGoodiesLevels"
+      :options="getConventionSetup().metadata.forGoodiesLevels.list"
       optionValue="value"
       optionLabel="label"
       v-bind="$attrs"
@@ -29,18 +29,21 @@ import type {
 } from "@/types/external/attsrv/attendees/attendee";
 import type { SelectButtonPassThroughMethodOptions } from "primevue/selectbutton";
 import type { ModelRef, WritableComputedRef } from "vue";
-import { metadataListForGoodiesLevels } from "@/config/metadata/packages/metadataForGoodiesLevels";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 const modelValue: ModelRef<PackageCountType<PackageApiValue>[] | null> =
   defineModel<PackageCountType<PackageApiValue>[] | null>({ required: true });
 const goodieChoice: WritableComputedRef<GoodiesLevelValue | null> =
-  computePackageChoice(modelValue, metadataListForGoodiesLevels);
+  computePackageChoice(
+    modelValue,
+    getConventionSetup().metadata.forGoodiesLevels.list
+  );
 const componentId: string = generateId(useId());
 
 function getButtonStyle(options: SelectButtonPassThroughMethodOptions) {
   return getSelectedButtonStyle(
     goodieChoice,
-    metadataListForGoodiesLevels,
+    getConventionSetup().metadata.forGoodiesLevels.list,
     options
   );
 }

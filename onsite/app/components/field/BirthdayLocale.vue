@@ -2,15 +2,17 @@
   <div :class="fieldCSS">
     <label :for="componentId" :class="fieldLabelCSS">Birthday</label>
     <IconField v-if="modelValue.birthday !== null">
-      <InputIcon :class="getBirthdayFlag(modelValue.transAge || 0)" />
+      <InputIcon
+        :class="getBirthdayFlag(modelValue.transAge || 0 as AgeInYears)"
+      />
       <InputText
         v-tooltip="{
-          value: `${getBirthdayNote(modelValue.transAge || 0)}`,
+          value: `${getBirthdayNote(modelValue.transAge || 0 as AgeInYears)}`,
           showDelay: 0,
           hideDelay: 1000,
         }"
         :id="componentId"
-        :class="getBirthdayFieldTextCSS(modelValue.transAge || 0)"
+        :class="getBirthdayFieldTextCSS(modelValue.transAge || 0 as AgeInYears)"
         class="w-36 text-right"
         :modelValue="computeBirthdayFormat"
         v-bind="$attrs"
@@ -18,7 +20,7 @@
     </IconField>
     <FieldPlaceholder width="9rem" :labelId="componentId" v-else />
     <small v-if="modelValue.birthday !== null" class="birthday-note-field">{{
-      getBirthdayNote(modelValue.transAge || 0)
+      getBirthdayNote(modelValue.transAge || (0 as AgeInYears))
     }}</small>
   </div>
 </template>
@@ -33,10 +35,13 @@ import { getBirthdayFlag } from "@/composables/fields/birthday/getBirthdayFlag";
 import { getBirthdayNote } from "@/composables/fields/birthday/getBirthdayNote";
 import { isValidAge } from "@/composables/fields/birthday/isValidAge";
 import type { ModelRef } from "vue";
-import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type {
+  AgeInYears,
+  TransformedAttendeeInfo,
+} from "@/types/internal/attendee";
 
-function getBirthdayFieldTextCSS(birthday: number): string {
-  if (!isValidAge(birthday)) {
+function getBirthdayFieldTextCSS(age: AgeInYears): string {
+  if (!isValidAge(age)) {
     return fieldTextCSS + " p-invalid";
   }
   return fieldTextCSS;
@@ -64,7 +69,7 @@ const modelValue: ModelRef<TransformedAttendeeInfo> =
 const componentId: string = generateId(useId());
 </script>
 
-<style>
+<style lang="css">
 small.birthday-note-field {
   font-size: 1rem;
   font-weight: bold;

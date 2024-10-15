@@ -1,8 +1,8 @@
-import type {
-  ConcreteGoodieValue,
-  AbstractGoodieWithVariantsValue,
-} from "@/setupEFIteration";
 import type { LabeledValue } from "@/types/internal/infos";
+import type {
+  AbstractGoodieWithVariantsValue,
+  ConcreteGoodieValue,
+} from "@/config/convention";
 
 export type DefaultVariantValues = Map<
   AbstractGoodieWithVariantsValue,

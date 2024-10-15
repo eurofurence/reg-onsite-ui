@@ -17,14 +17,14 @@
 
 <script setup lang="ts">
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
-import type {
-  AbstractGoodieWithVariants,
-  ConcreteGoodieValue,
-  GoodieConfig,
-} from "@/setupEFIteration";
 import type { ModelRef } from "vue";
 import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type { LabeledValue } from "@/types/internal/infos";
+import type {
+  AbstractGoodieWithVariantsValue,
+  ConcreteGoodieValue,
+  GoodieConfig,
+} from "@/config/convention";
 
 function checkConcreteItem(referenceList: ConcreteGoodieValue[]): boolean {
   return referenceList.includes(
@@ -42,7 +42,7 @@ function isAvailableItem(): boolean {
 
 function isDefault(): boolean {
   const defaultValue: string | null | undefined = props.defaultValue.get(
-    props.goodieConfig.value as AbstractGoodieWithVariants
+    props.goodieConfig.value as AbstractGoodieWithVariantsValue
   );
   if (defaultValue === undefined) {
     return false;

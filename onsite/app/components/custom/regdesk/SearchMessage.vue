@@ -21,7 +21,7 @@ interface Props {
 const props: Props = defineProps<Props>();
 </script>
 
-<style>
+<style lang="css">
 .stm-message {
   margin-top: 1rem;
   margin-right: 1rem;

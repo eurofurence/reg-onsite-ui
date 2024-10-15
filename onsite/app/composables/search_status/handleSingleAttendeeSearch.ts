@@ -5,9 +5,10 @@ import { doTrackedSearch } from "@/composables/search_status/doTrackedSearch";
 import type { RestErrorInfo } from "@/types/internal/rest";
 import type { SearchStatus } from "@/types/internal/component/regnumsearch";
 import type { OnsiteToastService } from "@/composables/services/toastService";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 async function handleSearch(
-  regNumber: number,
+  regNumber: RegNumber,
   errorHandler: RestErrorHandler,
   resultRef: Ref<TransformedAttendeeInfo | null>
 ): Promise<string[]> {
@@ -35,7 +36,7 @@ async function handleSearch(
 }
 
 export async function handleSingleAttendeeSearch(
-  regNumber: number,
+  regNumber: RegNumber,
   searchStatusRef: Ref<SearchStatus>,
   toastService: OnsiteToastService
 ): Promise<TransformedAttendeeInfo | null> {
@@ -46,7 +47,7 @@ export async function handleSingleAttendeeSearch(
     searchStatusRef,
     toastService,
     async (
-      regNumber: number,
+      regNumber: RegNumber,
       errorHandler: RestErrorHandler
     ): Promise<string[]> => {
       return await handleSearch(regNumber, errorHandler, resultRef);

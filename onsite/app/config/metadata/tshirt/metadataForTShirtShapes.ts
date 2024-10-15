@@ -1,5 +1,4 @@
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 import type { LabeledValue } from "@/types/internal/infos";
 
 export const enum TShirtShape {
@@ -15,6 +14,3 @@ export const metadataRecordForTShirtShape: MetadataRecord<
   [TShirtShape.regular]: { label: TShirtShape.regular },
   [TShirtShape.contoured]: { label: TShirtShape.contoured },
 };
-
-export const metadataListForTShirtShape: LabeledValue<TShirtShapeValue>[] =
-  getMetadataList(metadataRecordForTShirtShape);

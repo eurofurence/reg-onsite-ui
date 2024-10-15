@@ -1,8 +1,8 @@
+import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type {
   AbstractGoodieValue,
   AbstractGoodieWithVariantsValue,
-} from "@/setupEFIteration";
-import type { DefaultVariantValues } from "@/types/internal/goodies";
+} from "@/config/convention";
 
 export function getDefaultVariantValuesValue(
   defaultVariantValues: DefaultVariantValues,

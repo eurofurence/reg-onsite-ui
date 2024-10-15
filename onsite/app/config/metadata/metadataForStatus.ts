@@ -1,7 +1,6 @@
 import { ColorsPalette } from "@/composables/theme/colors";
 import type { StatusInfo } from "@/types/internal/infos";
 import type { MetadataRecord } from "@/composables/collection_tools/getMetadataEntry";
-import { getMetadataList } from "@/composables/collection_tools/getMetadataList";
 
 export const enum AttendeeApiStatus {
   new = "new",
@@ -52,7 +51,3 @@ export const metadataRecordForStatus: MetadataRecord<StatusInfo> = {
     icon: "pi pi-user-plus",
   },
 };
-
-export const metadataListForStatus: StatusInfo[] = getMetadataList<StatusInfo>(
-  metadataRecordForStatus
-);

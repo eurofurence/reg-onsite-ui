@@ -30,10 +30,10 @@ import { getAbstractFromConcreteItems } from "@/composables/items/getAbstractFro
 import { getDefaultVariantValues } from "@/composables/items/getDefaultVariantValues";
 import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
 import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
-import type { AbstractGoodieValue, GoodieConfig } from "@/setupEFIteration";
 import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
+import type { AbstractGoodieValue, GoodieConfig } from "@/config/convention";
 
 const goodieConfigListRef: ComputedRef<GoodieConfig[]> = computed<
   GoodieConfig[]
@@ -77,7 +77,7 @@ const componentId: string = generateId(useId());
 const itemGroupId: string = `itemGroup${componentId}`;
 </script>
 
-<style>
+<style lang="css">
 .items-checkbox-list {
   display: grid;
   grid-template-columns: 1fr;

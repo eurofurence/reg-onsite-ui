@@ -1,13 +1,10 @@
-import {
-  type AbstractGoodieValue,
-  type GoodieConfig,
-  configTinketItems,
-} from "@/setupEFIteration";
+import type { AbstractGoodieValue, GoodieConfig } from "@/config/convention";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 export function getGoodieItemsSubset(
   subset: AbstractGoodieValue[]
 ): GoodieConfig[] {
-  return configTinketItems.filter((entry: GoodieConfig) =>
-    subset.includes(entry.value)
+  return getConventionSetup().metadata.forAbstractGoodies.list.filter(
+    (entry: GoodieConfig) => subset.includes(entry.value)
   );
 }

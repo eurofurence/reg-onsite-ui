@@ -4,14 +4,15 @@ import { attendeeService } from "@/composables/services/attendeeService";
 import { environmentSettings } from "@/composables/services/environmentService";
 import { EnvName } from "@/types/internal/env";
 import type { OnsiteToastService } from "@/composables/services/toastService";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 export function getUndoCheckinFunction(
   updateAttendee: (
-    regNumber: number
+    regNumber: RegNumber
   ) => Promise<TransformedAttendeeInfo | null>,
   toastService: OnsiteToastService
-): (regNumber: number) => Promise<void> {
-  return async (regNumber: number): Promise<void> => {
+): (regNumber: RegNumber) => Promise<void> {
+  return async (regNumber: RegNumber): Promise<void> => {
     if (environmentSettings.envName !== EnvName.dev) {
       return;
     }

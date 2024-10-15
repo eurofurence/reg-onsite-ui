@@ -132,11 +132,11 @@ function getGlobalFilterNameItems(): ColumnDefinition[] {
   ];
   return setupColumnDefinitionList.filter((item: ColumnDefinition) => {
     const isNameField: boolean = nameFilterFieldList.some(
-      (field: FilterFieldValue) => field == item.fieldName
+      (field: FilterFieldValue) => field == item.value
     );
     const isInActiveGlobalFilters =
       props.dataOptions.filterConfig.globalFilterFields.some(
-        (field: FilterFieldValue) => field == item.fieldName
+        (field: FilterFieldValue) => field == item.value
       );
     return isNameField && isInActiveGlobalFilters;
   });

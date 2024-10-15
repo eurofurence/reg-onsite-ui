@@ -20,15 +20,16 @@
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { attendeeService } from "@/composables/services/attendeeService";
 import { OnsiteToastService } from "@/composables/services/toastService";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 
-async function getListOfOwnRegs(): Promise<number[]> {
-  const response: number[] | undefined = await attendeeService.getOwnRegs(
+async function getListOfOwnRegs(): Promise<RegNumber[]> {
+  const response: RegNumber[] | undefined = await attendeeService.getOwnRegs(
     getErrorHandlerFunction(toastService)
   );
   return response || [];
 }
-const attendeeList: number[] = await getListOfOwnRegs();
+const attendeeList: RegNumber[] = await getListOfOwnRegs();
 </script>

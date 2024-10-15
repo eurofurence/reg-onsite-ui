@@ -7,6 +7,7 @@ import {
 import type { ApiError } from "@/types/external/error";
 import type { ApiRegListResponse } from "@/types/external/attsrv/attendees/others";
 import type { FetchResultPromise } from "@/types/internal/rest";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
 async function fetchOwnRegs(): FetchResultPromise<
   ApiRegListResponse,
@@ -18,12 +19,12 @@ async function fetchOwnRegs(): FetchResultPromise<
 
 export async function getOwnRegs(
   errorHandler: RestErrorHandler
-): Promise<number[] | undefined> {
+): Promise<RegNumber[] | undefined> {
   const response: ApiRegListResponse | undefined =
     await restErrorWrapper<ApiRegListResponse>(
       "Attendee Information Service",
       fetchOwnRegs,
       errorHandler
     );
-  return response?.ids;
+  return response?.ids as RegNumber[];
 }

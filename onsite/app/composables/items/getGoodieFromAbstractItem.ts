@@ -1,24 +1,12 @@
-import { convertListToMap } from "@/composables/collection_tools/convertListToMap";
-import {
-  type AbstractGoodieValue,
-  type GoodieConfig,
-  configTinketItems,
-} from "@/setupEFIteration";
-
-const abstractItemLabelToGoodieConfigMap: Map<
-  AbstractGoodieValue,
-  GoodieConfig
-> = convertListToMap(
-  configTinketItems as { value: AbstractGoodieValue; [key: string]: any }[]
-);
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import { getMetadataEntry } from "@/composables/collection_tools/getMetadataEntry";
+import type { AbstractGoodieValue, GoodieConfig } from "@/config/convention";
 
 export function getGoodieFromAbstractItem(
   abstractValue: AbstractGoodieValue
-): GoodieConfig | null {
-  const findResult: GoodieConfig | undefined =
-    abstractItemLabelToGoodieConfigMap.get(abstractValue);
-  if (findResult === undefined) {
-    return null;
-  }
-  return findResult;
+): GoodieConfig {
+  return getMetadataEntry(
+    abstractValue,
+    getConventionSetup().metadata.forAbstractGoodies.record
+  );
 }

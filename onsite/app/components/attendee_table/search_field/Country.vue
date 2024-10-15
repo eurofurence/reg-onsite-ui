@@ -5,7 +5,7 @@
     :options="
       getLimitedOptionsFromAutoComplete(
         modelValue || [],
-        metadataListForCountry,
+        getConventionSetup().metadata.forCountry.list,
         autoCompleteDataRef,
         'country'
       )
@@ -41,13 +41,11 @@
 
 <script setup lang="ts">
 import type { ModelRef } from "vue";
-import {
-  metadataListForCountry,
-  type CountryCode,
-} from "@/config/metadata/metadataForCountry";
+import { type CountryCode } from "@/config/metadata/metadataForCountry";
 import { getLimitedOptionsFromAutoComplete } from "@/composables/sort_and_filter/getLimitedOptionsFromAutoComplete";
 import type { FilterElementProps } from "@/types/internal/component/table";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 const props: FilterElementProps = defineProps<FilterElementProps>();
 const modelValue: ModelRef<CountryCode[] | null> = defineModel<
@@ -59,7 +57,7 @@ const autoCompleteDataRef: ModelRef<TransformedAttendeeInfo[] | undefined> =
   defineModel<TransformedAttendeeInfo[] | undefined>("autoCompleteData");
 </script>
 
-<style>
+<style lang="css">
 .p-checkbox-box.tfcb {
   width: 1.5rem;
   height: 1.5rem;

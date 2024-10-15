@@ -5,7 +5,7 @@
       :id="componentId"
       v-model="spokenLanguagesRef"
       :class="fieldTextCSS"
-      :options="metadataListForLanguage"
+      :options="getConventionSetup().metadata.forLanguage.list"
       display="chip"
       v-bind="$attrs"
       optionLabel="label"
@@ -28,7 +28,8 @@
             :class="getLanguageFlagCSSClass(slotProps.value)"
           ></i>
           {{
-            metadataRecordForLanguage[slotProps.value]?.label || slotProps.value
+            getConventionSetup().metadata.forLanguage.record[slotProps.value]
+              ?.label || slotProps.value
           }}
         </Chip>
       </template>
@@ -45,14 +46,11 @@ import {
 } from "@/components/field/common/common";
 import { resolveColor } from "@/composables/colors/resolveColor";
 import { getFlagCSSClass } from "@/composables/fields/country/getFlagCSSClass";
-import {
-  type LanguageCode,
-  metadataListForLanguage,
-  metadataRecordForLanguage,
-} from "@/config/metadata/metadataForLanguage";
+import { type LanguageCode } from "@/config/metadata/metadataForLanguage";
 import type { ModelRef } from "vue";
 import type { CountryCode } from "@/config/metadata/metadataForCountry";
 import { ColorsPalette } from "@/composables/theme/colors";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 function isRegistrationLanguage(value: LanguageCode): boolean {
   if (
@@ -88,7 +86,7 @@ const registrationLanguageRef: ModelRef<string | null | undefined> =
 const componentId: string = generateId(useId());
 </script>
 
-<style>
+<style lang="css">
 .spoken-languages-field .p-icon.p-chip-remove-icon {
   display: none;
 }

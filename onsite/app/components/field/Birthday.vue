@@ -34,25 +34,28 @@ import { getBirthdayNote } from "@/composables/fields/birthday/getBirthdayNote";
 import { isValidAge } from "@/composables/fields/birthday/isValidAge";
 import type { ModelRef } from "vue";
 import { getAge } from "@/composables/fields/birthday/getAge";
+import type { AgeInYears } from "@/types/internal/attendee";
+import type { IsoBirthdayStr } from "@/types/external/attsrv/attendees/attendee";
 
-function getBirthdayFieldTextCSS(birthday: number): string {
-  if (!isValidAge(birthday)) {
+function getBirthdayFieldTextCSS(age: AgeInYears | null): string {
+  if (!isValidAge(age)) {
     return fieldTextCSS + " p-invalid";
   }
   return fieldTextCSS;
 }
 
-const computeAgeRef: ComputedRef<number> = computed(() =>
-  getAge(modelValue.value || "")
+const computeAgeRef: ComputedRef<AgeInYears | null> = computed(() =>
+  getAge(modelValue.value)
 );
 
-const modelValue: ModelRef<string | null> = defineModel<string | null>({
-  required: true,
-});
+const modelValue: ModelRef<IsoBirthdayStr | null> =
+  defineModel<IsoBirthdayStr | null>({
+    required: true,
+  });
 const componentId: string = generateId(useId());
 </script>
 
-<style>
+<style lang="css">
 small.birthday-note-field {
   font-size: 1rem;
   font-weight: bold;

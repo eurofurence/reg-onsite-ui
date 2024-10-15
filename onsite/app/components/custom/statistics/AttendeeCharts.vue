@@ -3,7 +3,12 @@
     <CustomStatisticsChart
       label="Status"
       v-bind:data="
-        getStatsFromProperty(statsRef, 'status', metadataListForStatus, {})
+        getStatsFromProperty(
+          statsRef,
+          'status',
+          getConventionSetup().metadata.forStatus.list,
+          {}
+        )
       "
     />
     <CustomStatisticsChart
@@ -12,7 +17,7 @@
         getStatsFromProperty(
           statsRef,
           'transSponsorChoice',
-          metadataListForSponsorLevels,
+          getConventionSetup().metadata.forSponsorLevels.list,
           {}
         )
       "
@@ -23,7 +28,7 @@
         getStatsFromProperty(
           statsRef,
           'transConbookChoice',
-          metadataListForConBookChoice,
+          getConventionSetup().metadata.forConBook.list,
           {}
         )
       "
@@ -34,7 +39,7 @@
         getStatsFromProperty(
           statsRef,
           'transConRole',
-          metadataListForConRoles,
+          getConventionSetup().metadata.forConRole.list,
           {
             flatten: true,
           }
@@ -47,9 +52,14 @@
       cssClass="w-[50rem]"
       :chartOptions="barlogYChartOptions"
       v-bind:data="
-        getStatsFromProperty(statsRef, 'country', metadataListForCountry, {
-          color: ColorsPalette.primary_400,
-        })
+        getStatsFromProperty(
+          statsRef,
+          'country',
+          getConventionSetup().metadata.forCountry.list,
+          {
+            color: ColorsPalette.primary_400,
+          }
+        )
       "
     />
     <CustomStatisticsChart
@@ -73,14 +83,10 @@ import {
   computeAttendeeStatisticEntries,
 } from "@/composables/statistics/computeAttendeeStatisticEntries";
 import { getStatsFromProperty } from "@/composables/statistics/getStatsFromProperty";
-import { metadataListForConBookChoice } from "@/config/metadata/flags/metadataForConBookChoice";
-import { metadataListForSponsorLevels } from "@/config/metadata/packages/metadataForSponsorLevels";
-import { metadataListForConRoles } from "@/config/metadata/flags/metadataForConRoles";
-import { metadataListForStatus } from "@/config/metadata/metadataForStatus";
 import type { ModelRef } from "vue";
-import { metadataListForCountry } from "@/config/metadata/metadataForCountry";
 import { ColorsPalette } from "@/composables/theme/colors";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 
 const barlogYChartOptions: any = {
   plugins: {
