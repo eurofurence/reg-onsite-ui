@@ -45,7 +45,7 @@ export function transformAttendee(
       attendee.packages_list,
       getConventionSetup().metadata.forGoodiesLevels.list
     ) || "";
-  var transAttendee: TransformedAttendeeInfo = {
+  let transAttendee: TransformedAttendeeInfo = {
     ...{
       pronouns: attendee?.pronouns || null,
       tshirt_size: attendee?.tshirt_size || null,

@@ -30,7 +30,7 @@ export function getActiveFilters(
     .map(([filterField, filterItem]) => {
       const newFieldName: AllFilterFieldValues =
         filterField as AllFilterFieldValues;
-      var result: CustomFilterMetaData = {
+      let result: CustomFilterMetaData = {
         ...filterItem,
         ...lookupColumnDefinition(newFieldName),
         ...{

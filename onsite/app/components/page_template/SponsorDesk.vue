@@ -110,7 +110,7 @@ async function handleSearch(
   regNumber: RegNumber,
   errorHandler: RestErrorHandler
 ): Promise<string[]> {
-  var errorList: string[] = [];
+  let errorList: string[] = [];
   function collectErrors(error: RestErrorInfo) {
     errorHandler(error);
     errorList.push(

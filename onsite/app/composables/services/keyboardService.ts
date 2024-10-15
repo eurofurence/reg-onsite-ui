@@ -68,7 +68,7 @@ function registerShortcuts(
   setupKeyEvents(event, matchFunction, handler, withModifier);
 }
 
-var shortCutScopeStackRef: Ref<ShortcutScope[]> = ref([]);
+let shortCutScopeStackRef: Ref<ShortcutScope[]> = ref([]);
 
 function pushScope(scope: ShortcutScope): void {
   shortCutScopeStackRef.value.push(scope);

@@ -5,7 +5,7 @@ export async function fetchResultWrapper<Type>(
   response: Response,
   data: Type | undefined = undefined
 ): FetchResultPromise<Type, ApiError> {
-  var responseData: Type | ApiError;
+  let responseData: Type | ApiError;
   if (data === undefined) {
     responseData = (await response.json()) as ApiError;
   } else {
