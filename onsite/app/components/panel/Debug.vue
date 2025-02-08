@@ -9,6 +9,7 @@
           optionLabel="badge_id"
         />
       </div>
+      <CustomLabeledToggleSwitch label="Local Mode" v-model="localMode" />
     </div>
     <div class="p-1">
       <Fieldset legend="Debug" :toggleable="true">
@@ -34,9 +35,13 @@ import { debugState } from "@/composables/state/debugState";
 import { getApiAttendeeInfo } from "@/tests/getApiAttendeeInfo";
 import { EnvName } from "@/types/internal/env";
 import { ref } from "vue";
+import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
-const debugFlag = ref(false);
-const debugApiAttendeeInfo = ref(getApiAttendeeInfo()[0]);
+const debugFlag: Ref<boolean> = ref(false);
+const localMode: Ref<boolean> = ref(false);
+const debugApiAttendeeInfo: Ref<TransformedAttendeeInfo> = ref(
+  getApiAttendeeInfo()[0] as TransformedAttendeeInfo
+);
 
 debugState.debugFlag = debugFlag;
 debugState.debugAttendee = debugApiAttendeeInfo;
