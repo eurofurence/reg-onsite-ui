@@ -94,12 +94,12 @@
         </template>
         <template #body="{ data }">
           <span :class="`table-field-${columnDefinition.value}`">
-            <AttendeeTableColumnElementCountry
-              v-if="columnDefinition.columnType === ColumnType.country"
+            <AttendeeTableColumnElementBirthday
+              v-if="columnDefinition.columnType === ColumnType.birthday"
               :modelValue="data"
             />
-            <AttendeeTableColumnElementBirthday
-              v-else-if="columnDefinition.columnType === ColumnType.birthday"
+            <AttendeeTableColumnElementCountry
+              v-else-if="columnDefinition.columnType === ColumnType.country"
               :modelValue="data"
             />
             <CustomTagControl
@@ -116,7 +116,7 @@
               :modelValue="data[columnDefinition.value]"
             />
             <AttendeeTableColumnElementStandard
-              v-else
+              v-else-if="columnDefinition.columnType === ColumnType.standard"
               :modelValue="data[columnDefinition.value]"
               :maxLength="columnDefinition.maxLength"
             />
