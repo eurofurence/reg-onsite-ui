@@ -50,7 +50,7 @@ export function getDefaultVariantValues(
   attendeeInfo: TransformedAttendeeInfo,
   apiSponsorDeskAddInfo: ApiSponsorDeskAddInfo
 ): DefaultVariantValues {
-  var result: LocalDefaultVariantValues = new Map<string, string | null>();
+  let result: LocalDefaultVariantValues = new Map<string, string | null>();
   // Pre-fill T-Shirt defaults with attendee preference
   overrideDefaultFromTShirtSizes(result, attendeeInfo.tshirt_size);
   // Override defaults from past / reserved items

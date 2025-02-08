@@ -222,7 +222,7 @@ export function getFilterFunctorContainerList<
   filter: RawAttendeeFilter,
   globalFilterColumns: FilterFieldValue[]
 ): FilterFunctorContainer<Type>[] {
-  var result: FilterFunctorContainer<Type>[] = [];
+  let result: FilterFunctorContainer<Type>[] = [];
   const fieldGet: {
     [key: string]: ValueGetter<Type>;
   } = getFieldGetters();

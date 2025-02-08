@@ -2,7 +2,7 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { AttendeeTableDisplayOptions } from "@/types/internal/system/regdesk";
 
 const previousAutoSelectId: Ref<number | undefined> = ref(undefined);
-var previousTwinId: [number | null, number | null] | null = null;
+let previousTwinId: [number | null, number | null] | null = null;
 
 function performAutoSelection(
   transformedAttendeeInfoList: TransformedAttendeeInfo[],

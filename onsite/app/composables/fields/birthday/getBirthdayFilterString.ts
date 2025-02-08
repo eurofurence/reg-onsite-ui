@@ -14,8 +14,8 @@ function parseDateElement(
   value: string | undefined,
   placeholder: "y" | "m" | "d"
 ): ParseDateElementResult {
-  var doStop = false;
-  var includeDash = false;
+  let doStop = false;
+  let includeDash = false;
   if (value?.includes(placeholder)) {
     value = stripCharacterFromRight(value, placeholder);
     doStop = true;
@@ -32,7 +32,7 @@ function parseDateElement(
 
 function getBirthdayFilterStringInternal(value: string): string | null {
   const [year, month, day]: string[] = value.split("-");
-  var result: string | null = null;
+  let result: string | null = null;
 
   const [yearStop, yearParsed, _yearIncludeDash]: ParseDateElementResult =
     parseDateElement(year, "y");
@@ -75,7 +75,7 @@ function getBirthdayFilterStringInternal(value: string): string | null {
 export function getBirthdayFilterString(
   rawFilterString: string
 ): string | null {
-  var result: string | null = null;
+  let result: string | null = null;
   if (rawFilterString.endsWith("-") || rawFilterString.endsWith("-0")) {
     result =
       getBirthdayFilterStringInternal(

@@ -41,7 +41,7 @@ const computedAutoCompleteDataRef: ComputedRef<[string, string][]> = computed<
       .map((item: TransformedAttendeeInfo) => item[autoCompleteField])
       .filter((value: any) => value != null)
   );
-  var uniqueAutoCompleteData: Map<string, string> = new Map<string, string>();
+  let uniqueAutoCompleteData: Map<string, string> = new Map<string, string>();
   autoCompleteData.forEach((entry: string) => {
     uniqueAutoCompleteData.set(entry, entry?.toLowerCase() || entry);
   });

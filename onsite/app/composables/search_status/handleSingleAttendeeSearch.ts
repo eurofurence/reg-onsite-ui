@@ -12,7 +12,7 @@ async function handleSearch(
   errorHandler: RestErrorHandler,
   resultRef: Ref<TransformedAttendeeInfo | null>
 ): Promise<string[]> {
-  var errorList: string[] = [];
+  let errorList: string[] = [];
   function collectErrors(error: RestErrorInfo) {
     errorHandler(error);
     errorList.push(

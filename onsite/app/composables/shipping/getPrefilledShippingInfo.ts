@@ -33,7 +33,7 @@ export function getPrefilledShippingInfo<Type extends TransformedAttendeeInfo>(
   storedAttendeeInfo: Type,
   missingItems: ConcreteGoodieValue[]
 ): ApiShippingAddInfo {
-  var result = getEmptyShippingAddInfo();
+  let result = getEmptyShippingAddInfo();
   result.id = storedAttendeeInfo.id || (0 as RegNumber);
   result.nickname = storedAttendeeInfo.nickname || "";
   result.first_name = storedAttendeeInfo.first_name || "";

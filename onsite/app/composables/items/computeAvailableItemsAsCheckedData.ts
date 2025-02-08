@@ -22,7 +22,7 @@ export function computeAvailableItemsAsCheckedData(
 ): WritableComputedRef<CheckedData> {
   return computed<CheckedData>({
     get: () => {
-      var result: CheckedData = {};
+      let result: CheckedData = {};
       allGoodieItems.forEach((item: GoodieConfig) => {
         const concreteGoodieValue: ConcreteGoodieValue = getConcreteItemValue(
           item,
@@ -36,8 +36,8 @@ export function computeAvailableItemsAsCheckedData(
             };
           }
         } else {
-          var hasActiveVariant = false;
-          var hasInActiveVariant = false;
+          let hasActiveVariant = false;
+          let hasInActiveVariant = false;
           item.variants.forEach((variant: LabeledValue<TShirtTypeValue>) => {
             const concreteGoodieVariantValue: ConcreteGoodieValue =
               getConcreteItemValue(item, variant);

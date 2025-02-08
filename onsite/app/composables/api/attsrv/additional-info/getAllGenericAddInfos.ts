@@ -37,7 +37,7 @@ export async function getAllAddInfos<AddInfoType>(
   if (result === undefined) {
     return undefined;
   } else {
-    var addInfoMap: Map<RegNumber, AddInfoType> = new Map<
+    let addInfoMap: Map<RegNumber, AddInfoType> = new Map<
       RegNumber,
       AddInfoType
     >();

@@ -43,7 +43,7 @@ function getTShirtInfo(
   shape: TShirtShapeValue
 ): TShirtInfo {
   const sizeLabel: string = metadataRecordForTShirtSizes[size].label;
-  var result: TShirtInfo = {
+  let result: TShirtInfo = {
     value: `${shape == TShirtShape.contoured ? "w" : ""}${size}`,
     label: `${sizeLabel} (${shape})`,
     size: size,

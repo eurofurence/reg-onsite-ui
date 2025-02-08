@@ -10,7 +10,7 @@ export function getAllApiRoleItems(
   flagValueList: FlagApiValue[] | null,
   id: RegNumber | null
 ): ConRoleInfo[] {
-  var roleItems: ConRoleInfo[] = [];
+  let roleItems: ConRoleInfo[] = [];
   if (flagValueList === null || id === null) {
     return [];
   }
@@ -19,7 +19,7 @@ export function getAllApiRoleItems(
       if (conroleInfo.value === ConRole.none) {
         return;
       }
-      var hasRole = false;
+      let hasRole = false;
       if (flagValueList.includes(conroleInfo.value)) {
         hasRole = true;
       } else if (conroleInfo.idList.includes(id)) {

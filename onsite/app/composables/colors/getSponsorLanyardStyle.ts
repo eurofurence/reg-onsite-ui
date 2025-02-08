@@ -22,7 +22,7 @@ export function getSponsorLanyardStyle(
   if (sponsorItem === undefined) {
     return {};
   }
-  var [mainColor, altColor]: [ColorsPaletteValue, ColorsPaletteValue] =
+  let [mainColor, altColor]: [ColorsPaletteValue, ColorsPaletteValue] =
     getColorVariants(sponsorItem.color);
   const role: ConRoleInfo = getMainConRoleChoice(
     attendeeInfo.flags_list,

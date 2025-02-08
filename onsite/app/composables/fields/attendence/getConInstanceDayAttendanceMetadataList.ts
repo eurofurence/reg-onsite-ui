@@ -8,7 +8,7 @@ export function getConInstanceDayAttendanceMetadataList(
   configConDays: ConDays,
   metadataRecordForAttendance: MetadataRecord<AttendanceInfo>
 ): AttendanceInfo[] {
-  var result: AttendanceInfo[] = [];
+  let result: AttendanceInfo[] = [];
   const localeName: string = "en-GB";
   for (
     let dayOffset: ConDays = 0 as ConDays;

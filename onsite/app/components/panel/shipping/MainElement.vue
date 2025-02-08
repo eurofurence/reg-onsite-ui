@@ -88,7 +88,7 @@ async function determineMissingItems(
   if (attendeeInfo.id === null) {
     return undefined;
   }
-  var storedAttendeeItemInfoTmp: ApiSponsorDeskAddInfo | null | undefined =
+  let storedAttendeeItemInfoTmp: ApiSponsorDeskAddInfo | null | undefined =
     await attendeeService.addInfos.getSponsorDeskAddInfo(
       errorHandler,
       attendeeInfo.id
@@ -127,7 +127,7 @@ async function initShippingFields(regNumber: RegNumber): Promise<void> {
   }
   attendeeMissingItems.value = missingItems;
 
-  var attendeeShippingInfo: ApiShippingAddInfo | null | undefined =
+  let attendeeShippingInfo: ApiShippingAddInfo | null | undefined =
     await attendeeService.addInfos.getShippingAddInfo(errorHandler, regNumber);
   if (attendeeShippingInfo === undefined) {
     return; // API Error - abort

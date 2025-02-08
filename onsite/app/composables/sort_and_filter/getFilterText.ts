@@ -62,7 +62,7 @@ function createCastAfterLabelMap<Type>(
 
 function getCountryValueLabelGetter(value: string | string[]): string {
   const countryCodeList: CountryCode[] = value as CountryCode[];
-  var truncatedCountryNameList: string[] = countryCodeList
+  let truncatedCountryNameList: string[] = countryCodeList
     .slice(0, 5)
     .map(getCountryName);
   if (countryCodeList.length > 5) {
