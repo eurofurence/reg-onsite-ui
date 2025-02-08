@@ -41,7 +41,8 @@
         <slot name="empty"></slot>
       </template>
 
-      <template #loading> Loading attendee data. Please wait. </template>
+      <template #loading>Loading attendee data. Please wait.</template>
+
       <Column
         v-for="columnDefinition of props.activeColumns"
         :sortable="columnDefinition?.sortEnabled || true"
