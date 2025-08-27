@@ -10,10 +10,6 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY onsite/package*.json onsite/yarn.lock ./
 
-# Install npm dependencies
-RUN npm install yarn
-RUN yarn install
-
 # Copy the rest of the application
 COPY onsite/public ./public
 COPY onsite/server ./server
@@ -21,8 +17,14 @@ COPY onsite/nuxt.config.ts onsite/tailwind.config.js onsite/tsconfig.json ./
 COPY onsite/app ./app
 COPY ./environment.${ENV_NAME}.ts ./app/config/environment.ts
 
+RUN find .
+
+# Install npm dependencies
+RUN npm install yarn
+RUN yarn install
+
 # Build Nuxt 3 application
-RUN npm run generate
+RUN yarn run generate
 
 # Step 2: Serve static files
 FROM nginxinc/nginx-unprivileged
