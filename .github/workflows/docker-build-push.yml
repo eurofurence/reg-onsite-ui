@@ -1,0 +1,73 @@
+name: Create and publish Docker image
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'ghcr-build-action'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-push-image:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        run: 'echo "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin'
+        shell: bash
+        env:
+          REGISTRY: 'ghcr.io'
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_PASS: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write secrets to environment.ts files
+        run: >
+          printf '%s' '${{ secrets.ENVIRONMENT_REGTEST_TS }}' > environment.regtest.ts
+          printf '%s' '${{ secrets.ENVIRONMENT_REGLIVE_TS }}' > environment.reglive.ts
+
+      - name: Docker build and push 'regtest-latest' image
+        if: startsWith(github.ref, 'refs/heads/')
+        run: >
+          TAG_ARGS=$(echo -n "$IMAGE_TAGS" | sed -r "s_([^ :/]+)_ --tag $REGISTRY/$IMAGE_NAME:\1 _g") &&
+          docker build
+          --build-arg ENV_NAME=regtest
+          --label org.opencontainers.image.url="$FULL_REPO_URL"
+          --label org.opencontainers.image.revision="$COMMIT_HASH"
+          $TAG_ARGS
+          --pull
+          . &&
+          docker push -a "$REGISTRY/$IMAGE_NAME"
+        shell: bash
+        env:
+          REGISTRY: 'ghcr.io'
+          IMAGE_NAME: ${{ github.repository }}
+          IMAGE_TAGS: regtest-latest
+          FULL_REPO_URL: "https://github.com/${{ github.repository }}"
+          COMMIT_HASH: ${{ github.sha }}
+
+      - name: Docker build and push 'reglive-latest' image
+        if: startsWith(github.ref, 'refs/heads/')
+        run: >
+          TAG_ARGS=$(echo -n "$IMAGE_TAGS" | sed -r "s_([^ :/]+)_ --tag $REGISTRY/$IMAGE_NAME:\1 _g") &&
+          docker build
+          --build-arg ENV_NAME=reglive
+          --label org.opencontainers.image.url="$FULL_REPO_URL"
+          --label org.opencontainers.image.revision="$COMMIT_HASH"
+          $TAG_ARGS
+          --pull
+          . &&
+          docker push -a "$REGISTRY/$IMAGE_NAME"
+        shell: bash
+        env:
+          REGISTRY: 'ghcr.io'
+          IMAGE_NAME: ${{ github.repository }}
+          IMAGE_TAGS: reglive-latest
+          FULL_REPO_URL: "https://github.com/${{ github.repository }}"
+          COMMIT_HASH: ${{ github.sha }}
