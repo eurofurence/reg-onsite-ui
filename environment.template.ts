@@ -1,4 +1,4 @@
-import { EnvName, type EnvironmentSettings } from "@/types/internal";
+import { EnvName, type EnvironmentSettings } from "@/types/internal/env";
 
 export const defaultEnvironment: EnvironmentSettings = {
   envName: EnvName.dev,
