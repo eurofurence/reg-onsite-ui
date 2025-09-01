@@ -37,7 +37,7 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/')
         run: >
           echo "VITE_API_BASE_URL=${API_BASE_DEV_URL}" > .env
-          TAG_ARGS=$(echo -n "$IMAGE_TAGS" | sed -r "s_([^ :/]+)_ --tag $REGISTRY/$IMAGE_NAME:\1 _g") &&
+          TAG_ARGS=$(echo -n "$IMAGE_TAGS" | sed -r "s_([^ :/]+)_ --tag ghcr.io/$REGISTRY/$IMAGE_NAME:\1 _g") &&
           docker build
           --build-arg ENV_NAME=regtest
           --label org.opencontainers.image.url="$FULL_REPO_URL"
@@ -58,7 +58,7 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/')
         run: >
           echo "VITE_API_BASE_URL=${API_BASE_PROD_URL}" > .env
-          TAG_ARGS=$(echo -n "$IMAGE_TAGS" | sed -r "s_([^ :/]+)_ --tag $REGISTRY/$IMAGE_NAME:\1 _g") &&
+          TAG_ARGS=$(echo -n "$IMAGE_TAGS" | sed -r "s_([^ :/]+)_ --tag ghcr.io/$REGISTRY/$IMAGE_NAME:\1 _g") &&
           docker build
           --build-arg ENV_NAME=reglive
           --label org.opencontainers.image.url="$FULL_REPO_URL"
