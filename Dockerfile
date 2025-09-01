@@ -14,7 +14,7 @@ COPY package*.json ./
 RUN npm install
 
 # Copy the rest of the application
-COPY *.html *.json *.ts ./
+COPY .env *.html *.json *.ts ./
 COPY src ./src
 COPY ./src/config/environment.${ENV_NAME}.ts ./src/config/environment.ts
 
