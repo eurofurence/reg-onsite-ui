@@ -30,7 +30,7 @@
     </div>
     <div
       class="pt-1 flex flex-grow w-full"
-      v-if="!authState.sessionActive || authState.sessionActive"
+      v-if="authState.sessionActive"
     >
       <slot></slot>
     </div>
