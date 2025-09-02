@@ -251,12 +251,12 @@ export const iterationEF2025: ConventionIterationSettings = {
 	AbstractEFGoodieWithVariants2025.tshirt_2025,
       ],
       [GoodiesLevel.sponsor]: [
-        AbstractEFGoodieWithVariants2025.attendee_pin_2025,
+        AbstractEFGoodieWithoutVariants2025.attendee_pin_2025,
         AbstractEFGoodieWithVariants2025.tshirt_2025,
         AbstractEFGoodieWithoutVariants2025.towel_2025,
       ],
       [GoodiesLevel.super_sponsor]: [
-        AbstractEFGoodieWithVariants2025.attendee_pin_2025,
+        AbstractEFGoodieWithoutVariants2025.attendee_pin_2025,
         AbstractEFGoodieWithVariants2025.tshirt_2025,
         AbstractEFGoodieWithoutVariants2025.towel_2025,
         AbstractEFGoodieWithoutVariants2025.messenger_bag_2025,
