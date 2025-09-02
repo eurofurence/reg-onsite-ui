@@ -37,27 +37,31 @@ jobs:
           echo "VITE_API_BASE_URL=${API_BASE_DEV_URL}" > .env
 
           # Generate Docker tag arguments
-          TAG_ARGS=$(echo "$IMAGE_TAG" | sed -r "s_([^ :/]+)_--tag $REGISTRY/$IMAGE_NAME:\1 _g")
+          TAG_ARGS=$(echo "$ENV_NAME-latest" | sed -r "s_([^ :/]+)_--tag $REGISTRY/$IMAGE_NAME:\1 _g")
           echo "Docker tag arguments: $TAG_ARGS"
 
           # Build Docker image with tag(s)
           docker build \
-            --build-arg ENV_NAME=regtest \
+            --build-arg ENV_NAME=$ENV_NAME \
             --label org.opencontainers.image.url="$FULL_REPO_URL" \
             --label org.opencontainers.image.revision="$COMMIT_HASH" \
             $TAG_ARGS \
             --pull \
             .
 
+          docker tag "$REGISTRY/$IMAGE_NAME:$ENV_NAME-latest" "$REGISTRY/$IMAGE_NAME:$ENV_NAME-$COMMIT_HASH"
+
           # List images
           docker image ls
 
-          echo "Pushing: $REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
-          docker push "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+          echo "Pushing: $REGISTRY/$IMAGE_NAME:$ENV_NAME-latest"
+          docker push "$REGISTRY/$IMAGE_NAME:$ENV_NAME-latest"
+          echo "Pushing: $REGISTRY/$IMAGE_NAME:$ENV_NAME-$COMMIT_HASH"
+          docker push "$REGISTRY/$IMAGE_NAME:$ENV_NAME-$COMMIT_HASH"
         env:
           REGISTRY: "ghcr.io"
           IMAGE_NAME: ${{ github.repository }}
-          IMAGE_TAG: regtest-latest
+          ENV_NAME: regtest
           FULL_REPO_URL: "https://github.com/${{ github.repository }}"
           COMMIT_HASH: ${{ github.sha }}
 
@@ -68,26 +72,30 @@ jobs:
           echo "VITE_API_BASE_URL=${API_BASE_PROD_URL}" > .env
 
           # Generate Docker tag arguments
-          TAG_ARGS=$(echo "$IMAGE_TAG" | sed -r "s_([^ :/]+)_--tag $REGISTRY/$IMAGE_NAME:\1 _g")
+          TAG_ARGS=$(echo "$ENV_NAME-latest" | sed -r "s_([^ :/]+)_--tag $REGISTRY/$IMAGE_NAME:\1 _g")
           echo "Docker tag arguments: $TAG_ARGS"
 
           # Build Docker image with tag(s)
           docker build \
-            --build-arg ENV_NAME=regtest \
+            --build-arg ENV_NAME=$ENV_NAME \
             --label org.opencontainers.image.url="$FULL_REPO_URL" \
             --label org.opencontainers.image.revision="$COMMIT_HASH" \
             $TAG_ARGS \
             --pull \
             .
 
+          docker tag "$REGISTRY/$IMAGE_NAME:$ENV_NAME-latest" "$REGISTRY/$IMAGE_NAME:$ENV_NAME-$COMMIT_HASH"
+
           # List images
           docker image ls
 
-          echo "Pushing: $REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
-          docker push "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+          echo "Pushing: $REGISTRY/$IMAGE_NAME:$ENV_NAME-latest"
+          docker push "$REGISTRY/$IMAGE_NAME:$ENV_NAME-latest"
+          echo "Pushing: $REGISTRY/$IMAGE_NAME:$ENV_NAME-$COMMIT_HASH"
+          docker push "$REGISTRY/$IMAGE_NAME:$ENV_NAME-$COMMIT_HASH"
         env:
           REGISTRY: "ghcr.io"
           IMAGE_NAME: ${{ github.repository }}
-          IMAGE_TAG: reglive-latest
+          ENV_NAME: reglive
           FULL_REPO_URL: "https://github.com/${{ github.repository }}"
           COMMIT_HASH: ${{ github.sha }}
