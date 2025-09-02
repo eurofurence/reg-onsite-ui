@@ -13,9 +13,10 @@ import type { LabeledValue } from "@/types/internal/infos";
 
 export const enum AbstractEFGoodieWithoutVariants2025 {
   towel_2025 = "towel_2025",
+  water_pouch_2025 = "water_pouch_2025",
   messenger_bag_2025 = "messenger_bag_2025",
   staff_coin_2025 = "staff_coin_2025",
-  attendee_pin_2025 = "attendee_pin_2025",
+  sponsor_pin_2025 = "attendee_pin_2025",
 
   critter_sticker_1_2025 = "critter_sticker_1_2025",
   critter_sticker_2_2025 = "critter_sticker_2_2025",
@@ -95,13 +96,16 @@ export const metadataRecordForGoodies2025: MetadataRecord<EFGoodieConfig2025> =
     [AbstractEFGoodieWithoutVariants2025.towel_2025]: {
       label: "Towel",
     },
+    [AbstractEFGoodieWithoutVariants2025.water_pouch_2025]: {
+      label: "Water Pouch",
+    },
     [AbstractEFGoodieWithoutVariants2025.messenger_bag_2025]: {
       label: "Messenger Bag",
     },
     [AbstractEFGoodieWithoutVariants2025.staff_coin_2025]: {
       label: "Staff Coin",
     },
-    [AbstractEFGoodieWithoutVariants2025.attendee_pin_2025]: {
+    [AbstractEFGoodieWithoutVariants2025.sponsor_pin_2025]: {
       label: "Pin",
     },
     [AbstractEFGoodieWithoutVariants2025.critter_sticker_1_2025]: {
@@ -273,13 +277,15 @@ export const iterationEF2025: ConventionIterationSettings = {
         AbstractEFGoodieWithVariants2025.tshirt_2025,
       ],
       [GoodiesLevel.sponsor]: [
-        AbstractEFGoodieWithoutVariants2025.attendee_pin_2025,
         AbstractEFGoodieWithVariants2025.tshirt_2025,
+        AbstractEFGoodieWithoutVariants2025.sponsor_pin_2025,
+        AbstractEFGoodieWithoutVariants2025.water_pouch_2025,
         AbstractEFGoodieWithoutVariants2025.towel_2025,
       ],
       [GoodiesLevel.super_sponsor]: [
-        AbstractEFGoodieWithoutVariants2025.attendee_pin_2025,
         AbstractEFGoodieWithVariants2025.tshirt_2025,
+        AbstractEFGoodieWithoutVariants2025.sponsor_pin_2025,
+        AbstractEFGoodieWithoutVariants2025.water_pouch_2025,
         AbstractEFGoodieWithoutVariants2025.towel_2025,
         AbstractEFGoodieWithoutVariants2025.messenger_bag_2025,
       ],
