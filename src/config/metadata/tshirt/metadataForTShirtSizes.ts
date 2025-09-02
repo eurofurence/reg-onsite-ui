@@ -2,6 +2,7 @@ import type { MetadataRecord } from "@/composables/collection_tools/metadata/get
 import type { LabeledValue } from "@/types/internal/infos";
 
 export const enum TShirtSize {
+  size_unknown = "None",
   size_xs = "XS",
   size_s = "S",
   size_m = "M",
@@ -18,6 +19,7 @@ export type TShirtSizeValue = `${TShirtSize}`;
 export const metadataRecordForTShirtSizes: MetadataRecord<
   LabeledValue<TShirtSizeValue>
 > = {
+  [TShirtSize.size_unknown]: { label: "<Unknown>" },
   [TShirtSize.size_xs]: { label: "X-Small" },
   [TShirtSize.size_s]: { label: "Small" },
   [TShirtSize.size_m]: { label: "Medium" },

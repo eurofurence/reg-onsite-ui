@@ -11,6 +11,7 @@ import type { Nullable } from "@/types/internal/common";
 import type { LabeledValue } from "@/types/internal/infos";
 
 export const enum TShirtType {
+  regular_unknown = "None",
   regular_xs = "XS",
   contoured_xs = "wXS",
   regular_s = "S",
@@ -43,6 +44,9 @@ function getTShirtInfo(
   shape: TShirtShapeValue
 ): TShirtInfo {
   const sizeLabel: string = metadataRecordForTShirtSizes[size].label;
+  if (size == TShirtSize.size_unknown) {
+    throw new Error(`This function does not support unknown sizes!`)
+  }
   let result: TShirtInfo = {
     value: `${shape == TShirtShape.contoured ? "w" : ""}${size}`,
     label: `${sizeLabel} (${shape})`,
@@ -56,6 +60,13 @@ function getTShirtInfo(
 }
 
 export const metadataListForTShirtTypesInternal: TShirtInfo[] = [
+  {
+    value: `${TShirtSize.size_unknown}`,
+    label: `Ask attendee!`,
+    size: TShirtSize.size_unknown,
+    shape: TShirtShape.regular,
+    cssClass: "text-red-500 animate-ping font-bold",
+  },
   getTShirtInfo(TShirtSize.size_xs, TShirtShape.regular),
   getTShirtInfo(TShirtSize.size_xs, TShirtShape.contoured),
   getTShirtInfo(TShirtSize.size_s, TShirtShape.regular),

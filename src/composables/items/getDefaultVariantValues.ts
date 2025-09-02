@@ -21,7 +21,7 @@ function overrideDefaultFromTShirtSizes(
   tshirt_goodies.forEach((value: GoodieConfig) => {
     defaultValues.set(
       value.value,
-      tshirtSize !== undefined ? tshirtSize : null
+      (tshirtSize !== undefined && tshirtSize !== null) ? tshirtSize : 'None'
     );
   });
 }
