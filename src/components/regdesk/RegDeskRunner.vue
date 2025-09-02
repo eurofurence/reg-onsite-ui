@@ -4,7 +4,6 @@
       :group="toastService.toastGroup"
       pt:root:class="relative z-[100]"
       :position="displayOptionsRef.displayRunner.location"
-      unstyled
     >
       <template #container="{ message, closeCallback }">
         <div
