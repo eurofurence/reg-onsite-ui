@@ -126,7 +126,7 @@ onMounted(async () => {
 });
 scheduleRegularTask(
   checkUserAccessSilent,
-  (1000 * 120) as DurationInMS,
+  (1000 * 600) as DurationInMS,
   (1000 * 10) as DurationInMS
 );
 </script>
