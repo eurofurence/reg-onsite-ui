@@ -16,6 +16,13 @@ export const enum AbstractEFGoodieWithoutVariants2025 {
   messenger_bag_2025 = "messenger_bag_2025",
   staff_coin_2025 = "staff_coin_2025",
   attendee_pin_2025 = "attendee_pin_2025",
+
+  critter_sticker_1_2025 = "critter_sticker_1_2025",
+  critter_sticker_2_2025 = "critter_sticker_2_2025",
+  critter_bookmark_2025 = "critter_bookmark_2025",
+  critter_postcard_2025 = "critter_postcard_2025",
+  critter_galaxy_coaster_set_2025 = "critter_galaxy_coaster_set_2025",
+
   // Workaround for staff pin distribution
   staff_pins_security_2025 = "staff_pins_security_2025",
   staff_pins_fursuit_support_2025 = "staff_pins_fursuit_support_2025",
@@ -96,6 +103,21 @@ export const metadataRecordForGoodies2025: MetadataRecord<EFGoodieConfig2025> =
     },
     [AbstractEFGoodieWithoutVariants2025.attendee_pin_2025]: {
       label: "Pin",
+    },
+    [AbstractEFGoodieWithoutVariants2025.critter_sticker_1_2025]: {
+      label: "Benefit: Sticker I – Round",
+    },
+    [AbstractEFGoodieWithoutVariants2025.critter_sticker_2_2025]: {
+      label: "Benefit: Sticker II – Oval",
+    },
+    [AbstractEFGoodieWithoutVariants2025.critter_bookmark_2025]: {
+      label: "Benefit: Bookmark",
+    },
+    [AbstractEFGoodieWithoutVariants2025.critter_postcard_2025]: {
+      label: "Benefit: Postcard",
+    },
+    [AbstractEFGoodieWithoutVariants2025.critter_galaxy_coaster_set_2025]: {
+      label: "Benefit: Galaxy Coaster Set",
     },
     [AbstractEFGoodieWithoutVariants2025.staff_pins_security_2025]: {
       label: "Staff Pin Bag for Security - 105 pins",
@@ -248,7 +270,7 @@ export const iterationEF2025: ConventionIterationSettings = {
   goodies: {
     forPackage: {
       [GoodiesLevel.tshirt]: [
-	AbstractEFGoodieWithVariants2025.tshirt_2025,
+        AbstractEFGoodieWithVariants2025.tshirt_2025,
       ],
       [GoodiesLevel.sponsor]: [
         AbstractEFGoodieWithoutVariants2025.attendee_pin_2025,
@@ -263,8 +285,22 @@ export const iterationEF2025: ConventionIterationSettings = {
       ],
     },
     forFlag: {
-      staff: [AbstractEFGoodieWithoutVariants2025.staff_coin_2025],
-      director: [AbstractEFGoodieWithoutVariants2025.staff_coin_2025],
+      staff: [
+        AbstractEFGoodieWithoutVariants2025.critter_sticker_1_2025,
+        AbstractEFGoodieWithoutVariants2025.critter_sticker_2_2025,
+        AbstractEFGoodieWithoutVariants2025.critter_bookmark_2025,
+        AbstractEFGoodieWithoutVariants2025.critter_postcard_2025,
+        AbstractEFGoodieWithoutVariants2025.critter_galaxy_coaster_set_2025,
+        AbstractEFGoodieWithoutVariants2025.staff_coin_2025,
+      ],
+      director: [
+        AbstractEFGoodieWithoutVariants2025.critter_sticker_1_2025,
+        AbstractEFGoodieWithoutVariants2025.critter_sticker_2_2025,
+        AbstractEFGoodieWithoutVariants2025.critter_bookmark_2025,
+        AbstractEFGoodieWithoutVariants2025.critter_postcard_2025,
+        AbstractEFGoodieWithoutVariants2025.critter_galaxy_coaster_set_2025,
+        AbstractEFGoodieWithoutVariants2025.staff_coin_2025,
+      ],
     },
     forRegNumber: {},
   },
