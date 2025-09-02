@@ -85,6 +85,22 @@
                 </LinkButton>
               </div>
             </Fieldset>
+            <Fieldset legend="Other Services">
+              <div class="flex flex-col gap-3 m-2">
+                <LinkButton
+                  href="https://critter.eurofurence.org"
+                  class="w-full"
+                >
+                  <i class="pi pi-briefcase" />Critter System
+                </LinkButton>
+                <LinkButton
+                  href="https://stream.eurofurence.org"
+                  class="w-full"
+                >
+                  <i class="pi pi-video" />Live Stream
+                </LinkButton>
+              </div>
+            </Fieldset>
           </div>
           <LabeledToggleSwitch
             label="Show disabled apps"
