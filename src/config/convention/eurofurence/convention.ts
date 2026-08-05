@@ -19,7 +19,15 @@ import {
   type AbstractEFGoodieWithVariants2025,
   type AbstractEFGoodieWithoutVariants2025,
   type ConcreteEFGoodieValue2025,
+  type EFGoodieConfig2025,
 } from "@/config/convention/eurofurence/ef2025";
+import {
+  metadataRecordForGoodies2026,
+  type AbstractEFGoodieWithVariants2026,
+  type AbstractEFGoodieWithoutVariants2026,
+  type ConcreteEFGoodieValue2026,
+  type EFGoodieConfig2026,
+} from "@/config/convention/eurofurence/ef2026";
 import efLogoUrl from "@/config/convention/eurofurence/ef_logo.png";
 import { efPrimaryColors } from "@/config/convention/eurofurence/theme";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
@@ -59,26 +67,30 @@ export const conventionSettingsForEF: ConventionSettings = {
 };
 
 type AbstractEFGoodieWithoutVariants =
+  | AbstractEFGoodieWithoutVariants2026
   | AbstractEFGoodieWithoutVariants2025
   | AbstractEFGoodieWithoutVariants2024
   | AbstractEFGoodieWithoutVariants2023;
 
 type AbstractEFGoodieWithVariants =
+  | AbstractEFGoodieWithVariants2026
   | AbstractEFGoodieWithVariants2025
   | AbstractEFGoodieWithVariants2024
   | AbstractEFGoodieWithVariants2023;
 
 export type ConcreteEFGoodieValue =
+  | ConcreteEFGoodieValue2026
   | ConcreteEFGoodieValue2025
   | ConcreteEFGoodieValue2024
   | ConcreteEFGoodieValue2023;
 
-export type EFGoodieConfig = EFGoodieConfig2023 | EFGoodieConfig2024;
+export type EFGoodieConfig = EFGoodieConfig2023 | EFGoodieConfig2024 | EFGoodieConfig2025 | EFGoodieConfig2026;
 
 export const metadataRecordForGoodiesEF: MetadataRecord<EFGoodieConfig> = {
   ...metadataRecordForGoodies2023,
   ...metadataRecordForGoodies2024,
   ...metadataRecordForGoodies2025,
+  ...metadataRecordForGoodies2026,
 };
 
 export type AbstractEFGoodieWithVariantsValue =

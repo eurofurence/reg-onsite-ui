@@ -7,7 +7,7 @@ import {
   type ConcreteEFGoodieValue,
   type EFGoodieConfig,
 } from "@/config/convention/eurofurence/convention";
-import { iterationEF2025 } from "@/config/convention/eurofurence/ef2025";
+import { iterationEF2026 } from "@/config/convention/eurofurence/ef2026";
 import type {
   ConventionInventorySettings,
   ConventionIterationSettings,
@@ -25,7 +25,7 @@ export const currentConventionSettings: ConventionSettings =
   conventionSettingsForEF;
 
 export const currentIterationSettings: ConventionIterationSettings =
-  iterationEF2025;
+  iterationEF2026;
 
 export const currentInventorySubset: ConventionInventorySettings = {
   // the sponsordesk has at most the items for the super sponsors
