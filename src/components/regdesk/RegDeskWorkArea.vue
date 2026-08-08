@@ -171,6 +171,7 @@ import {
   type KeyboardServiceEvent,
 } from "@/composables/services/keyboardService";
 import { OnsiteToastService } from "@/composables/services/toastService";
+import { FilterMatchMode } from "@primevue/core/api";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 import { setupColumnDefinitionList } from "@/config/system/regdesk";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
@@ -318,6 +319,19 @@ async function onEnter(event: KeyboardServiceEvent): Promise<boolean> {
       return false;
     }
     await dialog.value?.showConfirmDialogBlocking();
+    return true;
+  }
+  if (event.currentScope === ShortcutScope.regdesk) {
+    const inputElement = getInputElement(globaSearchInputId);
+    if (document.activeElement !== inputElement) {
+      return false;
+    }
+    const rawValue = inputElement.value.trim();
+    if (!rawValue) {
+      return false;
+    }
+    dataOptionsRef.value.filterConfig.filterValues.global.matchMode =
+      FilterMatchMode.EQUALS;
     return true;
   }
   return false;
