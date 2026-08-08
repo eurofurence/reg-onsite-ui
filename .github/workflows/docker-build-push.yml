@@ -99,3 +99,45 @@ jobs:
           ENV_NAME: reglive
           FULL_REPO_URL: "https://github.com/${{ github.repository }}"
           COMMIT_HASH: ${{ github.sha }}
+
+  build-and-push-backend:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        run: 'echo "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin'
+        shell: bash
+        env:
+          REGISTRY: "ghcr.io"
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_PASS: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker build and push backend image
+        if: startsWith(github.ref, 'refs/heads/')
+        shell: bash
+        run: |
+          docker build \
+            --file Dockerfile.backend \
+            --label org.opencontainers.image.url="$FULL_REPO_URL" \
+            --label org.opencontainers.image.revision="$COMMIT_HASH" \
+            --tag "$REGISTRY/$IMAGE_NAME:backend-latest" \
+            --pull \
+            .
+
+          docker tag "$REGISTRY/$IMAGE_NAME:backend-latest" "$REGISTRY/$IMAGE_NAME:backend-$COMMIT_HASH"
+
+          docker image ls
+
+          echo "Pushing: $REGISTRY/$IMAGE_NAME:backend-latest"
+          docker push "$REGISTRY/$IMAGE_NAME:backend-latest"
+          echo "Pushing: $REGISTRY/$IMAGE_NAME:backend-$COMMIT_HASH"
+          docker push "$REGISTRY/$IMAGE_NAME:backend-$COMMIT_HASH"
+        env:
+          REGISTRY: "ghcr.io"
+          IMAGE_NAME: ${{ github.repository }}
+          FULL_REPO_URL: "https://github.com/${{ github.repository }}"
+          COMMIT_HASH: ${{ github.sha }}
