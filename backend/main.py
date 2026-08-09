@@ -17,6 +17,7 @@ _attendee_service_url: str = os.environ.get("ATTENDEE_SERVICE_URL", "http://atte
 _payment_service_url: str = os.environ.get("PAYMENT_SERVICE_URL", "http://payment-service:8080")
 _admin_group: str = os.environ.get("ADMIN_GROUP", "")
 _sumup_access_token: str = os.environ.get("SUMUP_ACCESS_TOKEN", "")
+_idp_url: str = os.environ.get("IDP_URL", "https://identity.eurofurence.org")
 
 if not _audience:
     raise RuntimeError("JWT_AUDIENCE environment variable must be set")
@@ -240,6 +241,56 @@ async def package_payment_status(
     ]
 
     return {"packages": packages}
+
+
+@app.get("/api/group-members/{group_id}")
+async def group_members(
+    group_id: str,
+    idp_token: Annotated[str, Query()],
+    claims: Annotated[dict, Security(verify_admin)],
+    JWT: Annotated[str | None, Cookie()] = None,
+    AUTH: Annotated[str | None, Cookie()] = None,
+) -> dict:
+
+    # Collect all IDP user IDs for the group, following pagination
+    user_ids: set[str] = set()
+    url = f"{_idp_url}/api/v1/groups/{group_id}/users?page=1"
+    async with httpx.AsyncClient(timeout=15) as client:
+        while url:
+            resp = await client.get(url, headers={"Authorization": f"Bearer {idp_token}"})
+            resp.raise_for_status()
+            body = resp.json()
+            for entry in body.get("data") or []:
+                user_ids.add(entry["user_id"])
+            url = (body.get("links") or {}).get("next") or ""
+
+    if not user_ids:
+        return {"attendees": []}
+
+    cookie_header = f"JWT={JWT}"
+    if AUTH:
+        cookie_header += f"; AUTH={AUTH}"
+
+    # Fetch all attendees with identity_subject populated
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            f"{_attendee_service_url}/api/rest/v1/attendees/find",
+            json={
+                "match_any": [{"nickname": "*"}],
+                "fill_fields": ["nickname", "identity_subject"],
+            },
+            headers={"Cookie": cookie_header, "X-Admin-Request": "available"},
+        )
+
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail="upstream error")
+
+    attendees = [
+        {"id": a["id"], "nickname": a.get("nickname")}
+        for a in (resp.json().get("attendees") or [])
+        if a.get("identity_subject") in user_ids
+    ]
+    return {"attendees": attendees}
 
 
 @app.post("/api/cash-payment/{attendee_id}")
