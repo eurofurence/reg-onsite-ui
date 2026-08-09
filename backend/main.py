@@ -58,6 +58,11 @@ def verify_admin(claims: Annotated[dict, Security(verify_jwt)]) -> dict:
     return claims
 
 
+@app.get("/")
+def health_check() -> dict:
+    return {"status": "ok"}
+
+
 @app.get("/api/check_group")
 def check_group(
     group: Annotated[str, Query()],
