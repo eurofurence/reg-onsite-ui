@@ -13,11 +13,8 @@ async function postCashPaymentForAttendee(
   regNumber: RegNumber
 ): FetchResultPromise<ApiTransaction, ApiError> {
   const response: Response = await postApi(
-    `paysrv/api/rest/v1/transactions/initiate-payment`,
-    {
-      debitor_id: regNumber,
-      method: "transfer",
-    }
+    `onsite/api/cash-payment/${regNumber}`,
+    {}
   );
   return fetchResultWrapper<ApiTransaction>(response);
 }

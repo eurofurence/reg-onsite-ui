@@ -31,10 +31,7 @@
               @click="$emit('onPayment', modelValue.id)"
               :disabled="paymentDisabled()"
               raised
-              v-if="
-                props.enableCashierMode &&
-                environmentSettings.envName === EnvName.dev
-              "
+              v-if="props.enableCashierMode"
             >
               <b class="h-6"><i class="pi pi-money-bill" /> </b>
             </Button>
@@ -84,7 +81,6 @@ import RegStatusPanel from "@/components/common/RegStatusPanel.vue";
 import RegDeskCheckInTime from "@/components/regdesk/RegDeskCheckInTime.vue";
 import { canCheckin } from "@/composables/fields/status/canCheckin";
 import { environmentSettings } from "@/composables/services/environmentService";
-import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import {
   SearchStatusMode,

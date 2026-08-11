@@ -242,7 +242,7 @@ const transformedAttendeeListRef: ModelRef<TransformedAttendeeInfo[]> =
 
 const previousSelectId: Ref<number | undefined> = ref(undefined);
 
-const activeColumnsRef: Ref<ColumnDefinition[]> = ref(
+const activeColumnsRef: WritableComputedRef<ColumnDefinition[]> = computed(() =>
   getActiveColumnDefinitionList(displayOptionsRef.value.displayColumns)
 );
 
