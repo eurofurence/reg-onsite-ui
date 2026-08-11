@@ -25,6 +25,7 @@ interface GoodieConfigNode {
   reservedCount?: number;
   reservedIssuedCount?: number;
   plannedCount?: number;
+  boughtCount?: number;
 }
 
 export interface GoodieTreeNode {

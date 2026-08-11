@@ -15,7 +15,10 @@
           <CheckinStatistics v-model="regDeskInfoRef" />
         </TabPanel>
         <TabPanel value="2">
-          <SponsorStatistics v-model="sponsorDeskInfoRef" />
+          <SponsorStatistics
+            v-model="sponsorDeskInfoRef"
+            :attendeeInfos="transformedAttendeeInfoRef"
+          />
         </TabPanel>
       </TabPanels>
     </Tabs>
