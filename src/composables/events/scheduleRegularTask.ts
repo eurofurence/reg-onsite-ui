@@ -4,8 +4,8 @@ export function scheduleRegularTask(
   fun: CallableFunction,
   delay: DurationInMS,
   variance = 0 as DurationInMS
-): void {
+): ReturnType<typeof setInterval> {
   const interval: DurationInMS = (delay +
     Math.floor(Math.random() * variance)) as DurationInMS;
-  setInterval(fun, interval);
+  return setInterval(fun, interval);
 }

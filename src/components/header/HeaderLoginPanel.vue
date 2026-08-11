@@ -58,6 +58,7 @@ import HeaderLinkButton from "@/components/header/HeaderLinkButton.vue";
 import HeaderLoginButton from "@/components/header/HeaderLoginButton.vue";
 import HeaderLogo from "@/components/header/HeaderLogo.vue";
 import HeaderThemeSelection from "@/components/header/HeaderThemeSelection.vue";
+import { getGroups } from "@/composables/api/backend/getGroups";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { scheduleRegularTask } from "@/composables/events/scheduleRegularTask";
 import { generateId } from "@/composables/generateId";
@@ -66,14 +67,14 @@ import { attendeeService } from "@/composables/services/attendeeService";
 import { authService } from "@/composables/services/authService";
 import { OnsiteToastService } from "@/composables/services/toastService";
 import { authState } from "@/composables/state/authState";
-import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { ApiFrontendUserInfo } from "@/types/external/authsrv/frontenduserinfo";
+import type { AuthGroupValue } from "@/types/internal/convention";
 import type { DurationInMS } from "@/types/internal/common";
 import { ToastSeverity } from "@/types/internal/primevue";
 import ProgressBar from "@/volt/ProgressBar.vue";
 import Toast from "@/volt/Toast.vue";
 import Toolbar from "@/volt/Toolbar.vue";
-import { onMounted, ref, type Ref, useId } from "vue";
+import { onMounted, onUnmounted, ref, type Ref, useId } from "vue";
 
 const isConnecting: Ref<boolean> = ref(true);
 
@@ -84,24 +85,38 @@ async function checkUserAccess(): Promise<void> {
       getErrorHandlerFunction(toastService)
     );
 
-  const userRegNumList: RegNumber[] =
-    (await attendeeService.getOwnRegs(getErrorHandlerFunction(toastService))) ||
-    [];
+  if (data === undefined) {
+    isConnecting.value = false;
+    return;
+  }
+
+  const [userRegNumList, userGroups] = await Promise.all([
+    attendeeService.getOwnRegs(getErrorHandlerFunction(toastService)).then((r) => r ?? []),
+    getGroups(getErrorHandlerFunction(toastService)).then((r) => r ?? []),
+  ]);
   let userRegNumStr: string = userRegNumList.map((n) => `#${n}`).join(", ");
   if (userRegNumStr.length > 0) {
     userRegNumStr = `(${userRegNumStr})`;
   }
-  if (data !== undefined) {
-    authState.value.userName = data.name;
-    authState.value.userGroups = data.groups;
-    authState.value.userRegNumList = userRegNumList;
-    authState.value.sessionActive = true;
-    toastService.add({
-      severity: ToastSeverity.success,
-      summary: `Logged in as: ${data.name} ${userRegNumStr}`,
-      life: 2000,
-    });
-  }
+  const matchedAuthGroups: AuthGroupValue[] = (
+    Object.entries(getConventionSetup().auth) as [AuthGroupValue, typeof userGroups][]
+  )
+    .filter(([, idpIds]) => idpIds?.some((id) => userGroups.includes(id)))
+    .map(([groupName]) => groupName);
+
+  authState.value.userName = data.name;
+  authState.value.userGroups = userGroups;
+  authState.value.userRegNumList = userRegNumList;
+  authState.value.sessionActive = true;
+  toastService.add({
+    severity: ToastSeverity.success,
+    summary: `Logged in as: ${data.name} ${userRegNumStr}`,
+    detail:
+      matchedAuthGroups.length > 0
+        ? `Groups: ${matchedAuthGroups.join(", ")}`
+        : "No groups",
+    life: 2000,
+  });
   isConnecting.value = false;
 }
 
@@ -121,14 +136,18 @@ const props: Props = defineProps<Props>();
 const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 
-onMounted(async () => {
-  await checkUserAccess();
-});
-scheduleRegularTask(
+const regularTaskId = scheduleRegularTask(
   checkUserAccessSilent,
   (1000 * 600) as DurationInMS,
   (1000 * 10) as DurationInMS
 );
+
+onMounted(async () => {
+  await checkUserAccess();
+});
+onUnmounted(() => {
+  clearInterval(regularTaskId);
+});
 </script>
 
 <style lang="css">
