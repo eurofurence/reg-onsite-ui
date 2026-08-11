@@ -61,6 +61,8 @@ export interface ConventionSharedMetadata {
 
 export const enum AuthGroups {
   admin = "admin",
+  staff = "staff",
+  director = "director",
   dealersDen = "dealersDen",
   security = "security",
   registration = "registration",

@@ -51,10 +51,19 @@ export const conventionSettingsForEF: ConventionSettings = {
       "OE7QZN2RQX9KWML4", // Registration Test - Admin
       "54ZYODX1G2K1M76N", // Registration Live - Admin
     ] as IdpGroupId[],
+    staff: [
+      "54ZYODX15G2K1M76", // Staff
+    ] as IdpGroupId[],
+    director: [
+      "O9ZPL62DKZ8KMNRQ", // Director
+    ] as IdpGroupId[],
     dealersDen: [
       "QE3VMR2LK9X1PW07", // Dealers Den - Admin
       "EN3GL42Q072JKZQO", // Dealers Den - Frontdesk
       "PV9M4EXE587GR56K", // Dealers Den - Department
+    ] as IdpGroupId[],
+    sponsorDesk: [
+      "JMV93OXMVQXDN610", // Dealers Den - Admin
     ] as IdpGroupId[],
     security: [
       "0P9Z712NRQ8VDM5K", // Security - Department
