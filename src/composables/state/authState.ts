@@ -4,17 +4,21 @@ import type { IdpGroupId } from "@/types/external/authsrv/frontenduserinfo";
 import type { AuthGroupValue } from "@/types/internal/convention";
 import { ref, type Ref } from "vue";
 
-export const authState: Ref<{
+type AuthState = {
   sessionActive: boolean;
   userName: string | null;
   userGroups: IdpGroupId[];
   userRegNumList: RegNumber[];
-}> = ref({
+};
+
+const defaultAuthState: AuthState = {
   sessionActive: false,
   userName: null,
   userGroups: [],
   userRegNumList: [],
-});
+};
+
+export const authState: Ref<AuthState> = ref({ ...defaultAuthState });
 
 function isIdpMember(
   ...groupIdListList: (IdpGroupId[] | undefined)[]
@@ -25,13 +29,16 @@ function isIdpMember(
   );
 }
 
+export function clearSessionState(): void {
+  Object.assign(authState.value, defaultAuthState);
+}
+
 export function isInAnyGroup(...groupNameList: AuthGroupValue[]): boolean {
   const groupIdListList: (IdpGroupId[] | undefined)[] = groupNameList.map(
     (groupName: AuthGroupValue) => getConventionSetup().auth[groupName]
   );
   return (
     isIdpMember(...groupIdListList) ||
-    isIdpMember(getConventionSetup().auth.admin) ||
-    true // FIXME
+    isIdpMember(getConventionSetup().auth.admin)
   );
 }

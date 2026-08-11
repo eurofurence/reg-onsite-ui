@@ -9,7 +9,7 @@ async function tryTokenRefresh(): Promise<void> {
   });
 }
 
-async function checkLoginStatus(): Promise<boolean> {
+async function isSessionExpired(): Promise<boolean> {
   const checkUrl: URL = getUrl("authsrv/v1/frontend-userinfo");
   const response: Response = await fetch(checkUrl, {
     method: "GET",
@@ -24,7 +24,7 @@ async function checkLoginStatus(): Promise<boolean> {
 async function confirmLogout(): Promise<boolean> {
   // Try to relog before confirming logout
   await tryTokenRefresh();
-  return await checkLoginStatus();
+  return await isSessionExpired();
 }
 
 export async function smartFetch(

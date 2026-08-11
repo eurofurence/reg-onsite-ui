@@ -1,5 +1,5 @@
 import { parseRestError } from "@/composables/api/base/parseRestError";
-import { authState } from "@/composables/state/authState";
+import { clearSessionState } from "@/composables/state/authState";
 import type { ApiError } from "@/types/external/error";
 import type {
   FetchResult,
@@ -22,7 +22,7 @@ export async function restErrorWrapper<Type>(
     if (fetchResult.ok) {
       return fetchResult.data as Type;
     } else if (fetchResult.status === 401) {
-      authState.value.sessionActive = false;
+      clearSessionState();
       restErrorHandler(
         parseRestError(serviceName, fetchResult.data as ApiError)
       );

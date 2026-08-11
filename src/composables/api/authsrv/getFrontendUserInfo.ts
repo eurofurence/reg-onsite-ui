@@ -4,7 +4,7 @@ import {
   type RestErrorHandler,
   restErrorWrapper,
 } from "@/composables/api/base/restErrorWrapper";
-import { authState } from "@/composables/state/authState";
+import { clearSessionState } from "@/composables/state/authState";
 import type { ApiFrontendUserInfo } from "@/types/external/authsrv/frontenduserinfo";
 import type { ApiError } from "@/types/external/error";
 import type { FetchResultPromise } from "@/types/internal/rest";
@@ -27,7 +27,7 @@ export async function getFrontendUserInfo(
       errorHandler
     );
   if (result === undefined) {
-    authState.value.sessionActive = false;
+    clearSessionState();
   }
   return result;
 }
