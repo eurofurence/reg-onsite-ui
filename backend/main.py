@@ -17,10 +17,26 @@ _attendee_service_url: str = os.environ.get("ATTENDEE_SERVICE_URL", "http://atte
 _payment_service_url: str = os.environ.get("PAYMENT_SERVICE_URL", "http://payment-service:8080")
 _admin_group: str = os.environ.get("ADMIN_GROUP", "")
 _sumup_access_token: str = os.environ.get("SUMUP_ACCESS_TOKEN", "")
+_sumup_merchant_code: str = os.environ.get("SUMUP_MERCHANT_CODE", "")
 _idp_url: str = os.environ.get("IDP_URL", "https://identity.eurofurence.org")
+
+_GRACE_CENTS = 100  # 1 EUR grace, matching reg-attendee-service's graceAmountCents
+
 
 if not _audience:
     raise RuntimeError("JWT_AUDIENCE environment variable must be set")
+
+
+def _proxy_headers(JWT: str | None, AUTH: str | None) -> dict:
+    cookie = f"JWT={JWT}"
+    if AUTH:
+        cookie += f"; AUTH={AUTH}"
+    return {"Cookie": cookie, "X-Admin-Request": "available"}
+
+
+def _check_upstream(resp: httpx.Response) -> None:
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail="upstream error")
 
 
 def _decode_jwt(token: str) -> dict:
@@ -64,6 +80,14 @@ def health_check() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/api/groups")
+def get_groups(
+    claims: Annotated[dict, Depends(verify_jwt)],
+) -> dict:
+    groups: list[str] = claims.get("groups") or []
+    return {"groups": groups}
+
+
 @app.get("/api/check_group")
 def check_group(
     group: Annotated[str, Query()],
@@ -73,13 +97,15 @@ def check_group(
     return {"authorized": group in groups}
 
 
-@app.post("/api/sumup/token")
-async def set_sumup_token(
+@app.post("/api/sumup/setup")
+async def set_sumup_setup(
     claims: Annotated[dict, Security(verify_admin)],
     token: Annotated[str, Body(embed=True)],
+    merchant_code: Annotated[str, Body(embed=True)],
 ) -> dict:
-    global _sumup_access_token
+    global _sumup_access_token, _sumup_merchant_code
     _sumup_access_token = token
+    _sumup_merchant_code = merchant_code
     return {"status": "ok"}
 
 
@@ -113,7 +139,7 @@ async def sumup_product_counts(
         async def fetch_detail(tx_id: str):
             async with sem:
                 return await client.get(
-                    f"https://api.sumup.com/v0.1/me/transactions?id={tx_id}",
+                    f"https://api.sumup.com/v2.1/merchants/{_sumup_merchant_code}/transactions?id={tx_id}",
                     headers=headers,
                 )
 
@@ -121,9 +147,10 @@ async def sumup_product_counts(
 
     counts: dict[str, int] = {}
     for resp in details:
-        cart = resp.json().get("cart") or {}
-        for item in cart.get("items") or []:
-            key = item.get("product_summary") or "(unknown)"
+        for item in resp.json().get("products") or []:
+            name = item.get("name") or "(unknown)"
+            description = item.get("description") or ""
+            key = f"{name}: {description}" if description else name
             counts[key] = counts.get(key, 0) + item.get("quantity", 1)
 
     return counts
@@ -136,22 +163,11 @@ async def checkin_time(
     JWT: Annotated[str | None, Cookie()] = None,
     AUTH: Annotated[str | None, Cookie()] = None,
 ) -> dict:
-    cookie_header = f"JWT={JWT}"
-    if AUTH:
-        cookie_header += f"; AUTH={AUTH}"
-
     url = f"{_attendee_service_url}/api/rest/v1/attendees/{attendee_id}/status-history"
     async with httpx.AsyncClient() as client:
-        upstream = await client.get(
-            url,
-            headers={
-                "Cookie": cookie_header,
-                "X-Admin-Request": "available",
-            },
-        )
+        upstream = await client.get(url, headers=_proxy_headers(JWT, AUTH))
 
-    if upstream.status_code != 200:
-        raise HTTPException(status_code=upstream.status_code, detail="upstream error")
+    _check_upstream(upstream)
 
     history: list[dict] = upstream.json().get("status_history") or []
     checked_in_at = None
@@ -162,9 +178,6 @@ async def checkin_time(
     return {"checked_in_at": checked_in_at}
 
 
-_GRACE_CENTS = 100  # 1 EUR grace, matching reg-attendee-service's graceAmountCents
-
-
 @app.get("/api/package-payment-status/{attendee_id}")
 async def package_payment_status(
     attendee_id: int,
@@ -172,22 +185,14 @@ async def package_payment_status(
     JWT: Annotated[str | None, Cookie()] = None,
     AUTH: Annotated[str | None, Cookie()] = None,
 ) -> dict:
-    cookie_header = f"JWT={JWT}"
-    if AUTH:
-        cookie_header += f"; AUTH={AUTH}"
-
     url = f"{_payment_service_url}/api/rest/v1/transactions?debitor_id={attendee_id}"
     async with httpx.AsyncClient() as client:
-        upstream = await client.get(
-            url,
-            headers={"Cookie": cookie_header, "X-Admin-Request": "available"},
-        )
+        upstream = await client.get(url, headers=_proxy_headers(JWT, AUTH))
 
     if upstream.status_code == 404:
         return {"packages": []}
 
-    if upstream.status_code != 200:
-        raise HTTPException(status_code=upstream.status_code, detail="upstream error")
+    _check_upstream(upstream)
 
     payload: list[dict] = upstream.json().get("payload") or []
 
@@ -267,10 +272,6 @@ async def group_members(
     if not user_ids:
         return {"attendees": []}
 
-    cookie_header = f"JWT={JWT}"
-    if AUTH:
-        cookie_header += f"; AUTH={AUTH}"
-
     # Fetch all attendees with identity_subject populated
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(
@@ -279,11 +280,10 @@ async def group_members(
                 "match_any": [{"nickname": "*"}],
                 "fill_fields": ["nickname", "identity_subject"],
             },
-            headers={"Cookie": cookie_header, "X-Admin-Request": "available"},
+            headers=_proxy_headers(JWT, AUTH),
         )
 
-    if resp.status_code != 200:
-        raise HTTPException(status_code=resp.status_code, detail="upstream error")
+    _check_upstream(resp)
 
     attendees = [
         {"id": a["id"], "nickname": a.get("nickname")}
@@ -300,19 +300,12 @@ async def cash_payment(
     JWT: Annotated[str | None, Cookie()] = None,
     AUTH: Annotated[str | None, Cookie()] = None,
 ) -> Response:
-    cookie_header = f"JWT={JWT}"
-    if AUTH:
-        cookie_header += f"; AUTH={AUTH}"
-
     url = f"{_payment_service_url}/api/rest/v1/transactions/initiate-payment"
     async with httpx.AsyncClient() as client:
         upstream = await client.post(
             url,
             json={"debitor_id": attendee_id, "method": "cash"},
-            headers={
-                "Cookie": cookie_header,
-                "X-Admin-Request": "available",
-            },
+            headers=_proxy_headers(JWT, AUTH),
         )
 
     return Response(
