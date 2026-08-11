@@ -63,6 +63,7 @@ export function getDiagramDataFromList<ConfigValueType extends string>(
   );
   return {
     labels: labelList,
+    values: uniqueValueList,
     datasets: [
       {
         label: "Data",

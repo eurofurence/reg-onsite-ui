@@ -2,6 +2,7 @@ import type { ColorsPaletteValue } from "@/composables/theme/colors";
 
 export interface ChartData {
   labels: any;
+  values: string[];
   datasets: {
     label: string;
     data: number[];

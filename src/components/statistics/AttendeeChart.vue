@@ -6,6 +6,7 @@
       :data="props.data"
       :options="props?.chartOptions || defaultChartOptions"
       :class="props.cssClass"
+      @select="onSelect"
     />
   </div>
 </template>
@@ -35,4 +36,15 @@ const props = withDefaults(defineProps<Props>(), {
   chartType: "pie",
   cssClass: "w-96 h-96",
 });
+
+const emit = defineEmits<{
+  chartSelect: [value: string];
+}>();
+
+function onSelect(event: { element: { index: number } }): void {
+  const value: string | undefined = props.data.values[event.element.index];
+  if (value !== undefined) {
+    emit("chartSelect", value);
+  }
+}
 </script>

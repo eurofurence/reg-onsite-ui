@@ -10,6 +10,7 @@
           {}
         )
       "
+      @chartSelect="(v) => emit('filterSelect', { field: 'status', value: v })"
     />
     <AttendeeChart
       label="Sponsor Level"
@@ -21,6 +22,7 @@
           {}
         )
       "
+      @chartSelect="(v) => emit('filterSelect', { field: 'transSponsorChoice', value: v })"
     />
     <AttendeeChart
       label="Con Book"
@@ -32,6 +34,7 @@
           {}
         )
       "
+      @chartSelect="(v) => emit('filterSelect', { field: 'transConbookChoice', value: v })"
     />
     <AttendeeChart
       label="Roles"
@@ -45,6 +48,7 @@
           }
         )
       "
+      @chartSelect="(v) => emit('filterSelect', { field: 'transConRole', value: v })"
     />
     <div class="flex flex-col">
       <AttendeeChart
@@ -62,6 +66,7 @@
             }
           )
         "
+        @chartSelect="(v) => emit('filterSelect', { field: 'country', value: v })"
       />
       <div class="flex flex-row flex-grow mx-auto">
         <div><ToggleSwitch v-model="isLogCountries" /></div>
@@ -99,8 +104,13 @@ import {
 import { getStatsFromProperty } from "@/composables/statistics/getStatsFromProperty";
 import { ColorsPalette } from "@/composables/theme/colors";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { FilterFieldValue } from "@/types/internal/filter";
 import ToggleSwitch from "@/volt/ToggleSwitch.vue";
 import { ref, type ComputedRef, type ModelRef, type Ref } from "vue";
+
+const emit = defineEmits<{
+  filterSelect: [selection: { field: FilterFieldValue; value: string }];
+}>();
 
 const isLogCountries: Ref<boolean> = ref(false);
 const isLogAge: Ref<boolean> = ref(false);

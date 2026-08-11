@@ -39,7 +39,7 @@
       </div>
     </div>
     <div>
-      <AttendeeChartCollection v-model="filteredListRef" />
+      <AttendeeChartCollection v-model="filteredListRef" @filterSelect="onFilterSelect" />
     </div>
   </div>
 </template>
@@ -58,6 +58,7 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import { ColumnType } from "@/types/internal/component/table";
 import type {
   AllFilterFieldValues,
+  FilterFieldValue,
   RawAttendeeFilter,
 } from "@/types/internal/filter";
 import RadioButton from "@/volt/RadioButton.vue";
@@ -109,6 +110,14 @@ const filteredListRef: ComputedRef<TransformedAttendeeInfo[]> = computed(() => {
     []
   );
 });
+
+function onFilterSelect(selection: {
+  field: FilterFieldValue;
+  value: string;
+}): void {
+  filterOptionsRef.value[selection.field].value = [selection.value];
+  filterStatusRef.value = FilterStatus.filtered;
+}
 
 const componentId: string = generateId(useId());
 const filterStatusId: string = `statsFilterStatus${componentId}`;
