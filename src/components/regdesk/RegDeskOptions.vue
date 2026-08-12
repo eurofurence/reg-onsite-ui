@@ -191,7 +191,7 @@
             <label for="country">Country Filter</label>
             <SearchFieldCountry
               id="country"
-              v-model="dataOptionsRef.filterConfig.filterValues.country.value"
+              v-model="dataOptionsRef.filterConfig.presetFilterValues.country.value"
               :columnDefinition="null"
               :filterCallback="() => {}"
             />
@@ -200,7 +200,7 @@
             <label for="status">Status Filter</label>
             <SearchFieldTag
               id="status"
-              v-model="dataOptionsRef.filterConfig.filterValues.status.value"
+              v-model="dataOptionsRef.filterConfig.presetFilterValues.status.value"
               :columnDefinition="null"
               :filterCallback="() => {}"
               :configItems="
@@ -213,7 +213,7 @@
             <SearchFieldTag
               id="roles"
               v-model="
-                dataOptionsRef.filterConfig.filterValues.transConRole.value
+                dataOptionsRef.filterConfig.presetFilterValues.transConRole.value
               "
               :columnDefinition="null"
               :filterCallback="() => {}"
@@ -227,7 +227,7 @@
             <SearchFieldTag
               id="sponsor"
               v-model="
-                dataOptionsRef.filterConfig.filterValues.transSponsorChoice
+                dataOptionsRef.filterConfig.presetFilterValues.transSponsorChoice
                   .value
               "
               :columnDefinition="null"

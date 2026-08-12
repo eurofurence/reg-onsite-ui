@@ -52,7 +52,6 @@ import CustomConfirmDialog from "@/components/dialog/CustomConfirmDialog.vue";
 import CustomConfirmDialogHeader from "@/components/dialog/CustomConfirmDialogHeader.vue";
 import RegDeskRunner from "@/components/regdesk/RegDeskRunner.vue";
 import RegDeskWorkArea from "@/components/regdesk/RegDeskWorkArea.vue";
-import { deepCopy } from "@/composables/deepCopy";
 import { generateId } from "@/composables/generateId";
 import { getOnCheckinFunction } from "@/composables/logic/getOnCheckinFunction";
 import { getOnPaymentFunction } from "@/composables/logic/getOnPaymentFunction";
@@ -75,17 +74,14 @@ import { computedPagedResult } from "@/composables/sort_and_filter/computedPaged
 import { dirtyState } from "@/composables/state/dirtyState";
 import { useSmartCookie } from "@/composables/useSmartCookie";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
+import { useAttendeeDataOptions } from "@/composables/filter/useAttendeeDataOptions";
 import {
-  defaultAttendeeDataOptions,
   defaultAttendeeTableDisplayOptions,
 } from "@/config/system/regdesk";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { SearchStatus } from "@/types/internal/component/regnumsearch";
-import type {
-  AttendeeDataOptions,
-  AttendeeTableDisplayOptions,
-} from "@/types/internal/system/regdesk";
+import type { AttendeeTableDisplayOptions } from "@/types/internal/system/regdesk";
 import Button from "@/volt/Button.vue";
 import Toast from "@/volt/Toast.vue";
 import type {
@@ -145,9 +141,7 @@ const selectedAttendeeUpdater = getPreventUnselectIfNotCheckedInFunction(
 
 const onUndoCheckin = getUndoCheckinFunction(updateAttendee, toastService);
 
-const dataOptionsRef: Ref<AttendeeDataOptions> = ref(
-  deepCopy(defaultAttendeeDataOptions)
-);
+const dataOptionsRef = useAttendeeDataOptions();
 
 const doDataPreload: () => Promise<void> = getFunctionForDataPreload(
   rawListRef,

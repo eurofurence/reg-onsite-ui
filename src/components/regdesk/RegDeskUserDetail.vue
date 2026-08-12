@@ -81,6 +81,7 @@ import RegStatusPanel from "@/components/common/RegStatusPanel.vue";
 import RegDeskCheckInTime from "@/components/regdesk/RegDeskCheckInTime.vue";
 import { canCheckin } from "@/composables/fields/status/canCheckin";
 import { environmentSettings } from "@/composables/services/environmentService";
+import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import {
   SearchStatusMode,
@@ -103,7 +104,7 @@ const props = withDefaults(defineProps<Props>(), {
 const cooldownActive: Ref<boolean> = ref<boolean>(false);
 
 function paymentDisabled(): boolean {
-  return attendeeInfoRef.value.current_dues === 0;
+  return attendeeInfoRef.value.current_dues === null || attendeeInfoRef.value.current_dues <= 0;
 }
 
 function checkinDisabled(): boolean {

@@ -8,9 +8,7 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import { ToastSeverity } from "@/types/internal/primevue";
 import type { AttendeeDataOptions } from "@/types/internal/system/regdesk";
 import type { ToastMessageOptions } from "primevue";
-import { onMounted, ref, type Ref } from "vue";
-
-const waitForAttendeeList: Ref<boolean> = ref(true);
+import { onMounted, type Ref } from "vue";
 
 export function restoreSelectionFromRoute(
   toastService: OnsiteToastService,
@@ -38,13 +36,14 @@ export function restoreSelectionFromRoute(
       },
     };
     toastService.add(toastMessage);
+    let waitForAttendeeList = true;
     setTimeout(() => {
-      waitForAttendeeList.value = false;
+      waitForAttendeeList = false;
     }, timeoutDuration);
     try {
       while (
         transformedAttendeeListRef.value.length === 0 &&
-        waitForAttendeeList.value === true
+        waitForAttendeeList === true
       ) {
         await new Promise((resolve) => setTimeout(resolve, 50));
       }

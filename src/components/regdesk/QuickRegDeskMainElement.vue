@@ -58,9 +58,10 @@ import {
 import { EnvName } from "@/types/internal/env";
 import Toast from "@/volt/Toast.vue";
 import type { WritableComputedRef } from "vue";
-import { ref, useId, type Ref } from "vue";
+import { onMounted, onUnmounted, ref, useId, type Ref } from "vue";
 
-keyboardService.pushScope(ShortcutScope.regdesk);
+onMounted(() => keyboardService.pushScope(ShortcutScope.regdesk));
+onUnmounted(() => keyboardService.popScope(ShortcutScope.regdesk));
 
 const transformedAttendeeInfoRef: Ref<TransformedAttendeeInfo | null> =
   ref<TransformedAttendeeInfo | null>(null);

@@ -1,5 +1,5 @@
 <template>
-  <OnsitePage title="Registration Desk">
+  <OnsitePage title="Cashier Desk">
     <template #help>
       <ul>
         <li>Use 'Escape' to reset filters and exit the checkin dialog.</li>

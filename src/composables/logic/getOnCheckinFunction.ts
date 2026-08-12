@@ -26,10 +26,13 @@ export function getOnCheckinFunction(
         life: 10000,
       });
     }
+    let checkinFailed = false;
+    const baseErrorHandler = getErrorHandlerFunction(toastService);
     await attendeeService.checkinAttendee(
-      getErrorHandlerFunction(toastService),
+      (info) => { checkinFailed = true; baseErrorHandler(info); },
       regNumber
     );
+    if (checkinFailed) return;
     await attendeeService.addInfos.putRegDeskDeskAddInfo(
       getErrorHandlerFunction(toastService),
       regNumber,

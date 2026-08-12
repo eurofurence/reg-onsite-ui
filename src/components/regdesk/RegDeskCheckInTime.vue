@@ -8,7 +8,7 @@ import type { ApiRegDeskAddInfo } from "@/types/external/attsrv/additional-info/
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { RestErrorInfo } from "@/types/internal/rest";
 import type { ModelRef } from "vue";
-import { onMounted, ref, type Ref } from "vue";
+import { onMounted, ref, watch, type Ref } from "vue";
 
 const checkinTime: Ref<string> = ref("");
 
@@ -35,4 +35,5 @@ async function getCheckinTime(): Promise<void> {
 }
 
 onMounted(getCheckinTime);
+watch(regNumberRef, getCheckinTime);
 </script>

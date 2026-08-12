@@ -76,6 +76,7 @@
                 v-model="dataOptionsRef"
                 :globaSearchInputId="globaSearchInputId"
                 autofocus
+                @onSelectByNumber="selectByRegNumber"
               />
               <ResetFilterButton v-model="dataOptionsRef" />
               <SearchElementManual
@@ -171,7 +172,6 @@ import {
   type KeyboardServiceEvent,
 } from "@/composables/services/keyboardService";
 import { OnsiteToastService } from "@/composables/services/toastService";
-import { FilterMatchMode } from "@primevue/core/api";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 import { setupColumnDefinitionList } from "@/config/system/regdesk";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
@@ -187,7 +187,7 @@ import {
 import Button from "@/volt/Button.vue";
 import Dialog from "@/volt/Dialog.vue";
 import Toast from "@/volt/Toast.vue";
-import type { ModelRef, WritableComputedRef } from "vue";
+import type { ComputedRef, ModelRef, WritableComputedRef } from "vue";
 import { computed, ref, useId, useTemplateRef, type Ref } from "vue";
 
 interface Props {
@@ -242,7 +242,7 @@ const transformedAttendeeListRef: ModelRef<TransformedAttendeeInfo[]> =
 
 const previousSelectId: Ref<number | undefined> = ref(undefined);
 
-const activeColumnsRef: WritableComputedRef<ColumnDefinition[]> = computed(() =>
+const activeColumnsRef: ComputedRef<ColumnDefinition[]> = computed(() =>
   getActiveColumnDefinitionList(displayOptionsRef.value.displayColumns)
 );
 
@@ -276,6 +276,13 @@ const dialogVisibleIfSelectedRef: WritableComputedRef<boolean> = computed({
 });
 
 watchDialogVisibility(dialogVisibleIfSelectedRef, ShortcutScope.dialog_checkin);
+
+function selectByRegNumber(id: number): void {
+  const match = transformedAttendeeListRef.value.find((a) => a.id === id);
+  if (match) {
+    selectedAttendeeRef.value = match;
+  }
+}
 
 function focusGlobalFilterInputAndResetFilter(): void {
   const inputElement: HTMLInputElement = getInputElement(globaSearchInputId);
@@ -319,19 +326,6 @@ async function onEnter(event: KeyboardServiceEvent): Promise<boolean> {
       return false;
     }
     await dialog.value?.showConfirmDialogBlocking();
-    return true;
-  }
-  if (event.currentScope === ShortcutScope.regdesk) {
-    const inputElement = getInputElement(globaSearchInputId);
-    if (document.activeElement !== inputElement) {
-      return false;
-    }
-    const rawValue = inputElement.value.trim();
-    if (!rawValue) {
-      return false;
-    }
-    dataOptionsRef.value.filterConfig.filterValues.global.matchMode =
-      FilterMatchMode.EQUALS;
     return true;
   }
   return false;

@@ -14,7 +14,6 @@ export function getOnPaymentFunction(
   toastService: OnsiteToastService
 ): (regNumber: RegNumber) => Promise<void> {
   return async (regNumber: RegNumber): Promise<void> => {
-    console.log("PAYMENT");
     if (authState.value.userRegNumList.includes(regNumber)) {
       toastService.add({
         severity: ToastSeverity.warn,
