@@ -4,7 +4,7 @@
       <div class="flex items-center">
         <RadioButton
           v-model="filterStatusRef"
-          inputId="filterStatusId + '_raw'"
+          :inputId="filterStatusId + '_raw'"
           name="filterStatus"
           :value="FilterStatus.raw"
         />
@@ -15,7 +15,7 @@
       <div class="flex items-center">
         <RadioButton
           v-model="filterStatusRef"
-          inputId="filterStatusId + '_filtered'"
+          :inputId="filterStatusId + '_filtered'"
           name="filterStatus"
           :value="FilterStatus.filtered"
         />

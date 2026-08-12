@@ -12,10 +12,10 @@
           <AttendeeStatistics v-model="transformedAttendeeInfoRef" />
         </TabPanel>
         <TabPanel value="1">
-          <CheckinStatistics v-model="regDeskInfoRef" />
+          <CheckinStatistics v-model="regDeskInfoRef" :attendeeInfos="transformedAttendeeInfoRef" />
         </TabPanel>
         <TabPanel value="2">
-          <SponsorStatistics
+          <ItemStatistics
             v-model="sponsorDeskInfoRef"
             :attendeeInfos="transformedAttendeeInfoRef"
           />
@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import AttendeeStatistics from "@/components/statistics/AttendeeStatistics.vue";
 import CheckinStatistics from "@/components/statistics/CheckinStatistics.vue";
-import SponsorStatistics from "@/components/statistics/SponsorStatistics.vue";
+import ItemStatistics from "@/components/statistics/ItemStatistics.vue";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { generateId } from "@/composables/generateId";
 import { attendeeService } from "@/composables/services/attendeeService";
