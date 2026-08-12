@@ -72,8 +72,7 @@ import { getSubsetList } from "@/composables/collection_tools/subsets/getSubsetL
 import { deepCopy } from "@/composables/deepCopy";
 import { isDirty } from "@/composables/dirty/isDirty";
 import { generateId } from "@/composables/generateId";
-import { getAllConcreteItems } from "@/composables/items/getAllConcreteItems";
-import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
+import { useAvailableItems } from "@/composables/items/useAvailableItems";
 import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import { attendeeService } from "@/composables/services/attendeeService";
@@ -86,18 +85,15 @@ import {
 } from "@/composables/services/keyboardService";
 import { OnsiteToastService } from "@/composables/services/toastService";
 import { isDarkMode } from "@/composables/theme/isDarkMode";
-import { useSmartCookie } from "@/composables/useSmartCookie";
 import type {
   AbstractGoodieValue,
   ConcreteGoodieValue,
 } from "@/config/convention";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
-import { defaultSponsorDeskSettings } from "@/config/system/sponsordesk";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import { MessageSeverity, ToastSeverity } from "@/types/internal/primevue";
-import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
 import Button from "@/volt/Button.vue";
 import Message from "@/volt/Message.vue";
 import Panel from "@/volt/Panel.vue";
@@ -212,20 +208,10 @@ interface Props {
 }
 const props: Props = defineProps<Props>();
 
-const sponsorDeskSettings: Ref<SponsorDeskSettings> = useSmartCookie(
-  props.deskName,
-  {
-    ...defaultSponsorDeskSettings,
-    ...{
-      available: getAllConcreteItems(
-        getGoodieItemsSubset(props.deskItemSubset)
-      ),
-    },
-  }
-);
-
 const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
+
+const sponsorDeskSettings = useAvailableItems(props.deskItemSubset, getErrorHandlerFunction(toastService));
 </script>
 
 <style lang="css">

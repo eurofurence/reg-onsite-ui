@@ -12,18 +12,20 @@ export async function putSponsorDeskAddInfo(
   const jsonState = JSON.stringify(itemData, (key, value) => {
     return key === "history" ? [] : value;
   });
-  itemData.history.push(
-    JSON.stringify({
-      state: jsonState,
-      by: authState.value.userName,
-      when: new Date().toISOString(),
-    })
-  );
-  return await putAddInfo<ApiSponsorDeskAddInfo>(
+  const newHistoryEntry = JSON.stringify({
+    state: jsonState,
+    by: authState.value.userName,
+    when: new Date().toISOString(),
+  });
+  const result = await putAddInfo<ApiSponsorDeskAddInfo>(
     "Attendee Items Service",
     "sponsordesk",
     errorHandler,
     regNumber,
-    itemData
+    { ...itemData, history: [...itemData.history, newHistoryEntry] },
   );
+  if (result === null) {
+    itemData.history.push(newHistoryEntry);
+  }
+  return result;
 }

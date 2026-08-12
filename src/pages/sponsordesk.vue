@@ -1,7 +1,7 @@
 <template>
   <OnsitePage title="Sponsor Desk">
     <template #help>
-      This is the on site interface for the con store. It's inventory
+      This is the on site interface for the sponsor desk. Its inventory
       encompasses only the current sponsor items. Available hotkeys:
       <ul>
         <li>'Escape': Reset reg number input field</li>

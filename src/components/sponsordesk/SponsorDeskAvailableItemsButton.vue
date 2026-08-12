@@ -55,7 +55,6 @@ const menuProps: MenuItem[] = [
   {
     label: "Configure",
     icon: "pi pi-cog",
-    disabled: true, // FIXME
     command: () => {
       dialogVisibleForSettingsRef.value = true;
     },
