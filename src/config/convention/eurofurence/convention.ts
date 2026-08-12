@@ -63,7 +63,7 @@ export const conventionSettingsForEF: ConventionSettings = {
       "PV9M4EXE587GR56K", // Dealers Den - Department
     ] as IdpGroupId[],
     sponsorDesk: [
-      "JMV93OXMVQXDN610", // Dealers Den - Admin
+      "JMV93OXMVQXDN610", // Sponsor Desk
     ] as IdpGroupId[],
     security: [
       "0P9Z712NRQ8VDM5K", // Security - Department

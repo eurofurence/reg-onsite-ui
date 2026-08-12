@@ -1,7 +1,7 @@
 import type { MetadataRecord } from "@/composables/collection_tools/metadata/getMetadataEntryFromRecord";
 import type { AttendanceInfo } from "@/types/internal/infos";
 
-export const enum AttendeeApiAttendance {
+export enum AttendeeApiAttendance {
   full = "attendance",
   day_mon = "day-mon",
   day_tue = "day-tue",

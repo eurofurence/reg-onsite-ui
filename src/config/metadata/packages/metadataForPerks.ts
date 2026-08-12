@@ -4,6 +4,7 @@ import { NoPackage } from "@/types/internal/missing";
 
 export const enum GoodiesLevelApi {
   tshirt = "tshirt",
+  contributor = "contributor",
   sponsor = "sponsor",
   super_sponsor = "sponsor2",
 }
@@ -12,6 +13,7 @@ export type GoodiesLevelApiValue = `${GoodiesLevelApi}`;
 
 export const enum GoodiesLevel {
   no_sponsor = NoPackage.no_package,
+  contributor = GoodiesLevelApi.contributor,
   tshirt = GoodiesLevelApi.tshirt,
   sponsor = GoodiesLevelApi.sponsor,
   super_sponsor = GoodiesLevelApi.super_sponsor,
@@ -21,6 +23,7 @@ export type GoodiesLevelValue = `${GoodiesLevel}`;
 
 export const enum SponsorLevel {
   no_sponsor = GoodiesLevel.no_sponsor,
+  contributor = GoodiesLevelApi.contributor,
   sponsor = GoodiesLevelApi.sponsor,
   super_sponsor = GoodiesLevelApi.super_sponsor,
 }
@@ -43,6 +46,15 @@ export const packageTShirt: PackageInfo<GoodiesLevelValue> = {
   textColor: ColorsPalette.inverted_text,
   icon: "pi pi-user",
   search: { packages: { tshirt: 1 } },
+};
+
+export const packageContributor: PackageInfo<GoodiesLevelValue> = {
+  value: GoodiesLevel.contributor,
+  label: "Contributor",
+  color: ColorsPalette.teal_300,
+  textColor: ColorsPalette.inverted_text,
+  icon: "pi pi-heart",
+  search: { packages: { contributor: 1 } },
 };
 
 export const packageSponsor: PackageInfo<GoodiesLevelValue> = {

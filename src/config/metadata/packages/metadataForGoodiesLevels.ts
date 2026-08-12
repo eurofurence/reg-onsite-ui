@@ -2,6 +2,7 @@ import type { MetadataRecord } from "@/composables/collection_tools/metadata/get
 import {
   GoodiesLevel,
   type GoodiesLevelValue,
+  packageContributor,
   packageSponsor,
   packageSuperSponsor,
   packageTemplateRegular,
@@ -14,8 +15,9 @@ export const metadataRecordForGoodiesLevels: MetadataRecord<
 > = {
   [GoodiesLevel.no_sponsor]: {
     ...packageTemplateRegular,
-    ...{ search: { packages: { sponsor: 0, sponsor2: 0 } } },
+    ...{ search: { packages: { contributor: 0, sponsor: 0, sponsor2: 0 } } },
   },
+  [GoodiesLevel.contributor]: packageContributor,
   [GoodiesLevel.tshirt]: packageTShirt,
   [GoodiesLevel.sponsor]: packageSponsor,
   [GoodiesLevel.super_sponsor]: packageSuperSponsor,

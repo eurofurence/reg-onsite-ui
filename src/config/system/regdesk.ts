@@ -281,21 +281,24 @@ export function getDefaultAttendeeFilterValues(): RawAttendeeFilter {
   });
 }
 
+export function getDefaultPresetFilterValues(): RawAttendeeFilter {
+  return deepCopy({
+    ...getDefaultAttendeeFilterValues(),
+    status: {
+      value: [
+        AttendeeApiStatus.approved,
+        AttendeeApiStatus.partially_paid,
+        AttendeeApiStatus.paid,
+      ],
+      matchMode: FilterMatchMode.IN,
+    },
+  });
+}
+
 export const defaultAttendeeDataOptions: AttendeeDataOptions = {
   filterConfig: {
-    filterValues: {
-      ...getDefaultAttendeeFilterValues(),
-      ...{
-        status: {
-          value: [
-            AttendeeApiStatus.approved,
-            AttendeeApiStatus.partially_paid,
-            AttendeeApiStatus.paid,
-          ],
-          matchMode: FilterMatchMode.IN,
-        },
-      },
-    },
+    filterValues: getDefaultPresetFilterValues(),
+    presetFilterValues: getDefaultPresetFilterValues(),
     globalFilterFields: [
       "badge_id",
       "nickname",

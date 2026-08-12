@@ -1,5 +1,5 @@
-import GoodiesLevel from "@/components/common/field/GoodiesLevel.vue";
 import type { MetadataRecord } from "@/composables/collection_tools/metadata/getMetadataEntryFromRecord";
+import { GoodiesLevel } from "@/config/metadata/packages/metadataForPerks";
 import {
   metadataListForTShirtTypesInternal,
   type TShirtTypeValue,

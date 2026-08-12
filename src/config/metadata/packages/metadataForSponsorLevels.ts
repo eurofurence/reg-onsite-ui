@@ -1,5 +1,6 @@
 import type { MetadataRecord } from "@/composables/collection_tools/metadata/getMetadataEntryFromRecord";
 import {
+  packageContributor,
   packageSponsor,
   packageSuperSponsor,
   packageTemplateRegular,
@@ -13,8 +14,9 @@ export const metadataRecordForSponsorLevels: MetadataRecord<
 > = {
   [SponsorLevel.no_sponsor]: {
     ...packageTemplateRegular,
-    ...{ search: { packages: { sponsor: 0, sponsor2: 0 } } },
+    ...{ search: { packages: { contributor: 0, sponsor: 0, sponsor2: 0 } } },
   },
+  [SponsorLevel.contributor]: packageContributor,
   [SponsorLevel.sponsor]: packageSponsor,
   [SponsorLevel.super_sponsor]: packageSuperSponsor,
 };
