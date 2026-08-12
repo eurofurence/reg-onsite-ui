@@ -23,6 +23,7 @@ export type RawAttendeeFilter = Record<
 
 export interface FilterConfig {
   filterValues: RawAttendeeFilter;
+  presetFilterValues: RawAttendeeFilter;
   globalFilterFields: FilterFieldValue[];
 }
 

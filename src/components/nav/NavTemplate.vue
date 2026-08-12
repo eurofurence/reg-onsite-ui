@@ -21,6 +21,9 @@
                 <LinkButton :href="getLink('/quickregdesk')" class="w-full">
                   <i class="pi pi-bolt" />Quick Registration Desk
                 </LinkButton>
+                <LinkButton :href="getLink('/badge')" class="w-full">
+                  <i class="pi pi-credit-card" />Badge Management
+                </LinkButton>
               </div>
             </Fieldset>
             <Fieldset legend="Goodies">
@@ -45,6 +48,14 @@
                 </LinkButton>
                 <LinkButton :href="getLink('/shipping')" class="w-full">
                   <i class="pi pi-envelope" />Shipping Form
+                </LinkButton>
+                <LinkButton
+                  :disabled="checkDisabled(AuthGroups.director)"
+                  v-if="checkShown(AuthGroups.director)"
+                  :href="getLink('/items')"
+                  class="w-full"
+                >
+                  <i class="pi pi-box pr-2" />Item Management
                 </LinkButton>
               </div>
             </Fieldset>

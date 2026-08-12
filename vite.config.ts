@@ -15,10 +15,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
+        badge: "./badge.html",
         cashierdesk: "./cashierdesk.html",
         constore: "./constore.html",
         debug_fields: "./debug_fields.html",
         index: "./index.html",
+        items: "./items.html",
         quickregdesk: "./quickregdesk.html",
         regdesk: "./regdesk.html",
         shipping: "./shipping.html",

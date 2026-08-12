@@ -32,8 +32,7 @@ defineProps<Props>();
 const theme = ref<FieldsetPassThroughOptions>({
   root: `border border-surface-200 dark:border-surface-700 rounded-md
         bg-surface-0 dark:bg-surface-900 text-surface-700 dark:text-surface-0`,
-  legend: `border border-transparent rounded-md px-3 py-2 p-toggleable:p-0
-        transition-colors duration-200`,
+  legend: `mx-2 px-1 p-toggleable:p-0 transition-colors duration-200`,
   toggleButton: `select-none overflow-hidden relative group cursor-pointer
         flex items-center justify-center gap-2
         px-3 py-2

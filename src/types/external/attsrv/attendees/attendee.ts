@@ -18,6 +18,8 @@ import type { NoFlag, NoPackage } from "@/types/internal/missing";
 const enum UnusedPackages {
   room_none = "room-none",
   stage = "stage",
+  fursuit_badge = "fursuitbadge",
+  fursuit_add = "fursuitadd",
 }
 
 type UnusedPackagesValues = `${UnusedPackages}`;

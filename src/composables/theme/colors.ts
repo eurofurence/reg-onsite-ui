@@ -14,6 +14,7 @@ export const enum ColorsPalette {
   gray_700 = "gray-700",
   gray_900 = "gray-900",
   purple_400 = "purple-400",
+  teal_300 = "teal-300",
 }
 // Since color references are dynamically constructed,
 // the CSS file needs explicit source entries to prevent pruning of unused colors

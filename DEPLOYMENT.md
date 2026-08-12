@@ -6,18 +6,18 @@
 
 Add a new file at `src/config/convention/eurofurence/ef<YEAR>.ts` modelled after the previous year's file (e.g. `ef2026.ts`). It must define:
 
-- **`AbstractEFGoodieWithoutVariants<YEAR>`** — `const enum` of all goodies that have no size/variant selection (coins, bags, pins, cups, etc.). Each member maps to a stable string value that is persisted in the backend.
-- **`AbstractEFGoodieWithVariants<YEAR>`** — `const enum` of goodies that do have variants (currently only the T-Shirt). The enum value becomes the key prefix in the concrete value string.
-- **`ConcreteEFGoodieValue<YEAR>`** — union type of all concrete goodie strings (no-variant enums + `tshirt_<YEAR>_<size>`).
-- **`EFGoodieConfig<YEAR>`** — union of `GenericGoodieConfig` types used for type-safety throughout the UI.
-- **`metadataRecordForGoodies<YEAR>`** — maps every enum member to a human-readable `label` (and `variants` list for the T-Shirt). These labels appear in the sponsor desk and runner UI.
-- **`iterationEF<YEAR>`** — the main settings object:
-  - `conDates.start` — convention start date (`new Date("YYYY-MM-DD")`).
-  - `conDates.days` — number of convention days (cast as `ConDays`).
-  - `vip.regNumberList` — array of registration numbers that receive VIP treatment (can be empty initially).
-  - `goodies.forPackage` — maps each `GoodiesLevel` (`tshirt`, `sponsor`, `super_sponsor`) to the ordered list of goodie enum members attendees at that level receive.
-  - `goodies.forFlag` — maps staff flags (`staff`, `director`) to their goodies list (typically critter benefits + staff coin).
-  - `goodies.forRegNumber` — per-registration-number overrides (usually `{}`).
+- **`AbstractEFGoodieWithoutVariants<YEAR>`** - `const enum` of all goodies that have no size/variant selection (coins, bags, pins, cups, etc.). Each member maps to a stable string value that is persisted in the backend.
+- **`AbstractEFGoodieWithVariants<YEAR>`** - `const enum` of goodies that do have variants (currently only the T-Shirt). The enum value becomes the key prefix in the concrete value string.
+- **`ConcreteEFGoodieValue<YEAR>`** - union type of all concrete goodie strings (no-variant enums + `tshirt_<YEAR>_<size>`).
+- **`EFGoodieConfig<YEAR>`** - union of `GenericGoodieConfig` types used for type-safety throughout the UI.
+- **`metadataRecordForGoodies<YEAR>`** - maps every enum member to a human-readable `label` (and `variants` list for the T-Shirt). These labels appear in the sponsor desk and runner UI.
+- **`iterationEF<YEAR>`** - the main settings object:
+  - `conDates.start` - convention start date (`new Date("YYYY-MM-DD")`).
+  - `conDates.days` - number of convention days (cast as `ConDays`).
+  - `vip.regNumberList` - array of registration numbers that receive VIP treatment (can be empty initially).
+  - `goodies.forPackage` - maps each `GoodiesLevel` (`tshirt`, `sponsor`, `super_sponsor`) to the ordered list of goodie enum members attendees at that level receive.
+  - `goodies.forFlag` - maps staff flags (`staff`, `director`) to their goodies list (typically critter benefits + staff coin).
+  - `goodies.forRegNumber` - per-registration-number overrides (usually `{}`).
 
 **Example goodie breakdown for EF 2026:**
 

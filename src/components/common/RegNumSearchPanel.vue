@@ -48,8 +48,8 @@ authService.onLogin(ensureValidRoute);
 async function onSearchRegNumber(): Promise<void> {
   const regNumberFromRoute: RegNumber | null = getRegNumberFromRoute();
   if (regNumberFromRoute !== inputRegNumber.value) {
-    const regNumber: RegNumber | null = inputRegNumber.value;
     await confirmIfDirty(() => {
+      const regNumber: RegNumber | null = inputRegNumber.value;
       setRegNumberRoute(regNumber);
       emit("onSearchRegNumber", regNumber);
     });

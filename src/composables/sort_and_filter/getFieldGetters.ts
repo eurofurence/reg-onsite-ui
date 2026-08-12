@@ -90,7 +90,7 @@ export function getFieldGetters(): Record<
     transGoodieChoice: getAttendeeGoodies,
     transConRole: getAttendeeConRole,
     transSponsorChoice: getAttendeeSponsor,
-    transBirthday: getAttendeeStringFun("birthday"),
+    transBirthday: getAttendeeStringFun("transBirthday"),
     nickname: getAttendeeStringFun("nickname"),
     first_name: getAttendeeStringFun("first_name"),
     last_name: getAttendeeStringFun("last_name"),
