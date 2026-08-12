@@ -15,10 +15,10 @@ import type { TShirtTypeValue } from "@/config/metadata/tshirt/metadataForTShirt
 import type { FlagValue } from "@/types/internal/fields";
 import type { NoFlag, NoPackage } from "@/types/internal/missing";
 
-const enum UnusedPackages {
+export const enum UnusedPackages {
   room_none = "room-none",
   stage = "stage",
-  fursuit_badge = "fursuitbadge",
+  fursuit_badge = "fursuit",
   fursuit_add = "fursuitadd",
 }
 

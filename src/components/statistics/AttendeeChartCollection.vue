@@ -145,6 +145,7 @@ import { getStatsFromProperty } from "@/composables/statistics/getStatsFromPrope
 import { ColorsPalette } from "@/composables/theme/colors";
 import { AttendeeApiAttendance } from "@/config/metadata/packages/metadataForAttendance";
 import { metadataListForTShirtTypesInternal, TShirtType } from "@/config/metadata/tshirt/metadataForTShirtTypes";
+import { UnusedPackages } from "@/types/external/attsrv/attendees/attendee";
 import { NoPackage } from "@/types/internal/missing";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { ChartData } from "@/types/internal/statistics";
@@ -227,8 +228,8 @@ const fursuitData: ComputedRef<ChartData> = computed(() => {
   let addCount = 0;
   for (const a of statsRef.value) {
     for (const pkg of a.packages_list ?? []) {
-      if (pkg.name === "fursuitbadge") badgeCount += pkg.count;
-      if (pkg.name === "fursuitadd") addCount += pkg.count;
+      if (pkg.name === UnusedPackages.fursuit_badge) badgeCount += pkg.count;
+      if (pkg.name === UnusedPackages.fursuit_add) addCount += pkg.count;
     }
   }
   const [main, alt] = getColorVariants(ColorsPalette.purple_400);
@@ -236,7 +237,7 @@ const fursuitData: ComputedRef<ChartData> = computed(() => {
   const hoverColor = getColorFromStyle(alt);
   return {
     labels: ["Fursuit Badge", "Fursuit Add-on"],
-    values: ["fursuitbadge", "fursuitadd"],
+    values: [UnusedPackages.fursuit_badge, UnusedPackages.fursuit_add],
     datasets: [
       {
         label: "Count",
