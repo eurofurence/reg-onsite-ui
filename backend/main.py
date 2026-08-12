@@ -1,12 +1,13 @@
 import asyncio
 import json
 import os
-from typing import Annotated
+from typing import Annotated, Optional
 
 import httpx
 import jwt
 from fastapi import Body, Cookie, Depends, FastAPI, HTTPException, Query, Security
 from fastapi.responses import Response
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -313,3 +314,92 @@ async def cash_payment(
         status_code=upstream.status_code,
         media_type=upstream.headers.get("content-type", "application/json"),
     )
+
+
+class AttendeeRow(BaseModel):
+    regId: Optional[str] = None
+    nickname: Optional[str] = None
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    fullName: Optional[str] = None
+    email: Optional[str] = None
+    idpId: Optional[str] = None
+    item: Optional[str] = None
+
+
+class AttendeeLookupRequest(BaseModel):
+    rows: list[AttendeeRow]
+
+
+@app.post("/api/attendee-lookup")
+async def attendee_lookup(
+    request: AttendeeLookupRequest,
+    claims: Annotated[dict, Security(verify_admin)],
+    JWT: Annotated[str | None, Cookie()] = None,
+    AUTH: Annotated[str | None, Cookie()] = None,
+) -> dict:
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            f"{_attendee_service_url}/api/rest/v1/attendees/find",
+            json={
+                "match_any": [{"nickname": "*"}],
+                "fill_fields": ["id", "nickname", "first_name", "last_name", "email", "identity_subject"],
+            },
+            headers=_proxy_headers(JWT, AUTH),
+        )
+    _check_upstream(resp)
+    attendees = resp.json().get("attendees") or []
+
+    by_reg = {str(a["id"]): a for a in attendees if a.get("id") is not None}
+    by_nickname = {(a.get("nickname") or "").strip().lower(): a for a in attendees if a.get("nickname")}
+    by_email = {(a.get("email") or "").strip().lower(): a for a in attendees if a.get("email")}
+    by_idp = {a["identity_subject"]: a for a in attendees if a.get("identity_subject")}
+    by_name: dict[tuple[str, str], dict] = {}
+    for a in attendees:
+        fn = (a.get("first_name") or "").strip().lower()
+        ln = (a.get("last_name") or "").strip().lower()
+        if fn and ln:
+            by_name[(fn, ln)] = a
+
+    results = []
+    for row in request.rows:
+        matched = None
+
+        if not matched and row.regId and row.regId.strip():
+            matched = by_reg.get(row.regId.strip())
+
+        if not matched and row.idpId and row.idpId.strip():
+            matched = by_idp.get(row.idpId.strip())
+
+        if not matched and row.email and row.email.strip():
+            matched = by_email.get(row.email.strip().lower())
+
+        if not matched and row.nickname and row.nickname.strip():
+            matched = by_nickname.get(row.nickname.strip().lower())
+
+        if not matched and row.firstName and row.lastName:
+            matched = by_name.get((row.firstName.strip().lower(), row.lastName.strip().lower()))
+
+        if not matched and row.fullName and row.fullName.strip():
+            parts = row.fullName.strip().split(None, 1)
+            if len(parts) == 2:
+                matched = by_name.get((parts[0].lower(), parts[1].lower()))
+
+        results.append({
+            "id": matched["id"] if matched else None,
+            "nickname": matched.get("nickname") if matched else None,
+            "item": row.item,
+            "found": matched is not None,
+            "input": {
+                "regId": row.regId,
+                "nickname": row.nickname,
+                "firstName": row.firstName,
+                "lastName": row.lastName,
+                "fullName": row.fullName,
+                "email": row.email,
+                "idpId": row.idpId,
+                "item": row.item,
+            },
+        })
+
+    return {"results": results}
