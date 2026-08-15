@@ -36,6 +36,7 @@ export const enum ShortcutKey {
   key_s = "s",
   key_a = "a",
   key_q = "q",
+  key_c = "c",
 }
 
 function getSimpleKeyMatchFunction(triggerKey: string) {
@@ -50,6 +51,7 @@ const keyMatchMap = new Map<ShortcutKey, KeyMatchFunction>([
   [ShortcutKey.key_s, getSimpleKeyMatchFunction("s")],
   [ShortcutKey.key_a, getSimpleKeyMatchFunction("a")],
   [ShortcutKey.key_q, getSimpleKeyMatchFunction("q")],
+  [ShortcutKey.key_c, getSimpleKeyMatchFunction("c")],
 ]);
 
 export interface KeyboardServiceEvent {
@@ -83,7 +85,7 @@ function registerShortcuts(
   triggerKey: ShortcutKey,
   handler: KeyboardServiceCallback,
   withModifier = false
-): void {
+): () => void {
   const matchFunction: KeyMatchFunction | undefined =
     keyMatchMap.get(triggerKey);
   if (matchFunction === undefined) {
@@ -126,10 +128,21 @@ function registerShortcuts(
     }
     setupKeyEvents(event, matchFunction, triggerOnKeyEvent, withModifier);
   }
-  shortcutHandlers.get(lookupKey)!.push({
+  const storedHandlerInfo: StoredKeyboardServiceCallback = {
     handler: handler,
     registeredScope: scope,
-  });
+  };
+  shortcutHandlers.get(lookupKey)!.push(storedHandlerInfo);
+  return () => {
+    const lookupKey = getShortcutLookupKey(event, triggerKey, withModifier);
+    const storedHandlerList: StoredKeyboardServiceCallback[] | undefined =
+      shortcutHandlers.get(lookupKey);
+    if (!storedHandlerList) return;
+    const index = storedHandlerList.indexOf(storedHandlerInfo);
+    if (index !== -1) {
+      storedHandlerList.splice(index, 1);
+    }
+  };
 }
 
 let shortCutScopeStackRef: Ref<ShortcutScope[]> = ref([]);

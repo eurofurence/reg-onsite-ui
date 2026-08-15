@@ -1,0 +1,13 @@
+{
+  "JWT_PUBLIC_KEYS": "[]",
+  "JWT_AUDIENCE": "",
+  "JWT_ISSUER": "https://identity.eurofurence.org/",
+  "ADMIN_GROUP": "",
+  "IDP_URL": "https://identity.eurofurence.org",
+  "IDP_CLIENT_ID": "",
+  "IDP_CLIENT_SECRET": "",
+  "PAYMENT_SERVICE_URL": "http://payment-service:8080",
+  "ATTENDEE_SERVICE_URL": "http://attendee-service:8080",
+  "SUMUP_ACCESS_TOKEN": "",
+  "SUMUP_MERCHANT_CODE": ""
+}

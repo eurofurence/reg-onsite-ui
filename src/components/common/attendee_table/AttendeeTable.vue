@@ -47,7 +47,7 @@
         :field="columnDefinition.value"
         :header="columnDefinition.label"
         :columnKey="columnDefinition.value"
-        :sortField="columnDefinition.value"
+        :sortField="columnDefinition.sortFieldOverride ?? columnDefinition.value"
         :filterField="columnDefinition.value"
         :dataType="columnDefinition.dataType"
         :showFilterMenu="showFilterMenu(columnDefinition)"
@@ -100,6 +100,15 @@
               :autoCompleteField="columnDefinition.value"
               placeholder="Search"
             />
+            <SearchFieldAttendance
+              v-else-if="columnDefinition.columnType === ColumnType.attendance"
+              v-model="
+                dataOptionsRef.filterConfig.filterValues[columnDefinition.value as AllFilterFieldValues]
+                  .value
+              "
+              :columnDefinition="columnDefinition"
+              :configItems="columnDefinition.configItems"
+            />
           </div>
         </template>
         <template #body="{ data }">
@@ -130,6 +139,11 @@
               :modelValue="data[columnDefinition.value]"
               :maxLength="columnDefinition.maxLength"
             />
+            <ColumnAttendance
+              v-else-if="columnDefinition.columnType === ColumnType.attendance"
+              :modelValue="data[columnDefinition.value]"
+              :configItems="columnDefinition.configItems"
+            />
           </span>
         </template>
       </Column>
@@ -138,11 +152,13 @@
 </template>
 
 <script setup lang="ts">
+import ColumnAttendance from "@/components/common/attendee_table/ColumnAttendance.vue";
 import ColumnBirthday from "@/components/common/attendee_table/ColumnBirthday.vue";
 import ColumnCheckin from "@/components/common/attendee_table/ColumnCheckin.vue";
 import ColumnCountry from "@/components/common/attendee_table/ColumnCountry.vue";
 import ColumnDues from "@/components/common/attendee_table/ColumnDues.vue";
 import ColumnStandard from "@/components/common/attendee_table/ColumnStandard.vue";
+import SearchFieldAttendance from "@/components/common/attendee_table/SearchFieldAttendance.vue";
 import SearchFieldBirthday from "@/components/common/attendee_table/SearchFieldBirthday.vue";
 import SearchFieldCountry from "@/components/common/attendee_table/SearchFieldCountry.vue";
 import SearchFieldStandard from "@/components/common/attendee_table/SearchFieldStandard.vue";

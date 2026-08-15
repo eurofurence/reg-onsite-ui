@@ -10,7 +10,7 @@ import { putShippingAddInfo } from "@/composables/api/attsrv/additional-info/put
 import { putSponsorDeskAddInfo } from "@/composables/api/attsrv/additional-info/putSponsorDeskAddInfo";
 import { getAttendeeStatusHistory } from "@/composables/api/attsrv/attendees/getAttendeeStatusHistory";
 import { getOwnRegs } from "@/composables/api/attsrv/attendees/getOwnRegs";
-import { putCashPaymentForAttendee } from "@/composables/api/attsrv/attendees/putCashPaymentForAttendee";
+import { postInitPaymentForAttendee } from "@/composables/api/attsrv/attendees/postInitPaymentForAttendee";
 import { checkinAttendee } from "@/composables/services/attendee/checkinAttendee";
 import { debugSetStatusToPaid } from "@/composables/services/attendee/debugSetStatusToPaid";
 import { getAllAttendeesTrans } from "@/composables/services/attendee/getAllAttendeesTrans";
@@ -23,7 +23,7 @@ interface AttendeeService {
   getAttendees: typeof getAttendeesTrans;
   getAllAttendees: typeof getAllAttendeesTrans;
   checkinAttendee: typeof checkinAttendee;
-  putCashPaymentForAttendee: typeof putCashPaymentForAttendee;
+  postInitPaymentForAttendee: typeof postInitPaymentForAttendee;
   getAttendeeStatusHistory: typeof getAttendeeStatusHistory;
   debugSetStatusToPaid: typeof debugSetStatusToPaid;
 
@@ -50,7 +50,7 @@ export const attendeeService: AttendeeService = {
   getAttendees: getAttendeesTrans,
   getAllAttendees: getAllAttendeesTrans,
   checkinAttendee: checkinAttendee,
-  putCashPaymentForAttendee: putCashPaymentForAttendee,
+  postInitPaymentForAttendee: postInitPaymentForAttendee,
   getAttendeeStatusHistory: getAttendeeStatusHistory,
   debugSetStatusToPaid: debugSetStatusToPaid,
 

@@ -3,21 +3,22 @@ import AutoComplete from '@/volt/AutoComplete.vue'
 import Button from '@/volt/Button.vue'
 import Select from '@/volt/Select.vue'
 import { computed, ref, watch } from 'vue'
-import { localBadgeMappingStore } from '@/composables/services/badgeMappingStore'
-import { badgeTypesRef } from '@/composables/services/badgeTypeStore'
+import type { RestErrorHandler } from '@/composables/api/base/restErrorWrapper'
+import { badgeMappingRef, badgeTypesRef, saveBadgeConfig } from '@/composables/services/badgeConfigStore'
 import { getValidBadgeMappingFlags, getValidBadgeMappingPackages } from '@/composables/badge/getValidBadgeMappingValues'
 import { NO_FLAG, mappingKey } from '@/types/badgeMapping'
-import type { BadgeMapping } from '@/types/badgeMapping'
 import type { AutoCompleteCompleteEvent } from 'primevue/autocomplete'
 
-const mapping = ref<BadgeMapping>(localBadgeMappingStore.load())
+const props = defineProps<{ errorHandler: RestErrorHandler }>()
+
+const mapping = badgeMappingRef
 const newPackageValue = ref('')
 const newFlagValue = ref('')
 const packageSuggestions = ref<string[]>([])
 const flagSuggestions = ref<string[]>([])
 
-watch(mapping, (value) => {
-  localBadgeMappingStore.save(value)
+watch(mapping, () => {
+  saveBadgeConfig(props.errorHandler)
 }, { deep: true })
 
 const validPackages = getValidBadgeMappingPackages()
@@ -38,7 +39,7 @@ function addFlag() {
   if (!parts.length) return
   const combined = parts.sort((a, b) => a.localeCompare(b)).join(',')
   if (mapping.value.flags.includes(combined)) return
-  if (parts.length > 1 && !parts.every(p => validFlags.includes(p))) return
+  if (!parts.every(p => validFlags.includes(p))) return
   mapping.value.flags.push(combined)
   newFlagValue.value = ''
 }
@@ -85,8 +86,6 @@ function setRule(packageValue: string, flagValue: string, badgeTypeId: string) {
 
 <template>
   <div class="flex flex-col gap-6 p-8">
-    <h1 class="text-lg font-semibold text-slate-800">Badge Mapping</h1>
-
     <div class="flex gap-6">
       <div class="flex items-center gap-2">
         <AutoComplete

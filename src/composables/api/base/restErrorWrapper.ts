@@ -21,16 +21,11 @@ export async function restErrorWrapper<Type>(
     // await response.body.getReader().read()
     if (fetchResult.ok) {
       return fetchResult.data as Type;
-    } else if (fetchResult.status === 401) {
-      clearSessionState();
-      restErrorHandler(
-        parseRestError(serviceName, fetchResult.data as ApiError)
-      );
-    } else {
-      restErrorHandler(
-        parseRestError(serviceName, fetchResult.data as ApiError)
-      );
     }
+    if (fetchResult.status === 401) {
+      clearSessionState();
+    }
+    restErrorHandler(parseRestError(serviceName, fetchResult.data as ApiError));
   } catch (error: any) {
     restErrorHandler({
       serviceName: serviceName,

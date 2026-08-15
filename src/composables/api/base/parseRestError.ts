@@ -12,16 +12,22 @@ function ignoreDetails(_data: ApiError): null {
   return null;
 }
 
-function extractDetails(data: any): string {
-  try {
-    try {
-      return data.details.details[0];
-    } catch (error) {
-      return data.details;
+function extractDetails(data: ApiError): string {
+  const details = data.details;
+  if (typeof details === "object" && details !== null) {
+    const nested = details.details;
+    const nestedDetail: unknown = Array.isArray(nested) ? nested[0] : nested;
+    if (nestedDetail !== undefined) {
+      return String(nestedDetail);
     }
-  } catch (error) {
-    return data;
   }
+  if (typeof details === "string") {
+    return details;
+  }
+  if (details !== undefined) {
+    return JSON.stringify(details);
+  }
+  return JSON.stringify(data);
 }
 
 function extractDetailsDetailsItem(data: any): string {

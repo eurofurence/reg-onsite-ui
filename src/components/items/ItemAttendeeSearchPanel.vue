@@ -15,6 +15,7 @@
           icon="pi pi-search"
           label="Search"
         />
+        <slot name="actions" />
       </div>
       <div v-if="props.attendee">
         <SponsorDeskUserInfo v-model="attendeeModel" disabled />

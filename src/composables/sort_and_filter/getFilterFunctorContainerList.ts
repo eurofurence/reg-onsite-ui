@@ -1,4 +1,5 @@
 import { getBirthdayFilterString } from "@/composables/fields/birthday/getBirthdayFilterString";
+import { getMatcherListAgainstList } from "@/composables/filter/getMatcherListAgainstList";
 import { getMatcherNumberAgainstValue } from "@/composables/filter/getMatcherNumberAgainstValue";
 import { getMatcherStringAgainstList } from "@/composables/filter/getMatcherStringAgainstList";
 import { getMatcherStringAgainstValue } from "@/composables/filter/getMatcherStringAgainstValue";
@@ -10,6 +11,7 @@ import {
   FilterCmpType,
   type FilterCmpTypeValue,
   type FilterFieldValue,
+  type MatchListAgainstList,
   type MatchNumberAgainstValue,
   type MatchStringAgainstList,
   type MatchStringAgainstValue,
@@ -50,12 +52,12 @@ interface AddFilterInterface<Type extends TransformedAttendeeInfo> {
 
 function parseNumberFromDataTableFilterMetaData(
   filterMeta: DataTableFilterMetaData
-): number | null {
+): string | null {
   if (filterMeta.value === null || filterMeta.matchMode === undefined) {
     return null;
   }
-  const filterValue: number = parseInt(filterMeta.value);
-  if (isNaN(filterValue)) {
+  const filterValue: string = String(filterMeta.value).trim();
+  if (filterValue === "" || isNaN(Number(filterValue))) {
     return null;
   }
   return filterValue;
@@ -67,7 +69,7 @@ function addNumberValueFilter<Type extends TransformedAttendeeInfo>(
   isFromGlobal: boolean,
   filterMeta: DataTableFilterMetaData
 ): void {
-  const filterValue: number | null =
+  const filterValue: string | null =
     parseNumberFromDataTableFilterMetaData(filterMeta);
   if (filterValue === null) {
     return;
@@ -84,7 +86,7 @@ function addNumberValueFilter<Type extends TransformedAttendeeInfo>(
   };
   const entry: FilterFunctorContainer<Type> = {
     filterValue: filterValue,
-    matchModeString: filterMeta.matchMode as any,
+    matchModeString: filterMeta.matchMode ?? "",
     fieldGetFunction: closureFieldGetFunction,
     columnDefintion: param.columnDefintion,
     matchFunction: matchFunction,
@@ -129,7 +131,7 @@ function addValueFilter<Type extends TransformedAttendeeInfo>(
   };
   const entry: FilterFunctorContainer<Type> = {
     filterValue: filterValue,
-    matchModeString: filterMeta.matchMode as any,
+    matchModeString: filterMeta.matchMode ?? "",
     fieldGetFunction: closureFieldGetFunction,
     columnDefintion: param.columnDefintion,
     matchFunction: matchFunction,
@@ -162,7 +164,7 @@ function addCIValueFilter<Type extends TransformedAttendeeInfo>(
   };
   const entry: FilterFunctorContainer<Type> = {
     filterValue: filterValue,
-    matchModeString: filterMeta.matchMode as any,
+    matchModeString: filterMeta.matchMode ?? "",
     fieldGetFunction: closureFieldGetFunction,
     columnDefintion: param.columnDefintion,
     matchFunction: matchFunction,
@@ -207,7 +209,40 @@ function addListFilter<Type extends TransformedAttendeeInfo>(
   };
   const entry: FilterFunctorContainer<Type> = {
     filterValue: filterValue,
-    matchModeString: filterMeta.matchMode as any,
+    matchModeString: filterMeta.matchMode ?? "",
+    fieldGetFunction: closureFieldGetFunction,
+    columnDefintion: param.columnDefintion,
+    matchFunction: matchFunction,
+    isFromGlobal: isFromGlobal,
+  };
+  param.result.push(entry);
+}
+
+function addListVsListFilter<Type extends TransformedAttendeeInfo>(
+  param: AddFilterInterface<Type>,
+  fieldName: string,
+  isFromGlobal: boolean,
+  filterMeta: DataTableFilterMetaData
+): void {
+  const filterValue: string[] | null =
+    parseListFromDataTableFilterMetaData(filterMeta);
+  if (filterValue === null) {
+    return;
+  }
+  const closureMatchFunction: MatchListAgainstList =
+    getMatcherListAgainstList(filterMeta);
+  const closureFieldGetFunction: ValueGetter<Type> = getFieldGetFunction(
+    param.fieldResolvers,
+    fieldName
+  );
+  const matchFunction: PreparedMatchFunction<Type> = (item: Type): boolean => {
+    const dataValue: string[] = (item[fieldName as keyof Type] ||
+      []) as string[];
+    return closureMatchFunction(dataValue, filterValue);
+  };
+  const entry: FilterFunctorContainer<Type> = {
+    filterValue: filterValue,
+    matchModeString: filterMeta.matchMode ?? "",
     fieldGetFunction: closureFieldGetFunction,
     columnDefintion: param.columnDefintion,
     matchFunction: matchFunction,
@@ -274,6 +309,10 @@ export function getFilterFunctorContainerList<
     if (cmpType === FilterCmpType.str_vs_list) {
       // Normal string vs list comparison within one field
       addListFilter(params, fieldName, false, filter[filterKey]);
+    }
+    if (cmpType === FilterCmpType.list_vs_list) {
+      // List of data values vs list of selected filter values
+      addListVsListFilter(params, fieldName, false, filter[filterKey]);
     }
     /*
     Probably no use case for this...

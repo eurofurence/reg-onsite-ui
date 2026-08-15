@@ -1,12 +1,23 @@
+import { getCardFootprint } from '@/composables/print/cardFootprint'
+import type { CardRotationDeg } from '@/types/printSettings'
+
 function removeIframe(iframe: HTMLIFrameElement) {
   if (iframe.parentNode) {
     iframe.parentNode.removeChild(iframe)
   }
 }
 
+// SVGs loaded as an <img> resource render in a restricted "image mode" in
+// some browsers, where nested resources (e.g. a background <image> with a
+// data: href) inside the SVG can fail to render even though the SVG file
+// opened directly, or the same markup inserted inline into the DOM, is
+// fine. Inlining the raw <svg> markup avoids that mode entirely.
 function waitForImages(frameDocument: Document): Promise<void> {
-  const images = Array.from(frameDocument.images)
-  const pending = images.filter((image) => !image.complete)
+  const images = Array.from(frameDocument.querySelectorAll('svg image'))
+  const pending = images.filter((image) => {
+    const href = image.getAttribute('href')
+    return href != null && href !== ''
+  })
   if (pending.length === 0) {
     return Promise.resolve()
   }
@@ -26,12 +37,19 @@ function waitForImages(frameDocument: Document): Promise<void> {
 }
 
 export async function printBadgePages(
-  pages: string[],
+  pageSvgs: string[],
   pageSizeCss: string,
   pageWidthMm: number,
   pageHeightMm: number,
+  cardXMm: number,
+  cardYMm: number,
+  cardWidthMm: number,
+  cardHeightMm: number,
+  cardRotationDeg: CardRotationDeg,
+  backSideRotated180 = false,
+  cardBorderRadiusMm = 0,
 ): Promise<void> {
-  if (pages.length === 0) {
+  if (pageSvgs.length === 0) {
     return
   }
 
@@ -43,17 +61,25 @@ export async function printBadgePages(
   iframe.style.visibility = 'hidden'
   document.body.appendChild(iframe)
 
-  const pagesHtml = pages
-    .map((pageHtml, index) => {
-      const breakStyle = index < pages.length - 1 ? 'page-break-after:always;break-after:page;' : ''
-      return `<div style="width:${pageWidthMm}mm;height:${pageHeightMm}mm;overflow:hidden;display:flex;align-items:center;justify-content:center;${breakStyle}">${pageHtml}</div>`
+  const { imgLeftMm, imgTopMm } = getCardFootprint(cardXMm, cardYMm, cardWidthMm, cardHeightMm, cardRotationDeg)
+  const clipStyle = cardBorderRadiusMm > 0 ? `clip-path:inset(0 round ${cardBorderRadiusMm}mm);` : ''
+
+  const pagesHtml = pageSvgs
+    .map((svg, index) => {
+      const breakStyle = index < pageSvgs.length - 1 ? 'page-break-after:always;break-after:page;' : ''
+      const isBackSide = backSideRotated180 && index % 2 === 1
+      const rotations = [cardRotationDeg !== 0 ? `rotate(${cardRotationDeg}deg)` : '', isBackSide ? 'rotate(180deg)' : ''].filter(Boolean)
+      const rotateStyle = rotations.length > 0 ? `transform:${rotations.join(' ')};` : ''
+      const svgWrapperStyle = `position:absolute;left:${imgLeftMm}mm;top:${imgTopMm}mm;width:${cardWidthMm}mm;height:${cardHeightMm}mm;${rotateStyle}${clipStyle}`
+      const inlineSvg = svg.replace('<svg ', `<svg style="width:100%;height:100%;display:block;" `)
+      return `<div style="position:relative;width:${pageWidthMm}mm;height:${pageHeightMm}mm;overflow:hidden;${breakStyle}"><div style="${svgWrapperStyle}">${inlineSvg}</div></div>`
     })
     .join('\n')
 
   const frameDocument = iframe.contentDocument
   if (!frameDocument) {
     removeIframe(iframe)
-    return
+    throw new Error('Print failed: could not access print frame document')
   }
 
   frameDocument.open()
@@ -75,11 +101,18 @@ export async function printBadgePages(
   const printWindow = iframe.contentWindow
   if (!printWindow) {
     removeIframe(iframe)
-    return
+    throw new Error('Print failed: could not access print frame window')
   }
 
-  printWindow.addEventListener('afterprint', () => removeIframe(iframe))
-  setTimeout(() => removeIframe(iframe), 60_000)
+  let cleanedUp = false
+  const cleanup = () => {
+    if (cleanedUp) return
+    cleanedUp = true
+    clearTimeout(fallbackTimeoutId)
+    removeIframe(iframe)
+  }
+  printWindow.addEventListener('afterprint', cleanup)
+  const fallbackTimeoutId = setTimeout(cleanup, 60_000)
 
   frameDocument.fonts.forEach(face => { void face.load() })
   await Promise.all([waitForImages(frameDocument), frameDocument.fonts.ready])

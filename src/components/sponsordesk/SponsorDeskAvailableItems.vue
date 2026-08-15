@@ -6,7 +6,7 @@
     </div>
     <GoodieTreeTable
       :nodes="nodesRef"
-      :columns="statsColumns"
+      :columns="columns"
       showCheckboxes
       v-model:selectedItems="availableItemsRef"
     />
@@ -14,21 +14,17 @@
 </template>
 
 <script setup lang="ts">
-import GoodieTreeTable from "@/components/items/GoodieTreeTable.vue";
+import GoodieTreeTable, { type ColumnDef } from "@/components/items/GoodieTreeTable.vue";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
 import { generateId } from "@/composables/generateId";
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import { getConcreteVariantItemValue } from "@/composables/items/getConcreteVariantItemValue";
-import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
-import { getEmptySponsorDeskAddInfo } from "@/composables/services/attendee/getEmptySponsorDeskAddInfo";
+import { accumulateItemCounts, type ItemCounts } from "@/composables/items/buildItemTreeNodes";
+import { getSponsorDeskConfigCounts } from "@/composables/items/getSponsorDeskConfigCounts";
 import { attendeeService } from "@/composables/services/attendeeService";
 import { OnsiteToastService } from "@/composables/services/toastService";
 import type { ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
-import type { ApiAllAddInfo } from "@/types/external/attsrv/additional-info/common";
-import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
-import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
-import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { GoodieTreeNode } from "@/types/internal/goodies";
 import type { LabeledValue } from "@/types/internal/infos";
 import ProgressBar from "@/volt/ProgressBar.vue";
@@ -36,71 +32,40 @@ import Toast from "@/volt/Toast.vue";
 import type { ModelRef } from "vue";
 import { onMounted, ref, useId, type Ref } from "vue";
 
-const statsColumns = [
-  { field: "issuedCount", header: "Issued (all)" },
-  { field: "reservedIssuedCount", header: "Issued (reserved)" },
-  { field: "reservedCount", header: "Reserved" },
-  { field: "plannedCount", header: "Planned" },
-];
-
 const isLoadingSponsorStats = ref(false);
 
-interface SponsorStats {
-  rawData: ApiAllAddInfo<ApiSponsorDeskAddInfo>;
-  allServedAttendees: RegNumber[];
-  allIssuedItems: string[];
-  allPastItems: string[];
-  allReservedItems: string[];
-  allOwedItems: string[];
-}
-
-const sponsorStatsRef: Ref<SponsorStats | null> = ref<SponsorStats | null>(null);
-
-function compileStats(
-  allSponsorInfo: ApiAllAddInfo<ApiSponsorDeskAddInfo>,
-  allAttendes: TransformedAttendeeInfo[]
-): SponsorStats {
-  const emptySponsorInfo: ApiSponsorDeskAddInfo = getEmptySponsorDeskAddInfo();
-  const allSponsorValues: ApiSponsorDeskAddInfo[] = Array.from(allSponsorInfo.infos.values());
-  return {
-    rawData: allSponsorInfo,
-    allServedAttendees: Array.from(allSponsorInfo.infos.keys()),
-    allIssuedItems: allSponsorValues.flatMap((entry: ApiSponsorDeskAddInfo) => entry.issuedItems),
-    allPastItems: allSponsorValues.flatMap((entry: ApiSponsorDeskAddInfo) => entry.pastItems),
-    allReservedItems: allSponsorValues.flatMap((entry: ApiSponsorDeskAddInfo) => entry.reservedItems),
-    allOwedItems: allAttendes.flatMap((attendee: TransformedAttendeeInfo) => {
-      const sponsorInfo: ApiSponsorDeskAddInfo =
-        attendee.id === null ? emptySponsorInfo : allSponsorInfo.infos.get(attendee.id) || emptySponsorInfo;
-      return getOwedConcreteItems(attendee, sponsorInfo);
-    }),
-  };
-}
+const itemCountsRef: Ref<ItemCounts | null> = ref<ItemCounts | null>(null);
 
 onMounted(async () => {
   isLoadingSponsorStats.value = true;
   const errorHandler: RestErrorHandler = getErrorHandlerFunction(toastService);
-  const allSponsorDeskAddInfos: ApiAllAddInfo<ApiSponsorDeskAddInfo> | undefined =
-    await attendeeService.addInfos.getAllSponsorDeskAddInfos(errorHandler);
-  const allAttendes: TransformedAttendeeInfo[] =
-    (await attendeeService.getAllAttendees(errorHandler)) || [];
+  const [allSponsorDeskAddInfos, allAttendes, configCounts] = await Promise.all([
+    attendeeService.addInfos.getAllSponsorDeskAddInfos(errorHandler),
+    attendeeService.getAllAttendees(errorHandler),
+    getSponsorDeskConfigCounts(errorHandler),
+  ]);
   if (allSponsorDeskAddInfos !== undefined) {
-    sponsorStatsRef.value = compileStats(allSponsorDeskAddInfos, allAttendes);
+    itemCountsRef.value = accumulateItemCounts(
+      allSponsorDeskAddInfos.infos,
+      allAttendes ?? [],
+      configCounts.soldCount,
+      configCounts.inventoryCount
+    );
   }
   nodesRef.value = getGoodieTree(props.allGoodieItems);
   isLoadingSponsorStats.value = false;
 });
 
 function lookupStats(node: GoodieTreeNode): GoodieTreeNode {
-  function filterIssuedReserved(item: ApiSponsorDeskAddInfo) {
-    if (item.issuedItems === undefined || item.reservedItems === undefined) return false;
-    return item.issuedItems.includes(node.key) && item.reservedItems.includes(node.key);
-  }
-  if (sponsorStatsRef.value !== null) {
-    node.data.issuedCount = sponsorStatsRef.value.allIssuedItems.filter((key: string) => key == node.key).length;
-    node.data.reservedCount = sponsorStatsRef.value.allReservedItems.filter((key: string) => key == node.key).length;
-    node.data.reservedIssuedCount = Array.from(sponsorStatsRef.value.rawData.infos.values()).filter(filterIssuedReserved).length;
-    const allPlannedItems = [sponsorStatsRef.value.allPastItems, sponsorStatsRef.value.allOwedItems].flat();
-    node.data.plannedCount = allPlannedItems.filter((key: string) => key == node.key).length;
+  if (itemCountsRef.value !== null) {
+    const counts = itemCountsRef.value;
+    node.data.issuedCount = counts.issuedCount[node.key] ?? 0;
+    node.data.reservedCount = counts.reservedCount[node.key] ?? 0;
+    node.data.entitledCount = counts.entitledCount[node.key] ?? 0;
+    node.data.soldCount = counts.soldCount[node.key] ?? 0;
+    node.data.inventoryCount = counts.inventoryCount[node.key] ?? 0;
+    node.data.neededReserveCount = counts.neededReserveCount[node.key] ?? 0;
+    node.data.freeToSellCount = Math.max(0, node.data.inventoryCount - node.data.soldCount - (counts.heldCount[node.key] ?? 0));
   }
   return node;
 }
@@ -125,8 +90,11 @@ function getGoodieNode(goodieConfig: GoodieConfig): GoodieTreeNode {
       ...goodieConfig,
       issuedCount: sumStats((entry: GoodieTreeNode) => entry.data.issuedCount || 0),
       reservedCount: sumStats((entry: GoodieTreeNode) => entry.data.reservedCount || 0),
-      reservedIssuedCount: sumStats((entry: GoodieTreeNode) => entry.data.reservedIssuedCount || 0),
-      plannedCount: sumStats((entry: GoodieTreeNode) => entry.data.plannedCount || 0),
+      entitledCount: sumStats((entry: GoodieTreeNode) => entry.data.entitledCount || 0),
+      soldCount: sumStats((entry: GoodieTreeNode) => entry.data.soldCount || 0),
+      inventoryCount: sumStats((entry: GoodieTreeNode) => entry.data.inventoryCount || 0),
+      neededReserveCount: sumStats((entry: GoodieTreeNode) => entry.data.neededReserveCount || 0),
+      freeToSellCount: sumStats((entry: GoodieTreeNode) => entry.data.freeToSellCount || 0),
     },
     children: variantChildren,
   };
@@ -142,4 +110,14 @@ const availableItemsRef: ModelRef<ConcreteGoodieValue[]> = defineModel<ConcreteG
 const nodesRef: Ref<GoodieTreeNode[]> = ref<GoodieTreeNode[]>(getGoodieTree(props.allGoodieItems));
 const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
+
+const columns: ColumnDef[] = [
+  { field: "issuedCount", header: "Issued" },
+  { field: "reservedCount", header: "Reserved" },
+  { field: "entitledCount", header: "Entitled" },
+  { field: "soldCount", header: "Sold" },
+  { field: "inventoryCount", header: "Inventory" },
+  { field: "neededReserveCount", header: "Needed Reserve" },
+  { field: "freeToSellCount", header: "Free to Sell" },
+];
 </script>

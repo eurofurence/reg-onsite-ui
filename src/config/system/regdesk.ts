@@ -1,5 +1,7 @@
 import { deepCopy } from "@/composables/deepCopy";
+import { IN_OR_EMPTY_MATCH_MODE } from "@/composables/filter/getMatcherListAgainstList";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import { getAttendanceConfigItems } from "@/composables/fields/packages/getValues";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 import type { DurationInMS } from "@/types/internal/common";
 import {
@@ -14,14 +16,24 @@ import type { LabeledValue } from "@/types/internal/infos";
 import {
   AttendeeQueryStrategy,
   CheckinDisplay,
+  QuickDeskSearchMode,
   type AttendeeDataOptions,
   type AttendeeQueryStrategyValue,
   type AttendeeTableDisplayOptions,
   type CheckinDisplayValue,
+  type QuickDeskSettings,
 } from "@/types/internal/system/regdesk";
 import type { FontSize } from "@/types/internal/system/theme";
 import { FilterMatchMode } from "@primevue/core/api";
 import type { DataTableFilterMetaData } from "primevue/datatable";
+
+export const defaultQuickDeskSettings: QuickDeskSettings = {
+  searchMode: QuickDeskSearchMode.regId,
+  displayBigNumber: {
+    enabled: false,
+    size: 8 as FontSize,
+  },
+};
 
 export const defaultAttendeeTableDisplayOptions: AttendeeTableDisplayOptions = {
   displayRowsPerPage: 10,
@@ -153,6 +165,7 @@ export const setupColumnDefinitionList: ColumnDefinition[] = [
     label: "Nationality",
     sortEnabled: true,
     columnType: ColumnType.country,
+    sortFieldOverride: "transCountryName",
     filterConfig: {
       canBeGlobalFilter: false,
       canChangeMatcher: false,
@@ -234,6 +247,20 @@ export const setupColumnDefinitionList: ColumnDefinition[] = [
     },
   },
   {
+    value: "transDayAttendance",
+    label: "Attendance",
+    columnType: ColumnType.attendance,
+    configItems: getAttendanceConfigItems(),
+    sortEnabled: true,
+    filterConfig: {
+      canBeGlobalFilter: false,
+      canChangeMatcher: false,
+      cmpType: FilterCmpType.list_vs_list,
+      isPersistent: true,
+      isSufficientForQuery: false,
+    },
+  },
+  {
     value: "transCanCheckin",
     label: "Checkin",
     columnType: ColumnType.checkin,
@@ -262,6 +289,14 @@ const filterListMetadata: DataTableFilterMetaData = {
   matchMode: FilterMatchMode.IN,
 };
 
+// transDayAttendance is empty (rather than containing a value) for
+// attendees with no attendance package, so it needs the "empty also
+// matches" variant to support filtering on that bucket.
+const filterDayAttendanceMetadata: DataTableFilterMetaData = {
+  value: [],
+  matchMode: IN_OR_EMPTY_MATCH_MODE,
+};
+
 export function getDefaultAttendeeFilterValues(): RawAttendeeFilter {
   return deepCopy({
     global: filterMetadata,
@@ -277,6 +312,7 @@ export function getDefaultAttendeeFilterValues(): RawAttendeeFilter {
     transConRole: filterListMetadata,
     transCanCheckin: filterMetadata,
     transFullName: filterMetadata,
+    transDayAttendance: filterDayAttendanceMetadata,
     current_dues: filterMetadata,
   });
 }
@@ -289,6 +325,24 @@ export function getDefaultPresetFilterValues(): RawAttendeeFilter {
         AttendeeApiStatus.approved,
         AttendeeApiStatus.partially_paid,
         AttendeeApiStatus.paid,
+      ],
+      matchMode: FilterMatchMode.IN,
+    },
+  });
+}
+
+export function getDefaultCashierPresetFilterValues(): RawAttendeeFilter {
+  return deepCopy({
+    ...getDefaultAttendeeFilterValues(),
+    status: {
+      value: [
+        AttendeeApiStatus.new,
+        AttendeeApiStatus.approved,
+        AttendeeApiStatus.partially_paid,
+        AttendeeApiStatus.paid,
+        AttendeeApiStatus.checked_in,
+        AttendeeApiStatus.cancelled,
+        AttendeeApiStatus.deleted,
       ],
       matchMode: FilterMatchMode.IN,
     },

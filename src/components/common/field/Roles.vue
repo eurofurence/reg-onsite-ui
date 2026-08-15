@@ -2,19 +2,20 @@
   <div class="role-field" :class="fieldCSS">
     <label :for="componentId" :class="fieldLabelCSS">Roles</label>
     <div class="flex flex-rows gap-1" :id="componentId">
-      <div
-        v-if="modelValue"
-        v-for="item of getConRoleMetadataEntriesExclusive(modelValue, regNumber)"
-        :key="item.value"
-      >
-        <Chip
-          :class="fieldTextCSS"
-          class="h-12 text-white"
-          :pt:root:style:background="resolveColorEntry(item)"
-          :label="item.label"
-          v-bind="$attrs"
-        />
-      </div>
+      <template v-if="modelValue">
+        <div
+          v-for="item of getConRoleMetadataEntriesExclusive(modelValue, regNumber)"
+          :key="item.value"
+        >
+          <Chip
+            :class="fieldTextCSS"
+            class="h-12 text-white"
+            :pt:root:style:background="resolveColorEntry(item)"
+            :label="item.label"
+            v-bind="$attrs"
+          />
+        </div>
+      </template>
     </div>
   </div>
 </template>

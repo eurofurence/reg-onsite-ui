@@ -52,6 +52,12 @@ function getAttendeeGoodies<Type extends TransformedAttendeeInfo>(
   );
 }
 
+function getAttendeeDayAttendance<Type extends TransformedAttendeeInfo>(
+  attendee: Type
+): string {
+  return (attendee.transDayAttendance || []).join(", ");
+}
+
 type AllowedFieldsWithType<Obj, Type> = {
   [K in keyof Obj]: Obj[K] extends Type ? K : never;
 };
@@ -68,12 +74,6 @@ function getAttendeeNumberFun<Type extends TransformedAttendeeInfo>(
   return (attendee: Type) => Number(attendee[fieldName]) || 0;
 }
 
-function getAttendeeBooleanFun<Type extends TransformedAttendeeInfo>(
-  fieldName: keyof AllowedFieldsWithType<Type, string>
-): ValueGetter<Type> {
-  return (attendee: Type) => Number(attendee[fieldName]) || 0;
-}
-
 export function getFieldGetters(): Record<
   keyof TransformedAttendeeInfo,
   ValueGetter<TransformedAttendeeInfo>
@@ -83,11 +83,12 @@ export function getFieldGetters(): Record<
     transId: getAttendeeStringFun("transId"),
     badge_id: getAttendeeStringFun("badge_id"),
     transAge: getAttendeeNumberFun("transAge"),
-    country: getAttendeeCountry,
+    country: getAttendeeStringFun("country"),
     transCountryName: getAttendeeCountry,
-    transCanCheckin: getAttendeeBooleanFun("transCanCheckin"),
+    transCanCheckin: getAttendeeNumberFun("transCanCheckin"),
     transConbookChoice: getAttendeeConbook,
     transGoodieChoice: getAttendeeGoodies,
+    transDayAttendance: getAttendeeDayAttendance,
     transConRole: getAttendeeConRole,
     transSponsorChoice: getAttendeeSponsor,
     transBirthday: getAttendeeStringFun("transBirthday"),

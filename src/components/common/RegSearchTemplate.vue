@@ -8,10 +8,12 @@
     >
       <SplitterPanel :size="25">
         <div class="flex flex-col w-full">
-          <RegNumSearchPanel
-            :shortcutScopes="props.shortcutScopes"
-            @onSearchRegNumber="$emit('onSearchRegNumber', $event)"
-          />
+          <slot name="leftPanel">
+            <RegNumSearchPanel
+              :shortcutScopes="props.shortcutScopes"
+              @onSearchRegNumber="$emit('onSearchRegNumber', $event)"
+            />
+          </slot>
           <KeyboardShortcutsMessage>
             <template v-if="$slots.help">
               <slot name="help" />
@@ -21,22 +23,22 @@
       </SplitterPanel>
       <SplitterPanel :size="75">
         <div class="flex flex-col w-full">
-          <GroupPanel icon="pi-user" label="User Details">
-            <div class="flex flex-col gap-1 w-full">
+          <GroupPanel icon="pi-user" label="User Details" class="flex flex-col flex-grow">
+            <div class="flex flex-col flex-grow gap-1 w-full">
               <slot />
             </div>
           </GroupPanel>
         </div>
       </SplitterPanel>
     </Splitter>
-    <div v-else>
-      <div class="flex flex-col w-full">
+    <div class="flex flex-col w-full" v-else>
+      <slot name="leftPanel">
         <RegNumSearchPanel
           :shortcutScopes="props.shortcutScopes"
           @onSearchRegNumber="$emit('onSearchRegNumber', $event)"
         />
-        <slot />
-      </div>
+      </slot>
+      <slot />
     </div>
   </div>
 </template>

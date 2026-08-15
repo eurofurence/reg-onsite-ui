@@ -30,10 +30,17 @@ function isIdpMember(
 }
 
 export function clearSessionState(): void {
-  Object.assign(authState.value, defaultAuthState);
+  Object.assign(authState.value, {
+    ...defaultAuthState,
+    userGroups: [],
+    userRegNumList: [],
+  });
 }
 
 export function isInAnyGroup(...groupNameList: AuthGroupValue[]): boolean {
+  if (groupNameList.length === 0) {
+    return true;
+  }
   const groupIdListList: (IdpGroupId[] | undefined)[] = groupNameList.map(
     (groupName: AuthGroupValue) => getConventionSetup().auth[groupName]
   );

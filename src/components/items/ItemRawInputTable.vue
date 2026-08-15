@@ -7,57 +7,45 @@
       <span class="text-xs text-surface-400">{{ modelValue.length }} row(s)</span>
     </div>
 
-    <div
-      class="border border-surface-300 dark:border-surface-600 rounded-md overflow-auto max-h-64"
-    >
-      <table class="w-full text-sm">
-        <thead class="sticky top-0 bg-surface-100 dark:bg-surface-800 z-10">
-          <tr>
-            <th class="px-2 py-1 text-left font-medium text-xs w-24">Reg #</th>
-            <th class="px-2 py-1 text-left font-medium text-xs">Item Value</th>
-            <th class="px-2 py-1 text-left font-medium text-xs">Label</th>
-            <th class="w-7"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="modelValue.length === 0">
-            <td colspan="4" class="px-2 py-6 text-center text-surface-400 text-xs italic">
-        Use the Paste from Clipboard button above to import TSV data
-            </td>
-          </tr>
-          <tr
-            v-for="(row, idx) in modelValue"
-            :key="idx"
-            class="border-t border-surface-200 dark:border-surface-700 hover:bg-surface-50 dark:hover:bg-surface-800/50"
-          >
-            <td class="px-1 py-0.5">
-              <input
-                :value="row.regNum"
-                @input="updateRow(idx, 'regNum', ($event.target as HTMLInputElement).value)"
-                class="w-full bg-transparent border border-transparent focus:border-primary-400 rounded px-1 outline-none text-sm"
-                placeholder="12345"
-              />
-            </td>
-            <td class="px-1 py-0.5">
-              <input
-                :value="row.itemValue"
-                @input="updateRow(idx, 'itemValue', ($event.target as HTMLInputElement).value)"
-                class="w-full bg-transparent border border-transparent focus:border-primary-400 rounded px-1 outline-none font-mono text-xs"
-                placeholder="tshirt_2026_from_size"
-              />
-            </td>
-            <td class="px-2 py-0.5 text-surface-500 text-xs max-w-48 truncate">
-              {{ getLabel(row.itemValue) }}
-            </td>
-            <td class="px-1 py-0.5">
-              <button @click="removeRow(idx)" class="text-surface-400 hover:text-red-500 w-5 h-5 flex items-center justify-center">
-                <i class="pi pi-times text-xs" />
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <DataTable :value="modelValue" class="max-h-64" scrollable scrollHeight="16rem" size="small">
+      <template #empty>
+        <span class="text-surface-400 text-xs italic">Use the Paste from Clipboard button above to import TSV data</span>
+      </template>
+      <Column header="Reg #" style="width: 6rem">
+        <template #body="{ data, index }">
+          <InputText
+            :modelValue="data.regNum"
+            @update:modelValue="(value: string | undefined) => updateRow(index, 'regNum', value ?? '')"
+            placeholder="12345"
+            size="small"
+            class="w-full"
+          />
+        </template>
+      </Column>
+      <Column header="Item Value">
+        <template #body="{ data, index }">
+          <InputText
+            :modelValue="data.itemValue"
+            @update:modelValue="(value: string | undefined) => updateRow(index, 'itemValue', value ?? '')"
+            placeholder="tshirt_2026_from_size"
+            size="small"
+            class="w-full font-mono text-xs"
+          />
+        </template>
+      </Column>
+      <Column header="Label">
+        <template #body="{ data }">
+          <span class="text-surface-500 text-xs max-w-48 truncate block">{{ getLabel(data.itemValue) }}</span>
+        </template>
+      </Column>
+      <Column style="width: 3rem">
+        <template #body="{ index }">
+          <button @click="removeRow(index)" class="text-surface-400 hover:text-red-500 w-5 h-5 flex items-center justify-center">
+            <i class="pi pi-times text-xs" />
+          </button>
+        </template>
+      </Column>
+    </DataTable>
   </div>
 </template>
 
@@ -65,6 +53,9 @@
 import { getItemDisplayLabel } from "@/composables/items/getItemDisplayLabel";
 import type { ConcreteGoodieValue } from "@/config/convention";
 import Button from "@/volt/Button.vue";
+import DataTable from "@/volt/DataTable.vue";
+import InputText from "@/volt/InputText.vue";
+import { Column } from "primevue";
 
 export interface RawRow {
   regNum: string;

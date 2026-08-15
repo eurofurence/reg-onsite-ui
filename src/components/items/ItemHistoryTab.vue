@@ -36,10 +36,17 @@
         @refreshNeeded="refresh"
       />
     </template>
+
+    <ItemHistoryBackupRestore
+      v-if="!loading"
+      :toastService="toastService"
+      @refreshNeeded="refresh"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import ItemHistoryBackupRestore from "@/components/items/ItemHistoryBackupRestore.vue";
 import ItemHistoryRestore from "@/components/items/ItemHistoryRestore.vue";
 import ItemHistoryUndo from "@/components/items/ItemHistoryUndo.vue";
 import ItemHistoryWipe from "@/components/items/ItemHistoryWipe.vue";

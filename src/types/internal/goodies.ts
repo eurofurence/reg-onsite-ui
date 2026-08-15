@@ -23,13 +23,18 @@ interface GoodieConfigNode {
   variants?: LabeledValue<string>[] | null;
   issuedCount?: number;
   reservedCount?: number;
-  reservedIssuedCount?: number;
-  plannedCount?: number;
-  boughtCount?: number;
+  entitledCount?: number;
+  soldCount?: number;
+  inventoryCount?: number;
+  neededReserveCount?: number;
+  freeToSellCount?: number;
 }
 
 export interface GoodieTreeNode {
-  key: ConcreteGoodieValue;
+  // Leaf nodes use their real ConcreteGoodieValue; parent (goodie) nodes with
+  // children use a distinct "abstract:<value>" key so they never collide
+  // with a concrete leaf's key.
+  key: ConcreteGoodieValue | `abstract:${string}`;
   data: GoodieConfigNode;
   children?: GoodieTreeNode[];
 }

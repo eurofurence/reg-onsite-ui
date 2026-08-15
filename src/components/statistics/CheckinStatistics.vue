@@ -49,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import type { ApiAllAddInfo } from "@/types/external/attsrv/additional-info/common";
 import type { ApiRegDeskAddInfo } from "@/types/external/attsrv/additional-info/regdesk";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
@@ -56,6 +57,36 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import "chartjs-adapter-date-fns";
 import Chart from "primevue/chart";
 import { computed, type ModelRef } from "vue";
+
+const NO_PACKAGE_LEVEL = "no_package";
+
+const KNOWN_LEVEL_COLORS: Record<string, string> = {
+  [NO_PACKAGE_LEVEL]: "rgba(74, 222, 128, 0.7)",
+  contributor: "rgba(94, 234, 212, 0.7)",
+  sponsor: "rgba(250, 204, 21, 0.7)",
+  sponsor2: "rgba(192, 132, 252, 0.7)",
+};
+const FALLBACK_LEVEL_COLORS = [
+  "rgba(248, 113, 113, 0.7)",
+  "rgba(96, 165, 250, 0.7)",
+  "rgba(251, 146, 60, 0.7)",
+  "rgba(163, 230, 53, 0.7)",
+];
+
+function labelForLevel(level: string): string {
+  if (level === NO_PACKAGE_LEVEL) return "Regular";
+  const entry = getConventionSetup().metadata.forSponsorLevels.list.find(
+    (item) => item.value === level
+  );
+  return entry?.label ?? level;
+}
+
+function colorForLevel(level: string, fallbackIndex: number): string {
+  return (
+    KNOWN_LEVEL_COLORS[level] ??
+    FALLBACK_LEVEL_COLORS[fallbackIndex % FALLBACK_LEVEL_COLORS.length]!
+  );
+}
 
 interface Props {
   attendeeInfos: TransformedAttendeeInfo[];
@@ -171,60 +202,69 @@ const sponsorMap = computed(() => {
 
 function binCheckinsBySponsorLevel(
   binFn: (checkin_time: string) => string
-): Record<string, Record<string, number>> {
+): { bins: Record<string, Record<string, number>>; levels: string[] } {
   const bins: Record<string, Record<string, number>> = {};
+  const levels = new Set<string>();
   for (const [regNum, info] of modelValue.value.infos.entries()) {
     if (!info.checkin_time) continue;
     const bin = binFn(info.checkin_time);
-    const level = sponsorMap.value.get(regNum) ?? "no_package";
+    const level = sponsorMap.value.get(regNum) ?? NO_PACKAGE_LEVEL;
+    levels.add(level);
     if (!bins[bin]) bins[bin] = {};
     bins[bin][level] = (bins[bin][level] || 0) + 1;
   }
-  return bins;
+  return { bins, levels: [...levels].sort() };
 }
 
-const sponsorLevelDatasets = (_bins: Record<string, Record<string, number>>, sortedBins: string[], dataFn: (bin: string, level: string) => any) => [
-  { label: "Regular",       data: sortedBins.map((b) => dataFn(b, "no_package")),   backgroundColor: "rgba(74, 222, 128, 0.7)",  stack: "checkins" },
-  { label: "Contributor",   data: sortedBins.map((b) => dataFn(b, "contributor")),  backgroundColor: "rgba(94, 234, 212, 0.7)", stack: "checkins" },
-  { label: "Sponsor",       data: sortedBins.map((b) => dataFn(b, "sponsor")),      backgroundColor: "rgba(250, 204, 21, 0.7)",  stack: "checkins" },
-  { label: "Super-Sponsor", data: sortedBins.map((b) => dataFn(b, "sponsor2")),     backgroundColor: "rgba(192, 132, 252, 0.7)", stack: "checkins" },
-];
+const sponsorLevelDatasets = (levels: string[], sortedBins: string[], dataFn: (bin: string, level: string) => any) =>
+  levels.map((level, index) => ({
+    label: labelForLevel(level),
+    data: sortedBins.map((b) => dataFn(b, level)),
+    backgroundColor: colorForLevel(level, index),
+    stack: "checkins",
+  }));
 
 const sponsorLevelDaySeries = computed(() => {
-  const bins = binCheckinsBySponsorLevel((t) => t.substring(0, 10));
+  const { bins, levels } = binCheckinsBySponsorLevel((t) => t.substring(0, 10));
   const sortedBins = Object.keys(bins).sort();
   return {
     labels: sortedBins,
-    datasets: sponsorLevelDatasets(bins, sortedBins, (b, l) => bins[b]?.[l] || 0),
+    datasets: sponsorLevelDatasets(levels, sortedBins, (b, l) => bins[b]?.[l] || 0),
   };
 });
 
 const sponsorLevelHourSeries = computed(() => {
-  const bins = binCheckinsBySponsorLevel((t) => t.substring(0, 13) + ":00");
+  const { bins, levels } = binCheckinsBySponsorLevel((t) => t.substring(0, 13) + ":00");
   const sortedBins = Object.keys(bins).sort();
   return {
-    datasets: sponsorLevelDatasets(bins, sortedBins, (b, l) => ({ x: b, y: bins[b]?.[l] || 0 })),
+    datasets: sponsorLevelDatasets(levels, sortedBins, (b, l) => ({ x: b, y: bins[b]?.[l] || 0 })),
   };
 });
 
 const cumulativeSponsorSeries = computed(() => {
-  const bins = binCheckinsBySponsorLevel((t) => t.substring(0, 13) + ":00");
+  const { bins, levels } = binCheckinsBySponsorLevel((t) => t.substring(0, 13) + ":00");
   const sortedBins = Object.keys(bins).sort();
-  const running: Record<string, number> = { "no_package": 0, "contributor": 0, "sponsor": 0, "sponsor2": 0 };
-  const data: Record<string, { x: string; y: number }[]> = { "no_package": [], "contributor": [], "sponsor": [], "sponsor2": [] };
+  const running: Record<string, number> = {};
+  const data: Record<string, { x: string; y: number }[]> = {};
+  for (const level of levels) { running[level] = 0; data[level] = []; }
   for (const bin of sortedBins) {
-    for (const level of ["no_package", "contributor", "sponsor", "sponsor2"]) {
+    for (const level of levels) {
       running[level] = (running[level] ?? 0) + (bins[bin]?.[level] || 0);
       data[level]!.push({ x: bin, y: running[level]! });
     }
   }
   return {
-    datasets: [
-      { label: "Regular",       data: data["no_package"],   borderColor: "rgba(74, 222, 128, 1)",  backgroundColor: "rgba(74, 222, 128, 0.1)",  fill: true, tension: 0.1 },
-      { label: "Contributor",   data: data["contributor"],  borderColor: "rgba(94, 234, 212, 1)", backgroundColor: "rgba(94, 234, 212, 0.1)", fill: true, tension: 0.1 },
-      { label: "Sponsor",       data: data["sponsor"],      borderColor: "rgba(250, 204, 21, 1)",  backgroundColor: "rgba(250, 204, 21, 0.1)",  fill: true, tension: 0.1 },
-      { label: "Super-Sponsor", data: data["sponsor2"],     borderColor: "rgba(192, 132, 252, 1)", backgroundColor: "rgba(192, 132, 252, 0.1)", fill: true, tension: 0.1 },
-    ],
+    datasets: levels.map((level, index) => {
+      const color = colorForLevel(level, index).replace(", 0.7)", ", 1)");
+      return {
+        label: labelForLevel(level),
+        data: data[level],
+        borderColor: color,
+        backgroundColor: colorForLevel(level, index).replace(", 0.7)", ", 0.1)"),
+        fill: true,
+        tension: 0.1,
+      };
+    }),
   };
 });
 </script>

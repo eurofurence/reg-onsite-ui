@@ -10,7 +10,7 @@ export async function putRoomKeyAddInfo(
 ): Promise<null | undefined> {
   return await putAddInfo<ApiRoomKeyAddInfo>(
     "Attendee Key Service",
-    "shipping", // FIXME!
+    "roomkey",
     errorHandler,
     regNumber,
     itemData

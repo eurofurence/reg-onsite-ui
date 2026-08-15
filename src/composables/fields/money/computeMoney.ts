@@ -27,7 +27,8 @@ function setMoney(moneyValue: string): MoneyInCent {
     new RegExp("\\" + decimalSeparator),
     "."
   );
-  return (Number.parseFloat(moneyValueUniform) * 100) as MoneyInCent;
+  const parsedValue: number = Number.parseFloat(moneyValueUniform);
+  return ((Number.isNaN(parsedValue) ? 0 : parsedValue) * 100) as MoneyInCent;
 }
 
 export function computeMoney(

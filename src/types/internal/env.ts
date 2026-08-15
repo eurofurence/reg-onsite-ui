@@ -1,3 +1,5 @@
+import type { NavFieldset } from "@/types/internal/nav";
+
 export const enum EnvName {
   dev = "dev",
   prod = "prod",
@@ -9,5 +11,5 @@ export type EnvNameValue = `${EnvName}`;
 export interface EnvironmentSettings {
   envName: EnvNameValue;
   apiBaseUrl: URL;
-  dealerFrontdeskUrl: URL;
+  externalFieldsets: NavFieldset[];
 }

@@ -12,6 +12,8 @@
         :enableCashierMode="props.enableCashierMode"
         @onCheckin="$emit('onCheckin', $event)"
         @onPayment="$emit('onPayment', $event)"
+        @onApprove="$emit('onApprove', $event)"
+        @onPrint="$emit('onPrint', $event)"
         @onUndoCheckin="$emit('onUndoCheckin', $event)"
         @onSearchRegNumber="$emit('onSearchRegNumber', $event)"
       />
@@ -44,5 +46,12 @@ const selectedAttendeeRef: ModelRef<TransformedAttendeeInfo> =
   defineModel<TransformedAttendeeInfo>({
     required: true,
   });
-defineEmits(["onCheckin", "onUndoCheckin", "onSearchRegNumber", "onPayment"]);
+defineEmits([
+  "onCheckin",
+  "onUndoCheckin",
+  "onSearchRegNumber",
+  "onPayment",
+  "onApprove",
+  "onPrint",
+]);
 </script>

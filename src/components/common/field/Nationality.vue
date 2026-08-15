@@ -13,6 +13,7 @@
         class="w-40 h-12"
         pt:root="ps-10"
         :modelValue="getCountryName(modelValue)"
+        readonly
         v-bind="$attrs"
       />
     </div>

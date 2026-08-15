@@ -1,11 +1,11 @@
 import { fetchResultWrapper } from "@/composables/api/base/fetchResultWrapper";
-import { postApi } from "@/composables/api/base/postApi";
+import { putApi } from "@/composables/api/base/putApi";
 import { type RestErrorHandler, restErrorWrapper } from "@/composables/api/base/restErrorWrapper";
 import type { ApiError } from "@/types/external/error";
 import type { FetchResultPromise } from "@/types/internal/rest";
 
 async function fetchSetSumUpSetup(token: string, merchantCode: string): FetchResultPromise<{ status: string }, ApiError> {
-  const response = await postApi("onsite/api/sumup/setup", { token, merchant_code: merchantCode });
+  const response = await putApi("onsite/api/v1/sumup/credentials", { token, merchant_code: merchantCode });
   return fetchResultWrapper<{ status: string }>(response);
 }
 

@@ -1,5 +1,8 @@
 <template>
-  <small> Checked in: {{ checkinTime }} </small>
+  <small v-if="fetchFailed" class="text-red-500">
+    Checked in: unavailable (failed to load)
+  </small>
+  <small v-else> Checked in: {{ checkinTime }} </small>
 </template>
 
 <script setup lang="ts">
@@ -11,15 +14,19 @@ import type { ModelRef } from "vue";
 import { onMounted, ref, watch, type Ref } from "vue";
 
 const checkinTime: Ref<string> = ref("");
+const fetchFailed: Ref<boolean> = ref(false);
 
 const regNumberRef: ModelRef<RegNumber> = defineModel<RegNumber>({
   required: true,
 });
 
 async function getCheckinTime(): Promise<void> {
+  fetchFailed.value = false;
   const regDeskInfo: ApiRegDeskAddInfo | null | undefined =
     await attendeeService.addInfos.getRegDeskDeskAddInfo(
-      (_info: RestErrorInfo) => null,
+      (_info: RestErrorInfo) => {
+        fetchFailed.value = true;
+      },
       regNumberRef.value
     );
   if (

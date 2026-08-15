@@ -1,6 +1,7 @@
 import type { MetadataRecord } from "@/composables/collection_tools/metadata/getMetadataEntryFromRecord";
 import { conventionSharedMetadata } from "@/config/convention/commonMetadata";
 import {
+  iterationEF2023,
   metadataRecordForGoodies2023,
   type AbstractEFGoodieWithVariants2023,
   type AbstractEFGoodieWithoutVariants2023,
@@ -8,6 +9,7 @@ import {
   type EFGoodieConfig2023,
 } from "@/config/convention/eurofurence/ef2023";
 import {
+  iterationEF2024,
   metadataRecordForGoodies2024,
   type AbstractEFGoodieWithVariants2024,
   type AbstractEFGoodieWithoutVariants2024,
@@ -15,6 +17,7 @@ import {
   type EFGoodieConfig2024,
 } from "@/config/convention/eurofurence/ef2024";
 import {
+  iterationEF2025,
   metadataRecordForGoodies2025,
   type AbstractEFGoodieWithVariants2025,
   type AbstractEFGoodieWithoutVariants2025,
@@ -22,6 +25,7 @@ import {
   type EFGoodieConfig2025,
 } from "@/config/convention/eurofurence/ef2025";
 import {
+  iterationEF2026,
   metadataRecordForGoodies2026,
   type AbstractEFGoodieWithVariants2026,
   type AbstractEFGoodieWithoutVariants2026,
@@ -34,6 +38,26 @@ import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { IdpGroupId } from "@/types/external/authsrv/frontenduserinfo";
 import type { AgeInYears } from "@/types/internal/attendee";
 import type { ConventionSettings } from "@/types/internal/convention";
+
+// first entry is the current iteration
+const efIterations = [
+  { label: "EF 2026", settings: iterationEF2026, record: metadataRecordForGoodies2026 },
+  { label: "EF 2025", settings: iterationEF2025, record: metadataRecordForGoodies2025 },
+  { label: "EF 2024", settings: iterationEF2024, record: metadataRecordForGoodies2024 },
+  { label: "EF 2023", settings: iterationEF2023, record: metadataRecordForGoodies2023 },
+];
+
+const [currentEFIteration] = efIterations;
+if (currentEFIteration === undefined) {
+  throw new Error("No EF iterations configured");
+}
+
+const efGoodiesRecord = {
+  ...metadataRecordForGoodies2023,
+  ...metadataRecordForGoodies2024,
+  ...metadataRecordForGoodies2025,
+  ...metadataRecordForGoodies2026,
+};
 
 export const conventionSettingsForEF: ConventionSettings = {
   maxRegNumber: 99999 as RegNumber,
@@ -73,6 +97,14 @@ export const conventionSettingsForEF: ConventionSettings = {
       "50WYPNXVKL2Q7GDZ", // Registration Software Development - Department
     ] as IdpGroupId[],
   },
+  iterations: efIterations,
+  goodiesRecord: efGoodiesRecord,
+  currentGoodiesRecord: metadataRecordForGoodies2026,
+  inventory: {
+    // the sponsordesk has at most the items for the super sponsors
+    sponsordesk: currentEFIteration.settings.goodies.forPackage.sponsor2 || [],
+    constore: Object.keys(efGoodiesRecord) as AbstractEFGoodieValue[],
+  },
 };
 
 type AbstractEFGoodieWithoutVariants =
@@ -108,3 +140,10 @@ export type AbstractEFGoodieWithVariantsValue =
 export type AbstractEFGoodieValue =
   | `${AbstractEFGoodieWithoutVariants}`
   | AbstractEFGoodieWithVariantsValue;
+
+export interface ConventionGoodieTypesForEF {
+  concreteGoodieValue: ConcreteEFGoodieValue;
+  goodieConfig: EFGoodieConfig;
+  abstractGoodieValue: AbstractEFGoodieValue;
+  abstractGoodieWithVariantsValue: AbstractEFGoodieWithVariantsValue;
+}

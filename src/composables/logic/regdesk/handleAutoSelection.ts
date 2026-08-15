@@ -14,11 +14,16 @@ export function handleAutoSelection(
   function performAutoSelection(
     transformedAttendeeInfoList: TransformedAttendeeInfo[],
   ): void {
-    if (
-      transformedAttendeeInfoList.length > 2 ||
-      transformedAttendeeInfoList.length === 0
-    ) {
+    if (transformedAttendeeInfoList.length === 0) {
+      // Genuinely empty results — any remembered twin pair no longer applies.
       previousTwinId = null;
+      return;
+    }
+    if (transformedAttendeeInfoList.length > 2) {
+      // A transient list of unrelated size (e.g. an out-of-order async
+      // update) doesn't mean the twin scenario is over — keep the twin
+      // memory intact so a later oscillation back to length 1 is still
+      // guarded against.
       return;
     }
     if (transformedAttendeeInfoList.length === 2) {
@@ -35,6 +40,11 @@ export function handleAutoSelection(
         // Placeholder row (no real results) — treat as empty, clear twin guard
         previousTwinId = null;
         return;
+      }
+      if (previousTwinId && !previousTwinId.includes(single.id)) {
+        // The remaining candidate isn't part of the remembered twin pair
+        // anymore — we've moved on to an unrelated filter context.
+        previousTwinId = null;
       }
       if (
         previousTwinId &&

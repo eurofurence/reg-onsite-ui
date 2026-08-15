@@ -1,27 +1,51 @@
 <template>
-  <div class="flex flex-col gap-8">
-    <div class="flex flex-wrap gap-5 place-content-center">
-      <ItemFrequencyChart :infosMap="modelValue.infos" :attendeeInfos="attendeeInfos" />
-      <ItemTShirtCharts :infosMap="modelValue.infos" :attendeeInfos="attendeeInfos" />
-    </div>
+  <div class="flex flex-col gap-2">
+    <ItemFrequencyChart
+      :infosMap="modelValue.infos"
+      :attendeeInfos="attendeeInfos"
+      :soldCount="configCounts.soldCount"
+      :inventoryCount="configCounts.inventoryCount"
+    />
     <ItemTreeTable :nodes="itemTreeNodes" />
   </div>
 </template>
 
 <script setup lang="ts">
 import ItemFrequencyChart from "@/components/statistics/ItemFrequencyChart.vue";
-import ItemTShirtCharts from "@/components/statistics/ItemTShirtCharts.vue";
 import ItemTreeTable from "@/components/statistics/ItemTreeTable.vue";
 import { buildItemTree } from "@/composables/items/buildItemTreeNodes";
+import {
+  getSponsorDeskConfigCounts,
+  type SponsorDeskConfigCounts,
+} from "@/composables/items/getSponsorDeskConfigCounts";
 import type { ApiAllAddInfo } from "@/types/external/attsrv/additional-info/common";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
-import { computed } from "vue";
+import { computed, onMounted, ref, type Ref } from "vue";
 
-interface Props { attendeeInfos: TransformedAttendeeInfo[]; }
+interface Props {
+  attendeeInfos: TransformedAttendeeInfo[];
+}
 const props = defineProps<Props>();
 
-const modelValue = defineModel<ApiAllAddInfo<ApiSponsorDeskAddInfo>>({ required: true });
+const modelValue = defineModel<ApiAllAddInfo<ApiSponsorDeskAddInfo>>({
+  required: true,
+});
 
-const itemTreeNodes = computed(() => buildItemTree(modelValue.value.infos, props.attendeeInfos));
+const configCounts: Ref<SponsorDeskConfigCounts> = ref({
+  soldCount: {},
+  inventoryCount: {},
+});
+onMounted(async () => {
+  configCounts.value = await getSponsorDeskConfigCounts(() => {});
+});
+
+const itemTreeNodes = computed(() =>
+  buildItemTree(
+    modelValue.value.infos,
+    props.attendeeInfos,
+    configCounts.value.soldCount,
+    configCounts.value.inventoryCount,
+  ),
+);
 </script>

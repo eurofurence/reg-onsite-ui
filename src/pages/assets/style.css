@@ -9,6 +9,7 @@
 @source inline("bg-green-{50,{100..900..100},950}");
 @source inline("bg-gray-{50,{100..900..100},950}");
 @source inline("bg-purple-{50,{100..900..100},950}");
+@source inline("bg-teal-{50,{100..900..100},950}");
 @source inline("bg-primary-{50,{100..900..100},950}");
 @source inline("p-checked:bg-red-{50,{100..900..100},950}");
 @source inline("p-checked:bg-yellow-{50,{100..900..100},950}");
@@ -16,6 +17,7 @@
 @source inline("p-checked:bg-green-{50,{100..900..100},950}");
 @source inline("p-checked:bg-gray-{50,{100..900..100},950}");
 @source inline("p-checked:bg-purple-{50,{100..900..100},950}");
+@source inline("p-checked:bg-teal-{50,{100..900..100},950}");
 @source inline("p-checked:bg-primary-{50,{100..900..100},950}");
 @source inline("color-primary-{50,{100..900..100},950}");
 

@@ -1,34 +1,23 @@
-import type { MetadataRecord } from "@/composables/collection_tools/metadata/getMetadataEntryFromRecord";
 import {
   conventionSettingsForEF,
-  metadataRecordForGoodiesEF,
-  type AbstractEFGoodieValue,
-  type AbstractEFGoodieWithVariantsValue,
-  type ConcreteEFGoodieValue,
-  type EFGoodieConfig,
+  type ConventionGoodieTypesForEF,
 } from "@/config/convention/eurofurence/convention";
-import { iterationEF2026 } from "@/config/convention/eurofurence/ef2026";
-import type {
-  ConventionInventorySettings,
-  ConventionIterationSettings,
-  ConventionSettings,
-} from "@/types/internal/convention";
 
-export type ConcreteGoodieValue = ConcreteEFGoodieValue;
-export type GoodieConfig = EFGoodieConfig;
-export type AbstractGoodieValue = AbstractEFGoodieValue;
-export type AbstractGoodieWithVariantsValue = AbstractEFGoodieWithVariantsValue;
-export const metadataRecordForGoodies: MetadataRecord<GoodieConfig> =
-  metadataRecordForGoodiesEF;
+// this is the active convention configuration
+export const currentConventionSettings = conventionSettingsForEF;
 
-export const currentConventionSettings: ConventionSettings =
-  conventionSettingsForEF;
+export type ConcreteGoodieValue = ConventionGoodieTypesForEF["concreteGoodieValue"];
+export type GoodieConfig = ConventionGoodieTypesForEF["goodieConfig"];
+export type AbstractGoodieValue = ConventionGoodieTypesForEF["abstractGoodieValue"];
+export type AbstractGoodieWithVariantsValue = ConventionGoodieTypesForEF["abstractGoodieWithVariantsValue"];
+export const metadataRecordForGoodies = currentConventionSettings.goodiesRecord;
 
-export const currentIterationSettings: ConventionIterationSettings =
-  iterationEF2026;
+export const conventionIterations = currentConventionSettings.iterations;
+const [currentIteration] = conventionIterations;
+if (currentIteration === undefined) {
+  throw new Error("No convention iterations configured");
+}
+export const currentIterationSettings = currentIteration.settings;
+export const currentIterationLabel = currentIteration.label;
 
-export const currentInventorySubset: ConventionInventorySettings = {
-  // the sponsordesk has at most the items for the super sponsors
-  sponsordesk: currentIterationSettings.goodies.forPackage.sponsor2 || [],
-  constore: Object.keys(metadataRecordForGoodies) as AbstractGoodieValue[],
-};
+export const currentInventorySubset = currentConventionSettings.inventory;

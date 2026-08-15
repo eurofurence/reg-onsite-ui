@@ -5,8 +5,8 @@ export function getSubsetList<TypeSubset extends TypeSuperset, TypeSuperset>(
   if (data === null) {
     return null;
   }
-  const subsetAsSuperset: TypeSuperset[] = subset;
+  const subsetAsSuperset: Set<TypeSuperset> = new Set(subset);
   return data.filter((value: TypeSuperset) =>
-    subsetAsSuperset.includes(value)
+    subsetAsSuperset.has(value)
   ) as TypeSubset[];
 }

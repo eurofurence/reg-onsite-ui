@@ -17,6 +17,7 @@
         :class="getBirthdayFieldTextCSS(modelValue.transAge || 0 as AgeInYears)"
         class="w-36 h-12 text-right"
         :modelValue="computeBirthdayFormat"
+        readonly
         v-bind="$attrs"
       />
     </div>

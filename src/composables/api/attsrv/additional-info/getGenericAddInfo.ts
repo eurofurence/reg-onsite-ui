@@ -15,7 +15,18 @@ async function fetchAddInfo<AddInfoType>(
   const response: Response = await getApi(
     `attsrv/api/rest/v1/attendees/${regNumber}/additional-info/${addInfoArea}`
   );
-  const data: any = await response.json();
+  const bodyText: string = await response.text();
+  let data: any;
+  try {
+    data = JSON.parse(bodyText);
+  } catch {
+    data = {
+      message: "response.not.json",
+      timestamp: new Date().toISOString(),
+      requestid: "",
+      details: `HTTP ${response.status}: ${bodyText}`,
+    };
+  }
   if (data?.message === "addinfo.notfound.error") {
     return {
       ok: true,

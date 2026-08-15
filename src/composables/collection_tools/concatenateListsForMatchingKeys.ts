@@ -7,7 +7,11 @@ export function concatenateListsForMatchingKeys<InputType, ReturnType>(
   const concatenatedLists: ReturnType[] = [];
   for (const [matchKey, matchValue] of getRecordEntries(dictionary)) {
     if (matchKey.startsWith("!")) {
-      if (!keysToMatch.includes(matchKey.slice(1) as InputType)) {
+      const negatedKey = matchKey.slice(1);
+      if (negatedKey.startsWith("!")) {
+        throw new Error(`Double-negated key is not supported: "${matchKey}"`);
+      }
+      if (!keysToMatch.includes(negatedKey as InputType)) {
         concatenatedLists.push(...matchValue);
       }
     } else {

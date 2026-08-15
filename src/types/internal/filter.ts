@@ -12,7 +12,8 @@ export type FilterFieldValue =
   | "transConbookChoice"
   | "transSponsorChoice"
   | "transConRole"
-  | "transFullName";
+  | "transFullName"
+  | "transDayAttendance";
 
 export type AllFilterFieldValues = "global" | FilterFieldValue;
 
@@ -31,18 +32,23 @@ export interface MatchStringAgainstList {
   (dataValue: string, filterValue: string[]): boolean;
 }
 
+export interface MatchListAgainstList {
+  (dataValue: string[], filterValue: string[]): boolean;
+}
+
 export interface MatchStringAgainstValue {
   (dataValue: string, filterValue: string): boolean;
 }
 
 export interface MatchNumberAgainstValue {
-  (dataValue: number, filterValue: number): boolean;
+  (dataValue: number, filterValue: string): boolean;
 }
 
 export const enum FilterCmpType {
   number = "number",
   ci_str_vs_str = "ci_str_vs_str",
   str_vs_list = "str_vs_list",
+  list_vs_list = "list_vs_list",
   country = "country",
   birthday = "birthday",
 }

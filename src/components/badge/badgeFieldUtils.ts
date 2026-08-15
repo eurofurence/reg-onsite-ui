@@ -1,8 +1,5 @@
 import type { FieldPosition, FieldSize } from '@/types/badgeType'
 
-export const CARD_WIDTH_CM = 85.6 / 10
-export const CARD_HEIGHT_CM = 54 / 10
-export const CARD_ASPECT_RATIO = CARD_WIDTH_CM / CARD_HEIGHT_CM
 export const MIN_FIELD_WIDTH_PERCENT = 5
 export const MIN_FIELD_HEIGHT_PERCENT = 4
 
@@ -20,9 +17,9 @@ export function clampPosAndSize(pos: FieldPosition, size: FieldSize): { pos: Fie
   }
 }
 
-export function clampSquarePosAndSize(pos: FieldPosition, widthPercent: number): { pos: FieldPosition; size: FieldSize } {
-  const maxWidthPercent = Math.min(100, 100 / CARD_ASPECT_RATIO)
+export function clampSquarePosAndSize(pos: FieldPosition, widthPercent: number, cardAspectRatio: number): { pos: FieldPosition; size: FieldSize } {
+  const maxWidthPercent = Math.min(100, 100 / cardAspectRatio)
   const clampedWidth = Math.min(Math.max(widthPercent, MIN_FIELD_WIDTH_PERCENT), maxWidthPercent)
-  const heightPercent = clampedWidth * CARD_ASPECT_RATIO
+  const heightPercent = clampedWidth * cardAspectRatio
   return clampPosAndSize(pos, { width: clampedWidth, height: heightPercent })
 }

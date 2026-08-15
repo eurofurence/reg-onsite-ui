@@ -10,7 +10,11 @@
             <li>
               {{ getBadgeInputHelp() }}
             </li>
-            <li>
+            <li
+              :class="{
+                'text-yellow-600 dark:text-yellow-500': hasTooShortNameFilter(),
+              }"
+            >
               {{ getNameInputHelp() }}
             </li>
           </ul>
@@ -87,10 +91,14 @@ import {
 } from "@/composables/sort_and_filter/getFilterFunctorContainerList";
 import { getFilterText } from "@/composables/sort_and_filter/getFilterText";
 import { hasMinimalFilter } from "@/composables/sort_and_filter/hasMinimalFilter";
+import { isFilterTooShort } from "@/composables/sort_and_filter/isFilterTooShort";
 import { setupColumnDefinitionList } from "@/config/system/regdesk";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { ColumnDefinition } from "@/types/internal/component/table";
-import type { FilterFieldValue } from "@/types/internal/filter";
+import type {
+  AllFilterFieldValues,
+  FilterFieldValue,
+} from "@/types/internal/filter";
 import { MessageSeverity } from "@/types/internal/primevue";
 import {
   AttendeeQueryStrategy,
@@ -141,6 +149,18 @@ function getGlobalFilterNameItems(): ColumnDefinition[] {
       );
     return isNameField && isInActiveGlobalFilters;
   });
+}
+
+function hasTooShortNameFilter(): boolean {
+  const nameFilterFields: AllFilterFieldValues[] = [
+    "nickname",
+    "first_name",
+    "last_name",
+    "global",
+  ];
+  return nameFilterFields.some((field: AllFilterFieldValues) =>
+    isFilterTooShort(props.dataOptions.filterConfig.filterValues[field].value)
+  );
 }
 
 function getNameInputHelp(): string {

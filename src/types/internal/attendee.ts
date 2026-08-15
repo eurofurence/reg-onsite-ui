@@ -28,6 +28,7 @@ export interface TransformedAttendeeInfoInternal
   readonly transConbookChoice: ConBookValue;
   readonly transSponsorChoice: SponsorLevelValue;
   readonly transGoodieChoice: GoodiesLevelValue;
+  readonly transDayAttendance: string[];
   readonly transCanCheckin: boolean;
 }
 

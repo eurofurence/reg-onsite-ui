@@ -37,6 +37,8 @@
             :enableCashierMode="props.enableCashierMode"
             @onCheckin="emitCheckin"
             @onPayment="emitPayment"
+            @onApprove="emitApprove"
+            @onPrint="emitPrint"
             @onUndoCheckin="$emit('onUndoCheckin', $event)"
             @onSearchRegNumber="$emit('onSearchRegNumber', $event)"
           />
@@ -52,6 +54,9 @@
         v-model:searchStatus="searchStatusRef"
         :enableCashierMode="props.enableCashierMode"
         @onCheckin="emitCheckin"
+        @onPayment="emitPayment"
+        @onApprove="emitApprove"
+        @onPrint="emitPrint"
         @onUndoCheckin="$emit('onUndoCheckin', $event)"
         @onSearchRegNumber="$emit('onSearchRegNumber', $event)"
       />
@@ -71,7 +76,7 @@
       <template #header>
         <div class="w-full">
           <div class="flex gap-1 justify-between">
-            <div class="flex gap-1">
+            <div class="flex gap-1 items-end">
               <GlobalSearchField
                 v-model="dataOptionsRef"
                 :globaSearchInputId="globaSearchInputId"
@@ -84,7 +89,7 @@
                 @doLoad="$emit('triggerManual', $event)"
               />
             </div>
-            <div class="flex gap-1">
+            <div class="flex gap-1 items-end">
               <SearchElementOndemand
                 v-model="dataOptionsRef"
                 @doLoad="$emit('triggerOndemand', $event)"
@@ -94,6 +99,7 @@
                 @doLoad="$emit('triggerPreload', $event)"
               />
               <Button
+                v-if="canExportCSV"
                 class="h-12 aspect-square"
                 v-tooltip.bottom="'Export as CSV'"
                 @click="downloadAttendeeCSV"
@@ -124,6 +130,9 @@
         v-model:searchStatus="searchStatusRef"
         :enableCashierMode="props.enableCashierMode"
         @onCheckin="emitCheckin"
+        @onPayment="emitPayment"
+        @onApprove="emitApprove"
+        @onPrint="emitPrint"
         @onUndoCheckin="$emit('onUndoCheckin', $event)"
         @onSearchRegNumber="$emit('onSearchRegNumber', $event)"
       />
@@ -157,6 +166,7 @@ import SearchElementPreload from "@/components/regdesk/search_element/SearchElem
 import DisplayButton from "@/components/statistics/DisplayButton.vue";
 import { computeAttendeePlaceholder } from "@/composables/fields/computeAttendeePlaceholder";
 import { doResetFilters } from "@/composables/filter/doResetFilters";
+import { isInAnyGroup } from "@/composables/state/authState";
 import { generateId } from "@/composables/generateId";
 import { getInputElement } from "@/composables/getInputElement";
 import { downloadCSV } from "@/composables/logic/downloadCSV";
@@ -178,6 +188,7 @@ import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { SearchStatus } from "@/types/internal/component/regnumsearch";
 import type { ColumnDefinition } from "@/types/internal/component/table";
+import { AuthGroups } from "@/types/internal/convention";
 import {
   CheckinDisplay,
   type AttendeeDataOptions,
@@ -252,6 +263,10 @@ handleAutoSelection(
   selectedAttendeeRef,
   displayOptionsRef,
   previousSelectId
+);
+
+const canExportCSV = computed(() =>
+  isInAnyGroup(AuthGroups.admin, AuthGroups.director)
 );
 
 function downloadAttendeeCSV() {
@@ -346,6 +361,8 @@ const emit = defineEmits([
   "triggerOndemand",
   "onCheckin",
   "onPayment",
+  "onApprove",
+  "onPrint",
   "onUndoCheckin",
   "onSearchRegNumber",
   "onSort",
@@ -366,6 +383,20 @@ function emitPayment(): void {
   const regId: RegNumber | null | undefined = selectedAttendeeRef.value?.id;
   if (regId) {
     emit("onPayment", regId);
+  }
+}
+
+function emitApprove(): void {
+  const regId: RegNumber | null | undefined = selectedAttendeeRef.value?.id;
+  if (regId) {
+    emit("onApprove", regId);
+  }
+}
+
+function emitPrint(): void {
+  const regId: RegNumber | null | undefined = selectedAttendeeRef.value?.id;
+  if (regId) {
+    emit("onPrint", regId);
   }
 }
 </script>

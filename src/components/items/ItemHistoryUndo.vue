@@ -36,7 +36,7 @@ import Fieldset from "@/volt/Fieldset.vue";
 import InputNumber from "@/volt/InputNumber.vue";
 import ProgressBar from "@/volt/ProgressBar.vue";
 import Select from "@/volt/Select.vue";
-import { computed, ref, type Ref } from "vue";
+import { computed, ref, watch, type Ref } from "vue";
 
 interface Props {
   toastService: OnsiteToastService;
@@ -55,6 +55,12 @@ const undoProgress = ref<{ current: number; total: number } | null>(null);
 const uniqueOperators = computed(() => [...new Set(props.operations.map((op) => op.by).filter(Boolean))]);
 const undoableOps = computed(() => undoOperator.value ? props.operations.filter((op) => op.by === undoOperator.value) : [...props.operations]);
 const undoTargetOps = computed(() => undoableOps.value.slice(0, undoCount.value));
+
+watch(undoableOps, (ops) => {
+  if (undoCount.value > (ops.length || 1)) {
+    undoCount.value = ops.length || 1;
+  }
+});
 const undoPreviewRegs = computed(() => {
   if (undoTargetOps.value.length === 0) return 0;
   return buildRestoreTargets(props.addInfosMap, undoTargetOps.value[undoTargetOps.value.length - 1]!.whenStart.getTime()).size;

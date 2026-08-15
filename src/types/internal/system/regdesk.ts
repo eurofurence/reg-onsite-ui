@@ -31,6 +31,21 @@ export interface AttendeeDataOptions {
   filterConfig: FilterConfig;
 }
 
+export const enum QuickDeskSearchMode {
+  regId = "regId",
+  general = "general",
+}
+
+export type QuickDeskSearchModeValue = `${QuickDeskSearchMode}`;
+
+export interface QuickDeskSettings {
+  searchMode: QuickDeskSearchModeValue;
+  displayBigNumber: {
+    enabled: boolean;
+    size: FontSize;
+  };
+}
+
 export interface AttendeeTableDisplayOptions {
   displayCheckinLocation: CheckinDisplayValue;
   displayFilterHelp: boolean;

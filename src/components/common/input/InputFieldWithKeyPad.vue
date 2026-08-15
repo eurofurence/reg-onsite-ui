@@ -45,7 +45,7 @@ import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { ButtonSeverityValue } from "@/types/internal/primevue";
 import InputNumber from "@/volt/InputNumber.vue";
 import type { ModelRef } from "vue";
-import { ref, useId, type Ref } from "vue";
+import { onUnmounted, ref, useId, type Ref } from "vue";
 
 var resetOnNextNumber: Ref<boolean> = ref<boolean>(false);
 
@@ -99,66 +99,76 @@ function isShortcutActive(event: KeyboardServiceEvent): boolean {
   );
 }
 
-keyboardService.registerShortcuts(
-  ShortcutScope.keypad,
-  ShortcutEvent.keydown,
-  ShortcutKey.enter,
-  async (event: KeyboardServiceEvent) => {
-    if (isShortcutActive(event)) {
-      await focusRegNumberInput();
-      return true;
+const unregisterShortcutsList: (() => void)[] = [
+  keyboardService.registerShortcuts(
+    ShortcutScope.keypad,
+    ShortcutEvent.keydown,
+    ShortcutKey.enter,
+    async (event: KeyboardServiceEvent) => {
+      if (isShortcutActive(event)) {
+        await focusRegNumberInput();
+        return true;
+      }
+      return false;
     }
-    return false;
-  }
-);
-keyboardService.registerShortcuts(
-  ShortcutScope.keypad,
-  ShortcutEvent.keyup,
-  ShortcutKey.enter,
-  async (event: KeyboardServiceEvent) => {
-    if (isShortcutActive(event)) {
-      await onNumberSubmit();
-      return true;
+  ),
+  keyboardService.registerShortcuts(
+    ShortcutScope.keypad,
+    ShortcutEvent.keyup,
+    ShortcutKey.enter,
+    async (event: KeyboardServiceEvent) => {
+      if (isShortcutActive(event)) {
+        await onNumberSubmit();
+        return true;
+      }
+      return false;
     }
-    return false;
-  }
-);
-keyboardService.registerShortcuts(
-  ShortcutScope.keypad,
-  ShortcutEvent.keydown,
-  ShortcutKey.escape,
-  async (event: KeyboardServiceEvent) => {
-    if (isShortcutActive(event)) {
-      await resetRegNumber();
-      return true;
+  ),
+  keyboardService.registerShortcuts(
+    ShortcutScope.keypad,
+    ShortcutEvent.keydown,
+    ShortcutKey.escape,
+    async (event: KeyboardServiceEvent) => {
+      if (isShortcutActive(event)) {
+        await resetRegNumber();
+        return true;
+      }
+      return false;
     }
-    return false;
-  }
-);
-keyboardService.registerShortcuts(
-  ShortcutScope.keypad,
-  ShortcutEvent.keydown,
-  ShortcutKey.backspace,
-  async (event: KeyboardServiceEvent) => {
-    if (isShortcutActive(event)) {
-      await focusRegNumberInputAndHandleReset();
-      return false; // this is correct!
+  ),
+  keyboardService.registerShortcuts(
+    ShortcutScope.keypad,
+    ShortcutEvent.keydown,
+    ShortcutKey.backspace,
+    async (event: KeyboardServiceEvent) => {
+      if (isShortcutActive(event)) {
+        await focusRegNumberInputAndHandleReset();
+        return false; // this is correct!
+      }
+      return false;
     }
-    return false;
-  }
-);
-keyboardService.registerShortcuts(
-  ShortcutScope.keypad,
-  ShortcutEvent.keydown,
-  ShortcutKey.number,
-  async (event: KeyboardServiceEvent) => {
-    if (isShortcutActive(event)) {
-      await focusRegNumberInputAndHandleReset();
-      return false; // this is correct!
+  ),
+  keyboardService.registerShortcuts(
+    ShortcutScope.keypad,
+    ShortcutEvent.keydown,
+    ShortcutKey.number,
+    async (event: KeyboardServiceEvent) => {
+      if (isShortcutActive(event)) {
+        await focusRegNumberInputAndHandleReset();
+        return false; // this is correct!
+      }
+      return false;
     }
-    return false;
+  ),
+];
+
+onUnmounted(() => {
+  for (const unregister of unregisterShortcutsList) {
+    unregister();
   }
-);
+});
+
+defineExpose({ focusRegNumberInput });
 
 interface Props {
   maxNumber: RegNumber;

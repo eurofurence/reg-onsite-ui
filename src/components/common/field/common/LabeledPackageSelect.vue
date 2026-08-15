@@ -2,6 +2,7 @@
   <div :class="getDivClass()">
     <label :for="componentId" :class="fieldLabelCSS">{{ props.label }}</label>
     <Select
+      v-if="modelValue !== null"
       :id="componentId"
       :class="fieldTextCSS"
       v-model="packageChoice"
@@ -11,6 +12,7 @@
       :placeholder="props.metadataRecord[props.placeholderKey].label"
       v-bind="$attrs"
     />
+    <Placeholder v-else :width="`${props.widthInRem}rem`" :labelId="componentId" />
   </div>
 </template>
 
@@ -24,6 +26,7 @@ import {
   fieldLabelCSS,
   fieldTextCSS,
 } from "@/components/common/field/common/common";
+import Placeholder from "@/components/common/field/Placeholder.vue";
 import type { MetadataRecord } from "@/composables/collection_tools/metadata/getMetadataEntryFromRecord";
 import { getMetadataEntryListFromRecord } from "@/composables/collection_tools/metadata/getMetadataEntryListFromRecord";
 import { computeExclusivePackagePresence } from "@/composables/fields/packages/computeExclusivePackagePresence";

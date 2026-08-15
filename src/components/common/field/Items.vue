@@ -5,7 +5,10 @@
       class="items-checkbox-list grid gap-1 grid-cols-1 [@media(min-width:1500px)]:grid-cols-2 [@media(min-width:1500px)]:gap-x-4"
       :id="componentId"
     >
-      <div v-for="goodieConfig of goodieConfigListRef">
+      <div
+        v-for="goodieConfig of goodieConfigListRef"
+        :key="goodieConfig.value"
+      >
         <SponsorDeskItemElement
           :itemGroupId="itemGroupId"
           :goodieConfig="goodieConfig"
@@ -34,7 +37,7 @@ import { generateId } from "@/composables/generateId";
 import { getAbstractFromConcreteItems } from "@/composables/items/getAbstractFromConcreteItems";
 import { getDefaultVariantValues } from "@/composables/items/getDefaultVariantValues";
 import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
-import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
+import { getConcreteItemsEntitlement } from "@/composables/items/getConcreteItemsEntitlement";
 import type { AbstractGoodieValue, GoodieConfig } from "@/config/convention";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { DefaultVariantValues } from "@/types/internal/goodies";
@@ -44,13 +47,13 @@ import { computed, useId, type ComputedRef } from "vue";
 const goodieConfigListRef: ComputedRef<GoodieConfig[]> = computed<
   GoodieConfig[]
 >(() => {
-  const owedConcreteitems = getOwedConcreteItems(
+  const relevantConcreteItems = getConcreteItemsEntitlement(
     attendeeInfoRef.value,
     apiSDAddInfoRef.value
   );
-  const owedAbstractItemList = getAbstractFromConcreteItems(owedConcreteitems);
+  const relevantAbstractItemList = getAbstractFromConcreteItems(relevantConcreteItems);
   const enabledAbstractItemList: AbstractGoodieValue[] =
-    getSubsetList(owedAbstractItemList, props.deskItemSubset) || [];
+    getSubsetList(relevantAbstractItemList, props.deskItemSubset) || [];
   return getGoodieItemsSubset(enabledAbstractItemList);
 });
 

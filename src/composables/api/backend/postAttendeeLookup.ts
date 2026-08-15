@@ -27,7 +27,7 @@ export interface LookupResult {
 interface LookupResponse { results: LookupResult[]; }
 
 async function fetchAttendeeLookup(rows: LookupRow[]): FetchResultPromise<LookupResponse, ApiError> {
-  const response = await postApi("onsite/api/attendee-lookup", { rows });
+  const response = await postApi("onsite/api/v1/attendees/match", { rows });
   return fetchResultWrapper<LookupResponse>(response);
 }
 

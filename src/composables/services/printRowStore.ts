@@ -1,6 +1,6 @@
 import type { PrintRow } from '@/types/printRow'
 
-const STORAGE_KEY = 'xpage.printRows'
+const STORAGE_KEY = 'badge.printRows'
 
 export interface PrintRowStore {
   load(): PrintRow[]

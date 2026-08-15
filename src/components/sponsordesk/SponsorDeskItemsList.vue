@@ -55,7 +55,8 @@
         data-disable-shortcuts
         v-if="
           apiSDAddInfoRef.comment.length > 0 ||
-          forceCommentField == transformedAttendeeInfoRef.id
+          (forceCommentField !== null &&
+            forceCommentField == transformedAttendeeInfoRef.id)
         "
       />
     </div>
@@ -73,7 +74,7 @@ import { deepCopy } from "@/composables/deepCopy";
 import { isDirty } from "@/composables/dirty/isDirty";
 import { generateId } from "@/composables/generateId";
 import { useAvailableItems } from "@/composables/items/useAvailableItems";
-import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
+import { getConcreteItemsEntitlement } from "@/composables/items/getConcreteItemsEntitlement";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import { attendeeService } from "@/composables/services/attendeeService";
 import {
@@ -99,15 +100,45 @@ import Message from "@/volt/Message.vue";
 import Panel from "@/volt/Panel.vue";
 import Toast from "@/volt/Toast.vue";
 import type { ModelRef } from "vue";
-import { ref, useId, type Ref } from "vue";
+import { ref, useId, watch, type Ref } from "vue";
+
+const transformedAttendeeInfoRef: ModelRef<TransformedAttendeeInfo> =
+  defineModel<TransformedAttendeeInfo>({
+    required: true,
+  });
+const apiSDAddInfoRef: ModelRef<ApiSponsorDeskAddInfo> =
+  defineModel<ApiSponsorDeskAddInfo>("apiSDAddInfo", {
+    required: true,
+  });
+const apiSDAddInfoComparisonRef: ModelRef<ApiSponsorDeskAddInfo | null> =
+  defineModel<ApiSponsorDeskAddInfo | null>("apiSDAddInfoComparison", {
+    required: true,
+  });
+
+interface Props {
+  deskName: string;
+  deskItemSubset: AbstractGoodieValue[];
+}
+const props: Props = defineProps<Props>();
+
+const componentId: string = generateId(useId());
+const toastService: OnsiteToastService = new OnsiteToastService(componentId);
+
+const sponsorDeskSettings = useAvailableItems(props.deskItemSubset, getErrorHandlerFunction(toastService));
 
 const savingItemsFlag: Ref<boolean> = ref<boolean>(false);
-const forceCommentField: Ref<RegNumber> = ref<RegNumber>(0 as RegNumber);
+const forceCommentField: Ref<RegNumber | null> = ref<RegNumber | null>(null);
 
 function showCommentField() {
-  forceCommentField.value =
-    transformedAttendeeInfoRef.value.id || (0 as RegNumber);
+  forceCommentField.value = transformedAttendeeInfoRef.value.id;
 }
+
+watch(
+  () => transformedAttendeeInfoRef.value.id,
+  () => {
+    forceCommentField.value = null;
+  }
+);
 
 async function saveItems(): Promise<any> {
   if (transformedAttendeeInfoRef.value.id === null) {
@@ -160,17 +191,17 @@ keyboardService.registerShortcuts(
 );
 
 async function selectAvailable(): Promise<any> {
-  const concreteItems: ConcreteGoodieValue[] = getOwedConcreteItems(
+  const concreteItems: ConcreteGoodieValue[] = getConcreteItemsEntitlement(
     transformedAttendeeInfoRef.value,
     apiSDAddInfoRef.value
   );
-  const availableOwedItems: ConcreteGoodieValue[] | null = getSubsetList(
+  const availableRelevantItems: ConcreteGoodieValue[] | null = getSubsetList(
     concreteItems,
     sponsorDeskSettings.value.available
   );
   const keepIssuedItems: ConcreteGoodieValue[] = [
     ...new Set([
-      ...(availableOwedItems || []),
+      ...(availableRelevantItems || []),
       ...apiSDAddInfoRef.value.issuedItems,
     ]),
   ];
@@ -189,29 +220,6 @@ keyboardService.registerShortcuts(
   onKeyA
 );
 
-const transformedAttendeeInfoRef: ModelRef<TransformedAttendeeInfo> =
-  defineModel<TransformedAttendeeInfo>({
-    required: true,
-  });
-const apiSDAddInfoRef: ModelRef<ApiSponsorDeskAddInfo> =
-  defineModel<ApiSponsorDeskAddInfo>("apiSDAddInfo", {
-    required: true,
-  });
-const apiSDAddInfoComparisonRef: ModelRef<ApiSponsorDeskAddInfo | null> =
-  defineModel<ApiSponsorDeskAddInfo | null>("apiSDAddInfoComparison", {
-    required: true,
-  });
-
-interface Props {
-  deskName: string;
-  deskItemSubset: AbstractGoodieValue[];
-}
-const props: Props = defineProps<Props>();
-
-const componentId: string = generateId(useId());
-const toastService: OnsiteToastService = new OnsiteToastService(componentId);
-
-const sponsorDeskSettings = useAvailableItems(props.deskItemSubset, getErrorHandlerFunction(toastService));
 </script>
 
 <style lang="css">

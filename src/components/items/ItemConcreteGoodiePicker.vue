@@ -47,11 +47,7 @@
 import { getMetadataEntryListFromRecord } from "@/composables/collection_tools/metadata/getMetadataEntryListFromRecord";
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import { FROM_SIZE_VARIANT_VALUE } from "@/composables/items/fromSizeUtils";
-import { metadataRecordForGoodies2023 } from "@/config/convention/eurofurence/ef2023";
-import { metadataRecordForGoodies2024 } from "@/config/convention/eurofurence/ef2024";
-import { metadataRecordForGoodies2025 } from "@/config/convention/eurofurence/ef2025";
-import { metadataRecordForGoodies2026 } from "@/config/convention/eurofurence/ef2026";
-import type { ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
+import { conventionIterations, type ConcreteGoodieValue, type GoodieConfig } from "@/config/convention";
 import type { LabeledValue } from "@/types/internal/infos";
 import Button from "@/volt/Button.vue";
 import Select from "@/volt/Select.vue";
@@ -62,12 +58,10 @@ interface IterationInfo {
   goodies: GoodieConfig[];
 }
 
-const iterations: IterationInfo[] = [
-  { label: "EF 2026", goodies: getMetadataEntryListFromRecord(metadataRecordForGoodies2026) as GoodieConfig[] },
-  { label: "EF 2025", goodies: getMetadataEntryListFromRecord(metadataRecordForGoodies2025) as GoodieConfig[] },
-  { label: "EF 2024", goodies: getMetadataEntryListFromRecord(metadataRecordForGoodies2024) as GoodieConfig[] },
-  { label: "EF 2023", goodies: getMetadataEntryListFromRecord(metadataRecordForGoodies2023) as GoodieConfig[] },
-];
+const iterations: IterationInfo[] = conventionIterations.map((iteration) => ({
+  label: iteration.label,
+  goodies: getMetadataEntryListFromRecord(iteration.record) as GoodieConfig[],
+}));
 
 const selectedIterationLabel: Ref<string | null> = ref(null);
 const currentGoodies = computed<GoodieConfig[] | null>(() =>

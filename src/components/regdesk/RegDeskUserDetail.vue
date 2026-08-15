@@ -5,7 +5,10 @@
   >
     <template #icons>
       <div class="flex flex-row items-center pointer-events-auto select-text">
-        <ProgressBar v-if="cooldownActive" indeterminate />
+        <ProgressBar
+          v-if="checkinInFlightRegNumber === attendeeInfoRef.id"
+          indeterminate
+        />
         <RegDeskCheckInTime
           class="p-5"
           v-model="attendeeInfoRef.id"
@@ -27,6 +30,26 @@
             </Button>
             <Button
               class="aspect-square h-full"
+              v-tooltip="'Undo Checkin'"
+              @click="$emit('onUndoCheckin', modelValue.id)"
+              :disabled="refreshDisabled()"
+              raised
+              v-if="environmentSettings.envName === EnvName.dev"
+            >
+              <b class="h-6"><i class="pi pi-exclamation-circle" /> </b>
+            </Button>
+            <Button
+              class="aspect-square h-full"
+              v-tooltip="'Print badge'"
+              @click="$emit('onPrint', modelValue.id)"
+              :disabled="printDisabled()"
+              raised
+              v-if="props.enableCashierMode"
+            >
+              <b class="h-6"><i class="pi pi-print" /> </b>
+            </Button>
+            <Button
+              class="aspect-square h-full"
               v-tooltip="'Book cash payment'"
               @click="$emit('onPayment', modelValue.id)"
               :disabled="paymentDisabled()"
@@ -37,13 +60,13 @@
             </Button>
             <Button
               class="aspect-square h-full"
-              v-tooltip="'Undo Checkin'"
-              @click="$emit('onUndoCheckin', modelValue.id)"
-              :disabled="refreshDisabled()"
+              v-tooltip="'Approve attendee'"
+              @click="$emit('onApprove', modelValue.id)"
+              :disabled="approveDisabled()"
               raised
-              v-if="environmentSettings.envName === EnvName.dev"
+              v-if="props.enableCashierMode"
             >
-              <b class="h-6"><i class="pi pi-exclamation-circle" /> </b>
+              <b class="h-6"><i class="pi pi-check-circle" /> </b>
             </Button>
             <Button
               class="aspect-square h-full"
@@ -81,6 +104,13 @@ import RegStatusPanel from "@/components/common/RegStatusPanel.vue";
 import RegDeskCheckInTime from "@/components/regdesk/RegDeskCheckInTime.vue";
 import { canCheckin } from "@/composables/fields/status/canCheckin";
 import { environmentSettings } from "@/composables/services/environmentService";
+import {
+  keyboardService,
+  ShortcutEvent,
+  ShortcutKey,
+  ShortcutScope,
+  type KeyboardServiceEvent,
+} from "@/composables/services/keyboardService";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import {
@@ -92,7 +122,7 @@ import Button from "@/volt/Button.vue";
 import ButtonGroup from "@/volt/ButtonGroup.vue";
 import ProgressBar from "@/volt/ProgressBar.vue";
 import type { ModelRef } from "vue";
-import { ref, type Ref } from "vue";
+import { ref, watch, type Ref } from "vue";
 
 interface Props {
   searchStatus: SearchStatus;
@@ -101,14 +131,40 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   enableCashierMode: false,
 });
-const cooldownActive: Ref<boolean> = ref<boolean>(false);
+
+const attendeeInfoRef: ModelRef<TransformedAttendeeInfo> =
+  defineModel<TransformedAttendeeInfo>({
+    required: true,
+  });
+
+// Tracks the reg number of a checkin currently in flight. Cleared once the
+// attendee's status actually changes away from "paid" (checkin succeeded or
+// the attendee was otherwise updated), or after a safety timeout in case the
+// backend call fails silently without updating the status.
+const checkinInFlightRegNumber: Ref<TransformedAttendeeInfo["id"]> = ref(null);
+const checkinSafetyTimeoutMs = 15000;
 
 function paymentDisabled(): boolean {
   return attendeeInfoRef.value.current_dues === null || attendeeInfoRef.value.current_dues <= 0;
 }
 
+function approveDisabled(): boolean {
+  return attendeeInfoRef.value.status !== AttendeeApiStatus.new;
+}
+
+function printDisabled(): boolean {
+  return (
+    attendeeInfoRef.value.id === null ||
+    (attendeeInfoRef.value.status !== AttendeeApiStatus.paid &&
+      attendeeInfoRef.value.status !== AttendeeApiStatus.checked_in)
+  );
+}
+
 function checkinDisabled(): boolean {
-  return !canCheckin(attendeeInfoRef.value) || cooldownActive.value;
+  return (
+    !canCheckin(attendeeInfoRef.value) ||
+    checkinInFlightRegNumber.value === attendeeInfoRef.value.id
+  );
 }
 
 function refreshDisabled(): boolean {
@@ -118,23 +174,48 @@ function refreshDisabled(): boolean {
   );
 }
 
+watch(
+  () => attendeeInfoRef.value.status,
+  () => {
+    checkinInFlightRegNumber.value = null;
+  }
+);
+
 function triggerCheckin(): void {
-  emit("onCheckin", attendeeInfoRef.value.id);
-  cooldownActive.value = true;
+  const regNumber = attendeeInfoRef.value.id;
+  checkinInFlightRegNumber.value = regNumber;
   setTimeout(() => {
-    cooldownActive.value = false;
-  }, 2000);
+    if (checkinInFlightRegNumber.value === regNumber) {
+      checkinInFlightRegNumber.value = null;
+    }
+  }, checkinSafetyTimeoutMs);
+  emit("onCheckin", regNumber);
 }
 
-const attendeeInfoRef: ModelRef<TransformedAttendeeInfo> =
-  defineModel<TransformedAttendeeInfo>({
-    required: true,
-  });
+async function onKeyC(event: KeyboardServiceEvent): Promise<boolean> {
+  if (event.currentScope !== ShortcutScope.regdesk) {
+    return false;
+  }
+  if (checkinDisabled()) {
+    return false;
+  }
+  triggerCheckin();
+  return true;
+}
+
+keyboardService.registerShortcuts(
+  ShortcutScope.regdesk,
+  ShortcutEvent.keydown,
+  ShortcutKey.key_c,
+  onKeyC
+);
 
 const emit = defineEmits([
   "onCheckin",
   "onUndoCheckin",
   "onSearchRegNumber",
   "onPayment",
+  "onApprove",
+  "onPrint",
 ]);
 </script>

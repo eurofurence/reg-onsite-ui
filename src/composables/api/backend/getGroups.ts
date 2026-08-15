@@ -13,7 +13,7 @@ type ApiGroupsResponse = {
 };
 
 async function fetchGroups(): FetchResultPromise<ApiGroupsResponse, ApiError> {
-  const response: Response = await getApi("onsite/api/groups");
+  const response: Response = await getApi("onsite/api/v1/me/groups");
   return fetchResultWrapper<ApiGroupsResponse>(response);
 }
 

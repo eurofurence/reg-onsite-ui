@@ -21,6 +21,7 @@ export default defineConfig({
         debug_fields: "./debug_fields.html",
         index: "./index.html",
         items: "./items.html",
+        quickcashierdesk: "./quickcashierdesk.html",
         quickregdesk: "./quickregdesk.html",
         regdesk: "./regdesk.html",
         shipping: "./shipping.html",

@@ -9,24 +9,28 @@ import type { ApiError } from "@/types/external/error";
 import type { ApiTransaction } from "@/types/external/paysrv/transactions";
 import type { FetchResultPromise } from "@/types/internal/rest";
 
-async function postCashPaymentForAttendee(
-  regNumber: RegNumber
+export type PaymentMethod = "cash" | "credit" | "transfer" | "internal" | "gift";
+
+async function postInitPayment(
+  regNumber: RegNumber,
+  method: PaymentMethod
 ): FetchResultPromise<ApiTransaction, ApiError> {
   const response: Response = await postApi(
-    `onsite/api/cash-payment/${regNumber}`,
-    {}
+    `onsite/api/v1/attendees/${regNumber}/payment`,
+    { method }
   );
   return fetchResultWrapper<ApiTransaction>(response);
 }
 
-export async function putCashPaymentForAttendee(
+export async function postInitPaymentForAttendee(
   errorHandler: RestErrorHandler,
-  regNumber: RegNumber
+  regNumber: RegNumber,
+  method: PaymentMethod
 ): Promise<ApiTransaction | undefined> {
   const response: ApiTransaction | null | undefined =
     await restErrorWrapper<ApiTransaction>(
       "Attendee Payment Service",
-      () => postCashPaymentForAttendee(regNumber),
+      () => postInitPayment(regNumber, method),
       errorHandler
     );
   return response;

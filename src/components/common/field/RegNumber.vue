@@ -2,7 +2,7 @@
   <div :class="fieldCSS" class="w-24">
     <label :for="componentId" :class="fieldLabelCSS">Registration Number</label>
     <InputNumber
-      v-if="modelValue"
+      v-if="modelValue !== null"
       :id="componentId"
       :class="fieldTextCSS + ' text-right'"
       class="h-12"

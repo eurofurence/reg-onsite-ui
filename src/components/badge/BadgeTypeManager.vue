@@ -3,25 +3,35 @@ import Badge from '@/volt/Badge.vue'
 import Button from '@/volt/Button.vue'
 import { computed, ref, watch } from 'vue'
 import BadgeDesigner from '@/components/badge/BadgeDesigner.vue'
-import { localBadgeTypeStore } from '@/composables/services/badgeTypeStore'
-import { badgeMappingRef } from '@/composables/services/badgeMappingStore'
+import { getAvailableParentOptions, resolveBadgeType } from '@/composables/badge/badgeTypeInheritance'
+import type { RestErrorHandler } from '@/composables/api/base/restErrorWrapper'
+import { badgeMappingRef, badgeTypesRef, printSettingsRef, saveBadgeConfig } from '@/composables/services/badgeConfigStore'
 import { NO_FLAG } from '@/types/badgeMapping'
-import { renderBadgeHtml } from '@/composables/print/badgeHtml'
+import { renderBadgeSvg } from '@/composables/print/badgeHtml'
 import { printBadgePages } from '@/composables/print/printFrame'
-import { localPrintSettingsStore } from '@/composables/services/printSettingsStore'
 import { buildPageSizeCss, getOrientedPageDimensionsMm } from '@/types/printSettings'
-import { createDefaultBadgeType } from '@/types/badgeType'
-import type { BadgeType, BadgeTypeFields } from '@/types/badgeType'
+import { createDefaultBadgeType, createDefaultFieldInheritance } from '@/types/badgeType'
+import type { BadgeType, CustomFieldSource } from '@/types/badgeType'
 
-const storedBadgeTypes = localBadgeTypeStore.load()
-const badgeTypes = ref<BadgeType[]>(
-  storedBadgeTypes.length > 0 ? storedBadgeTypes : [createDefaultBadgeType('Attendee Badge')],
-)
+const props = defineProps<{ errorHandler: RestErrorHandler }>()
+
+const badgeTypes = badgeTypesRef
 const selectedId = ref<string | null>(badgeTypes.value[0]?.id ?? null)
 
+watch(badgeTypes, (value) => {
+  if (selectedId.value === null || !value.some((badgeType) => badgeType.id === selectedId.value)) {
+    selectedId.value = value[0]?.id ?? null
+  }
+})
+
 const previewIdValue = ref('1234S')
-const previewNameValue = ref('John Doe')
+const previewNicknameValue = ref('John Doe')
 const previewCountryValue = ref('Germany')
+const previewCustomValues = ref<Record<string, string>>({})
+
+const availableParentOptions = computed(() =>
+  selectedId.value ? getAvailableParentOptions(badgeTypes.value, selectedId.value) : [],
+)
 
 const mappingCountByTypeId = computed(() => {
   const counts: Record<string, number> = {}
@@ -43,8 +53,8 @@ const mappingTooltipByTypeId = computed(() => {
   return labels
 })
 
-watch(badgeTypes, (value) => {
-  localBadgeTypeStore.save(value)
+watch(badgeTypes, () => {
+  saveBadgeConfig(props.errorHandler)
 }, { deep: true })
 
 const sortedBadgeTypes = computed(() =>
@@ -87,31 +97,83 @@ function selectBadgeType(id: string) {
   selectedId.value = id
 }
 
+function resolveSourceValue(source: CustomFieldSource, fieldId: string): string {
+  switch (source.kind) {
+    case 'id': return previewIdValue.value
+    case 'nickname': return previewNicknameValue.value
+    case 'country': return previewCountryValue.value
+    case 'static': return source.text
+    case 'attendee': return previewCustomValues.value[fieldId] ?? ''
+  }
+}
+
+function previewFieldValues(resolved: BadgeType): Record<string, string> {
+  const fieldValues: Record<string, string> = {}
+  for (const field of resolved.fields.custom) {
+    fieldValues[field.id] = resolveSourceValue(field.source, field.id)
+  }
+  for (const field of resolved.fields.customBarcodes) {
+    fieldValues[field.id] = resolveSourceValue(field.source, field.id)
+  }
+  return fieldValues
+}
+
 async function previewAll() {
-  const printSettings = localPrintSettingsStore.load()
+  const printSettings = printSettingsRef.value
   const pages: string[] = []
   for (const badgeType of badgeTypes.value) {
-    const html = await renderBadgeHtml(
-      badgeType,
-      previewIdValue.value,
-      previewNameValue.value,
-      previewCountryValue.value,
-      printSettings.orientation === 'portrait',
+    const resolved = resolveBadgeType(badgeTypes.value, badgeType.id)
+    const svg = await renderBadgeSvg(
+      resolved,
+      previewFieldValues(resolved),
+      printSettings.cardWidthMm,
+      printSettings.cardHeightMm,
       printSettings.dpi,
     )
-    pages.push(html)
-    if (printSettings.doubleSided) pages.push(html)
+    pages.push(svg)
+    if (printSettings.doubleSided) pages.push(svg)
   }
   const pageDimensions = getOrientedPageDimensionsMm(printSettings)
-  printBadgePages(pages, buildPageSizeCss(printSettings), pageDimensions.width, pageDimensions.height)
+  printBadgePages(
+    pages,
+    buildPageSizeCss(printSettings),
+    pageDimensions.width,
+    pageDimensions.height,
+    printSettings.cardXMm,
+    printSettings.cardYMm,
+    printSettings.cardWidthMm,
+    printSettings.cardHeightMm,
+    printSettings.cardRotationDeg,
+    printSettings.backSideRotated180,
+    printSettings.cardBorderRadiusMm,
+  )
 }
 
 function deleteBadgeType(id: string) {
   const badgeType = badgeTypes.value.find((item) => item.id === id)
-  if (!badgeType || !confirm(`Delete badge type "${badgeType.name}"?`)) {
+  if (!badgeType) {
     return
   }
-  badgeTypes.value = badgeTypes.value.filter((item) => item.id !== id)
+  const mappingCount = mappingCountByTypeId.value[id] ?? 0
+  const warning = mappingCount > 0
+    ? ` ${mappingCount} mapping rule(s) currently assign attendees to this badge type; they will be cleared.`
+    : ''
+  if (!confirm(`Delete badge type "${badgeType.name}"?${warning}`)) {
+    return
+  }
+  badgeTypes.value = badgeTypes.value
+    .filter((item) => item.id !== id)
+    .map((item) => item.parentId === id
+      ? { ...item, parentId: null, inherit: createDefaultFieldInheritance() }
+      : item)
+  if (mappingCount > 0) {
+    const rules = { ...badgeMappingRef.value.rules }
+    for (const key of Object.keys(rules)) {
+      if (rules[key] === id) delete rules[key]
+    }
+    badgeMappingRef.value = { ...badgeMappingRef.value, rules }
+    saveBadgeConfig(props.errorHandler)
+  }
   if (selectedId.value === id) {
     selectedId.value = badgeTypes.value[0]?.id ?? null
   }
@@ -123,10 +185,6 @@ function duplicateSelected() {
 
 function deleteSelected() {
   if (selectedId.value) deleteBadgeType(selectedId.value)
-}
-
-function applyFieldsToAll(fields: BadgeTypeFields) {
-  badgeTypes.value = badgeTypes.value.map(bt => ({ ...bt, fields }))
 }
 </script>
 
@@ -165,15 +223,18 @@ function applyFieldsToAll(fields: BadgeTypeFields) {
     </div>
 
     <div class="flex-1">
-      <BadgeDesigner
-        v-if="selectedBadgeType"
-        v-model="selectedBadgeType"
-        v-model:id-value="previewIdValue"
-        v-model:name-value="previewNameValue"
-        v-model:country-value="previewCountryValue"
-        :key="selectedBadgeType.id"
-        @apply-to-all="applyFieldsToAll"
-      />
+      <template v-if="selectedBadgeType">
+        <BadgeDesigner
+          v-model="selectedBadgeType"
+          v-model:id-value="previewIdValue"
+          v-model:nickname-value="previewNicknameValue"
+          v-model:country-value="previewCountryValue"
+          v-model:custom-values="previewCustomValues"
+          :badge-types="badgeTypes"
+          :available-parent-options="availableParentOptions"
+          :key="selectedBadgeType.id"
+        />
+      </template>
       <p v-else class="text-sm text-slate-500">No badge types yet.</p>
     </div>
   </div>

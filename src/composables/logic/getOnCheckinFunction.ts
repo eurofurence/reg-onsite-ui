@@ -33,8 +33,9 @@ export function getOnCheckinFunction(
       regNumber
     );
     if (checkinFailed) return;
+    let auditRecordFailed = false;
     await attendeeService.addInfos.putRegDeskDeskAddInfo(
-      getErrorHandlerFunction(toastService),
+      (info) => { auditRecordFailed = true; baseErrorHandler(info); },
       regNumber,
       {
         checkin_by: authState.value.userName || "",
@@ -45,7 +46,13 @@ export function getOnCheckinFunction(
     );
     const updatedAttendee: TransformedAttendeeInfo | null =
       await updateAttendee(regNumber);
-    if (updatedAttendee?.status === AttendeeApiStatus.checked_in) {
+    if (auditRecordFailed) {
+      toastService.add({
+        severity: ToastSeverity.warn,
+        summary: `Attendee ${regNumber} was checked in, but recording who/when failed. Please note this manually.`,
+        life: 10000,
+      });
+    } else if (updatedAttendee?.status === AttendeeApiStatus.checked_in) {
       toastService.add({
         severity: ToastSeverity.info,
         summary: `Checked in attendee ${regNumber}`,
@@ -65,6 +72,12 @@ export function getOnCheckinFunction(
           setTimeout(focusGlobalFilterInputAndResetFilterRef.value, 300);
         }
       }
+    } else {
+      toastService.add({
+        severity: ToastSeverity.warn,
+        summary: `Checkin for attendee ${regNumber} did not complete as expected`,
+        life: 5000,
+      });
     }
   };
 }

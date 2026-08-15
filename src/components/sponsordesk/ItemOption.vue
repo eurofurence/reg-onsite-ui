@@ -10,9 +10,12 @@
     v-if="!isDefault() && !isReserved() && isAvailableItem()"
     class="invisible pi pi-circle"
   />
-  <span class="pl-2" :class="modelValue?.cssClass">{{
-    modelValue?.label
-  }}</span>
+  <span
+    class="pl-2"
+    :class="modelValue?.cssClass"
+    v-tooltip="getConcreteItemValue(props.goodieConfig, modelValue)"
+    >{{ modelValue?.label }}</span
+  >
 </template>
 
 <script setup lang="ts">
@@ -44,7 +47,7 @@ function isDefault(): boolean {
   const defaultValue: string | null | undefined = props.defaultValue.get(
     props.goodieConfig.value as AbstractGoodieWithVariantsValue
   );
-  if (defaultValue === undefined) {
+  if (defaultValue === undefined || defaultValue === null) {
     return false;
   }
   return (

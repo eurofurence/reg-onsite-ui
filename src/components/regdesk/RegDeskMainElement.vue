@@ -34,6 +34,8 @@
       :enableCashierMode="props.enableCashierMode"
       @onCheckin="onCheckin"
       @onPayment="onPayment"
+      @onApprove="onApprove"
+      @onPrint="onPrint"
       @onUndoCheckin="onUndoCheckin"
       @onSearchRegNumber="updateAttendee"
       @onPage="onPage"
@@ -44,17 +46,40 @@
       v-model:displayOptions="displayOptionsRef"
       v-model="selectedAttendeeRef"
     />
+    <PrintBadgeDialog
+      v-if="printRequestRef"
+      :visible="true"
+      @update:visible="printRequestRef = null"
+      :attendee="printRequestRef.attendee"
+    />
+    <PaymentMethodDialog
+      v-if="paymentRequestRef"
+      :visible="true"
+      @update:visible="paymentRequestRef = null"
+      :regNumber="paymentRequestRef"
+      :updateAttendee="updateAttendee"
+      :toastService="toastService"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import CustomConfirmDialog from "@/components/dialog/CustomConfirmDialog.vue";
 import CustomConfirmDialogHeader from "@/components/dialog/CustomConfirmDialogHeader.vue";
+import PaymentMethodDialog from "@/components/regdesk/PaymentMethodDialog.vue";
+import PrintBadgeDialog from "@/components/regdesk/PrintBadgeDialog.vue";
 import RegDeskRunner from "@/components/regdesk/RegDeskRunner.vue";
 import RegDeskWorkArea from "@/components/regdesk/RegDeskWorkArea.vue";
+import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { generateId } from "@/composables/generateId";
+import { ensureBadgeConfigLoaded } from "@/composables/services/badgeConfigStore";
+import { getOnApproveFunction } from "@/composables/logic/getOnApproveFunction";
 import { getOnCheckinFunction } from "@/composables/logic/getOnCheckinFunction";
 import { getOnPaymentFunction } from "@/composables/logic/getOnPaymentFunction";
+import {
+  getOnPrintFunction,
+  type PrintBadgeRequest,
+} from "@/composables/logic/getOnPrintFunction";
 import { getUndoCheckinFunction } from "@/composables/logic/getUndoCheckinFunction";
 import { getFunctionForDataPreload } from "@/composables/logic/regdesk/getFunctionForDataPreload";
 import { getPreventUnselectIfNotCheckedInFunction } from "@/composables/logic/regdesk/getPreventUnselectIfNotCheckedInFunction";
@@ -102,6 +127,8 @@ import {
 const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 
+onMounted(() => ensureBadgeConfigLoaded(getErrorHandlerFunction(toastService)));
+
 // Filtering - already handled by reactivity of filter data structure!
 async function onFilter(_event: DataTableFilterEvent): Promise<void> {}
 
@@ -136,12 +163,13 @@ const preventUnselectDialog: ShallowRef<typeof CustomConfirmDialog | null> =
 
 const selectedAttendeeUpdater = getPreventUnselectIfNotCheckedInFunction(
   selectedAttendeeRef,
-  preventUnselectDialog
+  preventUnselectDialog,
+  toastService
 );
 
 const onUndoCheckin = getUndoCheckinFunction(updateAttendee, toastService);
 
-const dataOptionsRef = useAttendeeDataOptions();
+const dataOptionsRef = useAttendeeDataOptions(props.enableCashierMode);
 
 const doDataPreload: () => Promise<void> = getFunctionForDataPreload(
   rawListRef,
@@ -192,8 +220,23 @@ const onCheckin: (regNumber: RegNumber) => Promise<void> = getOnCheckinFunction(
   toastService
 );
 
-const onPayment: (regNumber: RegNumber) => Promise<void> = getOnPaymentFunction(
+const paymentRequestRef: Ref<RegNumber | null> = ref(null);
+
+const onPayment: (regNumber: RegNumber) => void = getOnPaymentFunction(
+  paymentRequestRef,
+  toastService
+);
+
+const onApprove: (regNumber: RegNumber) => Promise<void> = getOnApproveFunction(
   updateAttendee,
+  toastService
+);
+
+const printRequestRef: Ref<PrintBadgeRequest | null> = ref(null);
+
+const onPrint: (regNumber: RegNumber) => Promise<void> = getOnPrintFunction(
+  selectedAttendeeRef,
+  printRequestRef,
   toastService
 );
 

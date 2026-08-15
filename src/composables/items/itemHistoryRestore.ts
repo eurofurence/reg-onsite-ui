@@ -1,6 +1,7 @@
 import { putAddInfo } from "@/composables/api/attsrv/additional-info/putGenericAddInfo";
 import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
 import { getEmptySponsorDeskAddInfo } from "@/composables/services/attendee/getEmptySponsorDeskAddInfo";
+import type { ConcreteGoodieValue } from "@/config/convention";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { Ref } from "vue";
@@ -15,6 +16,7 @@ export interface Operation {
   id: string;
   by: string;
   whenStart: Date;
+  whenLast: Date;
   affectedRegs: Set<RegNumber>;
 }
 
@@ -35,10 +37,11 @@ export function buildOperations(infos: Map<RegNumber, ApiSponsorDeskAddInfo>): O
   const ops: Operation[] = [];
   for (const entry of flat) {
     const last = ops[ops.length - 1];
-    const gapSec = last ? (entry.when.getTime() - last.whenStart.getTime()) / 1000 : Infinity;
+    const gapSec = last ? (entry.when.getTime() - last.whenLast.getTime()) / 1000 : Infinity;
     if (!last || last.by !== entry.by || gapSec > 300) {
-      ops.push({ id: `${entry.by}-${entry.when.getTime()}`, by: entry.by, whenStart: entry.when, affectedRegs: new Set([entry.regNum]) });
+      ops.push({ id: `${entry.by}-${entry.when.getTime()}`, by: entry.by, whenStart: entry.when, whenLast: entry.when, affectedRegs: new Set([entry.regNum]) });
     } else {
+      last.whenLast = entry.when;
       last.affectedRegs.add(entry.regNum);
     }
   }
@@ -70,6 +73,15 @@ export function buildRestoreTargets(
   return targets;
 }
 
+export function parseBackupFile(raw: string): Map<RegNumber, ApiSponsorDeskAddInfo> {
+  const parsed = JSON.parse(raw) as Record<string, ApiSponsorDeskAddInfo>;
+  const targets = new Map<RegNumber, ApiSponsorDeskAddInfo>();
+  for (const [regNumStr, state] of Object.entries(parsed)) {
+    targets.set(Number(regNumStr) as RegNumber, state);
+  }
+  return targets;
+}
+
 export async function applyRestoreTargets(
   errorHandler: RestErrorHandler,
   targets: Map<RegNumber, ApiSponsorDeskAddInfo>,
@@ -88,4 +100,67 @@ export async function applyRestoreTargets(
 
 export function formatTimestamp(d: Date): string {
   return d.toLocaleString("de-DE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+export interface AttendeeHistoryStep {
+  by: string;
+  when: Date;
+  added: Record<"pastItems" | "reservedItems" | "issuedItems", ConcreteGoodieValue[]>;
+  removed: Record<"pastItems" | "reservedItems" | "issuedItems", ConcreteGoodieValue[]>;
+  commentChanged: boolean;
+  comment: string;
+  state: ApiSponsorDeskAddInfo | null;
+}
+
+const DIFF_FIELDS = ["pastItems", "reservedItems", "issuedItems"] as const;
+
+function diffItemList(
+  before: ConcreteGoodieValue[],
+  after: ConcreteGoodieValue[],
+): { added: ConcreteGoodieValue[]; removed: ConcreteGoodieValue[] } {
+  const beforeSet = new Set(before);
+  const afterSet = new Set(after);
+  return {
+    added: after.filter((item) => !beforeSet.has(item)),
+    removed: before.filter((item) => !afterSet.has(item)),
+  };
+}
+
+export function buildAttendeeHistorySteps(addInfo: ApiSponsorDeskAddInfo): AttendeeHistoryStep[] {
+  const parsedEntries = addInfo.history
+    .map(parseHistoryEntry)
+    .filter((entry): entry is RawHistoryEntry => entry !== null)
+    .sort((a, b) => new Date(a.when).getTime() - new Date(b.when).getTime());
+
+  const emptyState = getEmptySponsorDeskAddInfo();
+  let previousState: ApiSponsorDeskAddInfo = emptyState;
+  const steps: AttendeeHistoryStep[] = [];
+
+  for (const entry of parsedEntries) {
+    let state: ApiSponsorDeskAddInfo | null = null;
+    try {
+      state = JSON.parse(entry.state) as ApiSponsorDeskAddInfo;
+    } catch {
+      state = null;
+    }
+    const effectiveState = state ?? previousState;
+    const added: AttendeeHistoryStep["added"] = { pastItems: [], reservedItems: [], issuedItems: [] };
+    const removed: AttendeeHistoryStep["removed"] = { pastItems: [], reservedItems: [], issuedItems: [] };
+    for (const field of DIFF_FIELDS) {
+      const diff = diffItemList(previousState[field] ?? [], effectiveState[field] ?? []);
+      added[field] = diff.added;
+      removed[field] = diff.removed;
+    }
+    steps.push({
+      by: entry.by ?? "",
+      when: new Date(entry.when),
+      added,
+      removed,
+      commentChanged: (previousState.comment ?? "") !== (effectiveState.comment ?? ""),
+      comment: effectiveState.comment ?? "",
+      state,
+    });
+    previousState = effectiveState;
+  }
+  return steps;
 }

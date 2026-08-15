@@ -16,6 +16,7 @@ import type { FlagValue } from "@/types/internal/fields";
 import type { NoFlag, NoPackage } from "@/types/internal/missing";
 
 export const enum UnusedPackages {
+  benefactor = "benefactor",
   room_none = "room-none",
   stage = "stage",
   fursuit_badge = "fursuit",

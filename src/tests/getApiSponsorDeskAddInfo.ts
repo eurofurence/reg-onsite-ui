@@ -1,5 +1,5 @@
 import { deepCopy } from "@/composables/deepCopy";
-import { AbstractEFGoodieWithoutVariants2024 } from "@/config/convention/eurofurence/ef2024";
+import { AbstractTCGoodieWithoutVariants2024 } from "@/config/convention/testcon/testcon2024";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 
 const dummyData: ApiSponsorDeskAddInfo[] = [
@@ -25,15 +25,15 @@ const dummyData: ApiSponsorDeskAddInfo[] = [
     history: [],
   },
   {
-    issuedItems: [AbstractEFGoodieWithoutVariants2024.staff_coin_2024],
+    issuedItems: [AbstractTCGoodieWithoutVariants2024.staff_coin_2024],
     reservedItems: [],
     pastItems: [],
     comment: "",
     history: [],
   },
   {
-    reservedItems: [AbstractEFGoodieWithoutVariants2024.staff_coin_2024],
-    issuedItems: [AbstractEFGoodieWithoutVariants2024.staff_coin_2024],
+    reservedItems: [AbstractTCGoodieWithoutVariants2024.staff_coin_2024],
+    issuedItems: [AbstractTCGoodieWithoutVariants2024.staff_coin_2024],
     pastItems: [],
     comment: "",
     history: [],

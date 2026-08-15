@@ -34,11 +34,11 @@
       <i class="pi pi-spin pi-spinner text-2xl" />
     </div>
 
-    <div v-else class="flex flex-col items-center gap-2">
-      <GoodieTreeTable :nodes="itemTreeNodes">
+    <div v-else class="flex flex-col items-center gap-8">
+      <GoodieTreeTable :nodes="itemTreeNodes" :columns="columns">
         <template #action="{ data }">
           <button
-            v-if="data.issuedCount + data.reservedCount + data.boughtCount > 0"
+            v-if="data.issuedCount + data.reservedCount + data.entitledCount > 0"
             class="flex items-center justify-center w-7 h-7 rounded hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors cursor-pointer"
             @click="openDialog(data)"
             v-tooltip.left="'Show attendees'"
@@ -47,6 +47,12 @@
           </button>
         </template>
       </GoodieTreeTable>
+      <ItemFrequencyChart
+        :infosMap="infosMap"
+        :attendeeInfos="attendeeInfosList"
+        :soldCount="configCounts.soldCount"
+        :inventoryCount="configCounts.inventoryCount"
+      />
     </div>
   </div>
 
@@ -56,14 +62,18 @@
     :concreteKeys="dialogConcreteKeys"
     :attendeeInfosList="attendeeInfosList"
     :infosMap="infosMap"
+    :neededReserveCount="dialogNeededReserveCount"
+    :freeToSellCount="dialogFreeToSellCount"
   />
 </template>
 
 <script setup lang="ts">
-import GoodieTreeTable, { type FlatRow } from "@/components/items/GoodieTreeTable.vue";
+import GoodieTreeTable, { type ColumnDef, type FlatRow } from "@/components/items/GoodieTreeTable.vue";
 import ItemInventoryDialog from "@/components/items/ItemInventoryDialog.vue";
+import ItemFrequencyChart from "@/components/statistics/ItemFrequencyChart.vue";
 import { buildItemTree } from "@/composables/items/buildItemTreeNodes";
-import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
+import { getMissingConcreteItems } from "@/composables/items/getMissingConcreteItems";
+import { getSponsorDeskConfigCounts, type SponsorDeskConfigCounts } from "@/composables/items/getSponsorDeskConfigCounts";
 import { getEmptySponsorDeskAddInfo } from "@/composables/services/attendee/getEmptySponsorDeskAddInfo";
 import { downloadCSV } from "@/composables/logic/downloadCSV";
 import { attendeeService } from "@/composables/services/attendeeService";
@@ -83,30 +93,45 @@ const errorHandler = getErrorHandlerFunction(props.toastService);
 const loading: Ref<boolean> = ref(true);
 const infosMap: Ref<Map<RegNumber, ApiSponsorDeskAddInfo>> = ref(new Map());
 const attendeeInfosList: Ref<TransformedAttendeeInfo[]> = ref([]);
+const configCounts: Ref<SponsorDeskConfigCounts> = ref({ soldCount: {}, inventoryCount: {} });
 
 async function refresh(): Promise<void> {
   loading.value = true;
-  const [allAttendees, allAddInfos] = await Promise.all([
+  const [allAttendees, allAddInfos, counts] = await Promise.all([
     attendeeService.getAllAttendees(errorHandler),
     attendeeService.addInfos.getAllSponsorDeskAddInfos(errorHandler),
+    getSponsorDeskConfigCounts(errorHandler),
   ]);
   attendeeInfosList.value = allAttendees ?? [];
   infosMap.value = allAddInfos?.infos ?? new Map();
+  configCounts.value = counts;
   loading.value = false;
 }
 
 onMounted(refresh);
 
-const itemTreeNodes = computed<GoodieTreeNode[]>(() => buildItemTree(infosMap.value, attendeeInfosList.value));
+const itemTreeNodes = computed<GoodieTreeNode[]>(() =>
+  buildItemTree(infosMap.value, attendeeInfosList.value, configCounts.value.soldCount, configCounts.value.inventoryCount)
+);
+
+const columns: ColumnDef[] = [
+  { field: "issuedCount", header: "Issued" },
+  { field: "reservedCount", header: "Reserved" },
+  { field: "entitledCount", header: "Entitled" },
+  { field: "soldCount", header: "Sold" },
+  { field: "inventoryCount", header: "Inventory" },
+  { field: "neededReserveCount", header: "Needed Reserve" },
+  { field: "freeToSellCount", header: "Free to Sell" },
+];
 
 function exportItemTreeAsCSV(): void {
-  const headers = ["Item", "Issued", "Reserved", "Owed"];
+  const headers = ["Item", "Issued", "Reserved", "Entitled", "Sold", "Inventory", "Needed Reserve", "Free to Sell"];
   const rows: string[][] = [];
   for (const node of itemTreeNodes.value) {
-    rows.push([node.data.label, String(node.data.issuedCount ?? 0), String(node.data.reservedCount ?? 0), String(node.data.boughtCount ?? 0)]);
+    rows.push([node.data.label, String(node.data.issuedCount ?? 0), String(node.data.reservedCount ?? 0), String(node.data.entitledCount ?? 0), String(node.data.soldCount ?? 0), String(node.data.inventoryCount ?? 0), String(node.data.neededReserveCount ?? 0), String(node.data.freeToSellCount ?? 0)]);
     for (const child of node.children ?? []) {
       const childLabel = child.data.value.startsWith("tshirt") ? `  T-Shirt ${child.data.label}` : `  ${child.data.label}`;
-      rows.push([childLabel, String(child.data.issuedCount ?? 0), String(child.data.reservedCount ?? 0), String(child.data.boughtCount ?? 0)]);
+      rows.push([childLabel, String(child.data.issuedCount ?? 0), String(child.data.reservedCount ?? 0), String(child.data.entitledCount ?? 0), String(child.data.soldCount ?? 0), String(child.data.inventoryCount ?? 0), String(child.data.neededReserveCount ?? 0), String(child.data.freeToSellCount ?? 0)]);
     }
   }
   const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(";")).join("\n");
@@ -120,15 +145,15 @@ function exportAttendeeDataAsCSV(): void {
   for (const attendee of attendeeInfosList.value) {
     if (attendee.id === null) continue;
     const addInfo = infosMap.value.get(attendee.id) ?? empty;
-    const owed = getOwedConcreteItems(attendee, addInfo);
-    if (!addInfo.comment && addInfo.issuedItems.length === 0 && addInfo.reservedItems.length === 0 && owed.length === 0) continue;
+    const missingItems = getMissingConcreteItems(attendee, addInfo);
+    if (!addInfo.comment && addInfo.issuedItems.length === 0 && addInfo.reservedItems.length === 0 && missingItems.length === 0) continue;
     rows.push([
       String(attendee.id),
       attendee.nickname ?? "",
       addInfo.comment,
       addInfo.issuedItems.join("|"),
       addInfo.reservedItems.join("|"),
-      owed.join("|"),
+      missingItems.join("|"),
     ]);
   }
   const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(";")).join("\n");
@@ -138,12 +163,16 @@ function exportAttendeeDataAsCSV(): void {
 const dialogVisible = ref(false);
 const dialogTitle = ref("");
 const dialogConcreteKeys = ref<string[]>([]);
+const dialogNeededReserveCount = ref(0);
+const dialogFreeToSellCount = ref(0);
 
 function openDialog(row: FlatRow): void {
   dialogConcreteKeys.value = row.hasChildren
     ? (itemTreeNodes.value.find((n) => n.key === row.key)?.children?.map((c) => c.key) ?? [row.key])
     : [row.key];
   dialogTitle.value = `${row.label} (${row.value})`;
+  dialogNeededReserveCount.value = row.neededReserveCount ?? 0;
+  dialogFreeToSellCount.value = row.freeToSellCount ?? 0;
   dialogVisible.value = true;
 }
 </script>

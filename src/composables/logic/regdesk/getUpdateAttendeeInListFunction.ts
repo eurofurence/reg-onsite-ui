@@ -22,9 +22,13 @@ export function getUpdateAttendeeInListFunction(
   searchStatusRef: Ref<SearchStatus>,
   toastService: OnsiteToastService
 ): (regNumber: RegNumber) => Promise<TransformedAttendeeInfo | null> {
+  const latestRequestSequenceByRegNumber = new Map<RegNumber, number>();
   return async (
     regNumber: RegNumber
   ): Promise<TransformedAttendeeInfo | null> => {
+    const requestSequence =
+      (latestRequestSequenceByRegNumber.get(regNumber) ?? 0) + 1;
+    latestRequestSequenceByRegNumber.set(regNumber, requestSequence);
     const result: TransformedAttendeeInfo | null =
       await handleSingleAttendeeSearch(
         regNumber,
@@ -33,6 +37,12 @@ export function getUpdateAttendeeInListFunction(
       );
     if (result == null) {
       return null;
+    }
+    if (latestRequestSequenceByRegNumber.get(regNumber) !== requestSequence) {
+      // A newer search for the same attendee was started after this one;
+      // return this call's own (still valid) result, but skip writing it
+      // back into the list/selection so it doesn't clobber fresher state.
+      return result;
     }
     if (hasAttendeeChanged(regNumber, selectedRef.value, result)) {
       selectedRef.value = result;

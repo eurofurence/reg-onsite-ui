@@ -43,7 +43,7 @@
       <Button
         :disabled="
           JSON.stringify(oldAttendeeShippingInfoRef) ===
-          JSON.stringify(attendeeShippingInfoRef)
+            JSON.stringify(attendeeShippingInfoRef) || !isShippingEmailValid()
         "
         label="Save"
         @click="doSave"
@@ -62,7 +62,7 @@ import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerF
 import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
 import { deepCopy } from "@/composables/deepCopy";
 import { generateId } from "@/composables/generateId";
-import { getOwedConcreteItems } from "@/composables/items/getOwedConcreteItems";
+import { getConcreteItemsEntitlement } from "@/composables/items/getConcreteItemsEntitlement";
 import { getEmptySponsorDeskAddInfo } from "@/composables/services/attendee/getEmptySponsorDeskAddInfo";
 import { attendeeService } from "@/composables/services/attendeeService";
 import {
@@ -71,10 +71,14 @@ import {
 } from "@/composables/services/keyboardService";
 import { OnsiteToastService } from "@/composables/services/toastService";
 import { getEmptyShippingAddInfo } from "@/composables/shipping/getEmptyShippingAddInfo";
-import { getPrefilledShippingInfo } from "@/composables/shipping/getPrefilledShippingInfo";
+import { getPrefilledShippingInfo, resolveTShirtSizeAndShape } from "@/composables/shipping/getPrefilledShippingInfo";
 import type { ConcreteGoodieValue } from "@/config/convention";
 import { getShippingI18N, type ShippingI18N } from "@/config/i18n/shipping";
-import type { ApiShippingAddInfo } from "@/types/external/attsrv/additional-info/shipping";
+import { TShirtSize } from "@/config/metadata/tshirt/metadataForTShirtSizes";
+import {
+  ShippingEmailUse,
+  type ApiShippingAddInfo,
+} from "@/types/external/attsrv/additional-info/shipping";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
@@ -113,14 +117,46 @@ async function determineMissingItems(
   }
   const attendeeItemInfo: ApiSponsorDeskAddInfo = storedAttendeeItemInfoTmp; // Just for the linter
   {
-    const owedItems: ConcreteGoodieValue[] = getOwedConcreteItems(
+    const entitledItems: ConcreteGoodieValue[] = getConcreteItemsEntitlement(
       attendeeInfo,
       attendeeItemInfo
     );
-    return owedItems.filter(
+    return entitledItems.filter(
       (item) => !attendeeItemInfo.issuedItems.includes(item)
     );
   }
+}
+
+// Fills in contact fields that are still blank in an existing shipping
+// record with the attendee's current data, without overwriting anything
+// staff may have already entered or corrected for shipping purposes.
+// tshirt_size/tshirt_shape are only backfilled while still at the
+// "Ask attendee!" sentinel, for the same reason.
+function backfillContactInfo(
+  attendeeShippingInfo: ApiShippingAddInfo,
+  storedAttendeeInfo: TransformedAttendeeInfo,
+  missingItems: ConcreteGoodieValue[]
+): ApiShippingAddInfo {
+  const result: ApiShippingAddInfo = {
+    ...attendeeShippingInfo,
+    nickname: attendeeShippingInfo.nickname || storedAttendeeInfo.nickname || "",
+    first_name: attendeeShippingInfo.first_name || storedAttendeeInfo.first_name || "",
+    last_name: attendeeShippingInfo.last_name || storedAttendeeInfo.last_name || "",
+    street: attendeeShippingInfo.street || storedAttendeeInfo.street || "",
+    zip: attendeeShippingInfo.zip || storedAttendeeInfo.zip || "",
+    city: attendeeShippingInfo.city || storedAttendeeInfo.city || "",
+    email: attendeeShippingInfo.email || storedAttendeeInfo.email || "",
+    state: attendeeShippingInfo.state || storedAttendeeInfo.state || "",
+  };
+  if (result.tshirt_size === TShirtSize.size_unknown) {
+    const { tshirt_size, tshirt_shape } = resolveTShirtSizeAndShape(
+      storedAttendeeInfo,
+      missingItems
+    );
+    result.tshirt_size = tshirt_size;
+    result.tshirt_shape = tshirt_shape;
+  }
+  return result;
 }
 
 async function initShippingFields(regNumber: RegNumber): Promise<void> {
@@ -151,7 +187,11 @@ async function initShippingFields(regNumber: RegNumber): Promise<void> {
         missingItems
       );
   } else {
-    attendeeShippingInfoRef.value = attendeeShippingInfo;
+    attendeeShippingInfoRef.value = backfillContactInfo(
+      attendeeShippingInfo,
+      storedAttendeeInfo,
+      missingItems
+    );
     oldAttendeeShippingInfoRef.value = deepCopy<ApiShippingAddInfo>(
       attendeeShippingInfoRef.value
     );
@@ -178,6 +218,16 @@ function hasMissingTShirt(): boolean {
   return attendeeMissingItems.value.some((item: ConcreteGoodieValue) =>
     item.startsWith("tshirt_")
   );
+}
+
+function isShippingEmailValid(): boolean {
+  if (
+    attendeeShippingInfoRef.value.shipping_email !==
+    ShippingEmailUse.email_can_be_shared_with_logistics
+  ) {
+    return true;
+  }
+  return attendeeShippingInfoRef.value.email.trim().length > 0;
 }
 
 async function doSave(): Promise<void> {

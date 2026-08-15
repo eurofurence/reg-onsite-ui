@@ -25,7 +25,7 @@ export type DealerTableValue = `${DealerTable}`;
 export const metadataRecordForDealerPackages: MetadataRecord<
   LabeledValue<DealerTableValue>
 > = {
-  [DealerTable.none]: { label: "No Art Show Table" },
+  [DealerTable.none]: { label: "No Dealer Table" },
   [DealerTable.dt0p5x1]: { label: "DD 0.5" },
   [DealerTable.dt1p0x1]: { label: "DD 1.0" },
   [DealerTable.dt1p5x1]: { label: "DD 1.5" },

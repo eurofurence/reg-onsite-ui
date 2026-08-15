@@ -121,11 +121,23 @@ async function checkUserAccess(): Promise<void> {
 }
 
 async function checkUserAccessSilent(): Promise<void> {
-  if (authState.value.sessionActive) {
+  if (!authState.value.sessionActive) {
+    return;
+  }
+  const data: ApiFrontendUserInfo | undefined =
     await authService.getFrontendUserInfo(
       getErrorHandlerFunction(toastService)
     );
+  if (data === undefined) {
+    return;
   }
+  const [userRegNumList, userGroups] = await Promise.all([
+    attendeeService.getOwnRegs(getErrorHandlerFunction(toastService)).then((r) => r ?? []),
+    getGroups(getErrorHandlerFunction(toastService)).then((r) => r ?? []),
+  ]);
+  authState.value.userName = data.name;
+  authState.value.userGroups = userGroups;
+  authState.value.userRegNumList = userRegNumList;
 }
 
 interface Props {

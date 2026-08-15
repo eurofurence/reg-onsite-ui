@@ -1,10 +1,11 @@
 <template>
-  <div :class="getDivClass()">
+  <div :class="fieldCSS" :style="getDivStyle()">
     <label :for="componentId" :class="fieldLabelCSS">{{ props.label }}</label>
     <div class="m-px" v-if="modelValue || !props.showSkeleton">
       <InputText
         :id="componentId"
-        :class="getInputClass()"
+        :class="fieldTextCSS"
+        :style="getInputStyle()"
         class="h-12"
         v-model="modelValue"
         v-bind="$attrs"
@@ -28,26 +29,24 @@ import InputText from "@/volt/InputText.vue";
 import type { ModelRef } from "vue";
 import { useId } from "vue";
 
-function getDivClass() {
+function getDivStyle(): Record<string, string> | undefined {
   if (modelValue.value === null) {
-    return fieldCSS;
+    return undefined;
   }
   if (props.autoExpand && modelValue.value.length > props.autoExpand) {
-    return fieldCSS;
+    return undefined;
   }
-  const width: number = props.widthInRem * 4;
-  return `${fieldCSS} min-w-${width}`;
+  return { minWidth: `${props.widthInRem}rem` };
 }
 
-function getInputClass() {
+function getInputStyle(): Record<string, string> | undefined {
   if (modelValue.value === null) {
-    return fieldTextCSS;
+    return undefined;
   }
   if (props.autoExpand && modelValue.value.length > props.autoExpand) {
-    return fieldCSS;
+    return undefined;
   }
-  const width: number = props.widthInRem * 4;
-  return `${fieldTextCSS} w-${width}`;
+  return { width: `${props.widthInRem}rem` };
 }
 
 function getPlaceholderWidth() {

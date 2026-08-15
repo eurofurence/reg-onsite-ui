@@ -16,7 +16,7 @@ async function fetchCheckinTime(
   regNumber: RegNumber
 ): FetchResultPromise<ApiCheckinTimeResponse, ApiError> {
   const response: Response = await getApi(
-    `onsite/api/checkin-time/${regNumber}`
+    `onsite/api/v1/attendees/${regNumber}/check-in`
   );
   return fetchResultWrapper<ApiCheckinTimeResponse>(response);
 }

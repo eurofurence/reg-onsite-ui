@@ -19,42 +19,32 @@
       <div class="flex flex-col gap-3">
         <div class="flex gap-2 items-center">
           <Button @click="fetchProducts" :loading="fetching" icon="pi pi-refresh" label="Fetch from SumUp" severity="secondary" />
-          <span v-if="productCounts !== null" class="text-xs text-surface-400">{{ Object.keys(productCounts).length }} product(s)</span>
+          <span v-if="fetching && fetchProgress" class="text-xs text-surface-400">
+            Fetching… {{ fetchProgress.pages_fetched }} page(s){{ fetchProgress.transactions_found > 0 ? `, ${fetchProgress.transactions_found} transaction(s) found, ${fetchProgress.details_fetched}/${fetchProgress.transactions_found} detail(s) fetched` : '' }}
+          </span>
+          <span v-else-if="productCounts !== null" class="text-xs text-surface-400">{{ Object.keys(productCounts).length }} product(s)</span>
         </div>
 
-        <div v-if="productCounts !== null" class="border border-surface-300 dark:border-surface-600 rounded-md overflow-auto max-h-80">
-          <table class="w-full text-sm">
-            <thead class="sticky top-0 bg-surface-100 dark:bg-surface-800 z-10">
-              <tr>
-                <th class="px-2 py-1 text-left text-xs font-medium">SumUp Product</th>
-                <th class="px-2 py-1 text-left text-xs font-medium w-14">Count</th>
-                <th class="px-2 py-1 text-left text-xs font-medium">Item Value</th>
-                <th class="px-2 py-1 text-left text-xs font-medium">Label</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(count, productKey) in productCounts"
-                :key="productKey"
-                class="border-t border-surface-200 dark:border-surface-700 hover:bg-surface-50 dark:hover:bg-surface-800/50"
-              >
-                <td class="px-2 py-0.5 text-xs">{{ productKey }}</td>
-                <td class="px-2 py-0.5 text-xs text-center">{{ count }}</td>
-                <td class="px-1 py-0.5">
-                  <input
-                    :value="mapping[productKey] ?? ''"
-                    @input="updateMapping(String(productKey), ($event.target as HTMLInputElement).value)"
-                    class="w-full bg-transparent border border-transparent focus:border-primary-400 rounded px-1 outline-none font-mono text-xs"
-                    placeholder="tshirt_2026_m"
-                  />
-                </td>
-                <td class="px-2 py-0.5 text-xs text-surface-500 max-w-48 truncate">
-                  {{ labelFor(mapping[String(productKey)]) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <DataTable v-if="productCounts !== null" :value="productRows" dataKey="productKey" class="max-h-80" scrollable scrollHeight="20rem" size="small">
+          <Column field="productKey" header="SumUp Product" />
+          <Column field="count" header="Count" style="width: 4rem" />
+          <Column header="Item Value">
+            <template #body="{ data }">
+              <InputText
+                :modelValue="mapping[data.productKey] ?? ''"
+                @update:modelValue="(value: string | undefined) => updateMapping(data.productKey, value ?? '')"
+                placeholder="tshirt_2026_m"
+                size="small"
+                class="w-full font-mono text-xs"
+              />
+            </template>
+          </Column>
+          <Column header="Label">
+            <template #body="{ data }">
+              <span class="text-xs text-surface-500 max-w-48 truncate block">{{ labelFor(mapping[data.productKey]) }}</span>
+            </template>
+          </Column>
+        </DataTable>
       </div>
     </Fieldset>
 
@@ -83,17 +73,19 @@
 import { getSponsorDeskConfig, type SponsorDeskConfigRecord } from "@/composables/api/attsrv/additional-info/getSponsorDeskConfig";
 import { putSponsorDeskConfig } from "@/composables/api/attsrv/additional-info/putSponsorDeskConfig";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
-import { getSumUpProductCounts } from "@/composables/api/backend/getSumUpProductCounts";
+import { getSumUpProductCountsStatus, startSumUpProductCountsFetch, type SumUpProductCountsJobStatus } from "@/composables/api/backend/getSumUpProductCounts";
 import { setSumUpSetup } from "@/composables/api/backend/setSumUpSetup";
 import { getItemDisplayLabel } from "@/composables/items/getItemDisplayLabel";
 import type { OnsiteToastService } from "@/composables/services/toastService";
 import type { ConcreteGoodieValue } from "@/config/convention";
 import { ToastSeverity } from "@/types/internal/primevue";
 import Button from "@/volt/Button.vue";
+import DataTable from "@/volt/DataTable.vue";
 import Fieldset from "@/volt/Fieldset.vue";
 import InputText from "@/volt/InputText.vue";
+import { Column } from "primevue";
 import { useLocalStorage } from "@vueuse/core";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 interface Props { toastService: OnsiteToastService; }
 const props = defineProps<Props>();
@@ -119,13 +111,50 @@ async function configureSumUp(): Promise<void> {
 // Product counts
 const fetching = ref(false);
 const productCounts = ref<Record<string, number> | null>(null);
+const fetchProgress = ref<SumUpProductCountsJobStatus | null>(null);
+let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
+function stopPolling(): void {
+  if (pollTimer) clearTimeout(pollTimer);
+  pollTimer = null;
+}
+
+async function pollJob(): Promise<void> {
+  const status = await getSumUpProductCountsStatus(errorHandler);
+  if (status === undefined) {
+    fetching.value = false;
+    fetchProgress.value = null;
+    return;
+  }
+  fetchProgress.value = status;
+  if (status.status === "running") {
+    pollTimer = setTimeout(() => pollJob(), 2000);
+    return;
+  }
+  fetching.value = false;
+  if (status.status === "done") {
+    productCounts.value = status.counts;
+  } else {
+    props.toastService.add({ severity: ToastSeverity.error, summary: "Fetch failed", detail: status.error ?? undefined, life: 6000 });
+  }
+}
 
 async function fetchProducts(): Promise<void> {
   fetching.value = true;
-  const result = await getSumUpProductCounts(errorHandler);
-  fetching.value = false;
-  if (result !== undefined) productCounts.value = result;
+  fetchProgress.value = null;
+  const result = await startSumUpProductCountsFetch(errorHandler);
+  if (result === undefined) {
+    fetching.value = false;
+    return;
+  }
+  await pollJob();
 }
+
+onUnmounted(stopPolling);
+
+const productRows = computed(() =>
+  Object.entries(productCounts.value ?? {}).map(([productKey, count]) => ({ productKey, count }))
+);
 
 // Mapping: SumUp product key → ConcreteGoodieValue (empty string = skip)
 // Loaded from reg #0; debounce-saved on every change

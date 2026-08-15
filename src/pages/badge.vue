@@ -1,32 +1,36 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, useId } from 'vue'
 import OnsitePage from '@/components/common/OnsitePage.vue'
 import BadgeMapping from '@/components/badge/BadgeMapping.vue'
 import BadgeTypeManager from '@/components/badge/BadgeTypeManager.vue'
 import MassPrint from '@/components/badge/MassPrint.vue'
 import PrintSettingsView from '@/components/badge/PrintSettings.vue'
 import { usePageSizeStyle } from '@/composables/usePageSizeStyle'
-import { localPrintSettingsStore } from '@/composables/services/printSettingsStore'
+import { getErrorHandlerFunction } from '@/composables/api/base/getErrorHandlerFunction'
+import { generateId } from '@/composables/generateId'
+import { loadBadgeConfig, printSettingsRef } from '@/composables/services/badgeConfigStore'
+import { OnsiteToastService } from '@/composables/services/toastService'
 import Tab from '@/volt/Tab.vue'
 import TabList from '@/volt/TabList.vue'
 import TabPanel from '@/volt/TabPanel.vue'
 import TabPanels from '@/volt/TabPanels.vue'
 import Tabs from '@/volt/Tabs.vue'
-import type { PrintSettings } from '@/types/printSettings'
+import Toast from '@/volt/Toast.vue'
 
-const printSettings = ref<PrintSettings>(localPrintSettingsStore.load())
+const componentId = generateId(useId())
+const toastService = new OnsiteToastService(componentId)
+const errorHandler = getErrorHandlerFunction(toastService)
 
-watch(printSettings, (value) => {
-  localPrintSettingsStore.save(value)
-}, { deep: true })
+onMounted(() => loadBadgeConfig(errorHandler))
 
-usePageSizeStyle(printSettings)
+usePageSizeStyle(printSettingsRef)
 </script>
 
 <template>
   <OnsitePage title="Badge Management">
+    <Toast :group="toastService.toastGroup" position="bottom-right" />
     <Tabs value="print-settings" class="flex flex-col flex-grow">
-      <TabList>
+      <TabList pt:content="flex justify-center">
         <Tab value="print-settings">Settings</Tab>
         <Tab value="designer">Badge Designer</Tab>
         <Tab value="badge-mapping">Badge Mapping</Tab>
@@ -34,13 +38,13 @@ usePageSizeStyle(printSettings)
       </TabList>
       <TabPanels>
         <TabPanel value="print-settings">
-          <PrintSettingsView v-model="printSettings" />
+          <PrintSettingsView v-model="printSettingsRef" :errorHandler="errorHandler" />
         </TabPanel>
         <TabPanel value="designer">
-          <BadgeTypeManager />
+          <BadgeTypeManager :errorHandler="errorHandler" />
         </TabPanel>
         <TabPanel value="badge-mapping">
-          <BadgeMapping />
+          <BadgeMapping :errorHandler="errorHandler" />
         </TabPanel>
         <TabPanel value="mass-print">
           <MassPrint />

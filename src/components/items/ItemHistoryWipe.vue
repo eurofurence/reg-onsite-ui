@@ -6,7 +6,7 @@
         <Button @click="wipePending = true" icon="pi pi-trash" label="Wipe all history" severity="danger" />
       </template>
       <template v-else>
-        <span class="text-sm text-red-500">Remove all history? Current item states are preserved.</span>
+        <span class="text-sm text-red-500">Remove all history? Current item states are preserved, but Restore and Undo will no longer be available for these attendees — this cannot be undone.</span>
         <Button @click="executeWipe" :loading="wipeLoading" icon="pi pi-check" label="Yes, wipe" severity="danger" />
         <Button @click="wipePending = false" label="Cancel" severity="secondary" />
       </template>

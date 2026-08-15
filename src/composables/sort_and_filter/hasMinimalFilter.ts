@@ -10,10 +10,8 @@ export function hasMinimalFilter(filter: RawAttendeeFilter): boolean {
     // Specific badge filters are always sufficient
     return true;
   }
-  if (
-    hasFilterContent(filter.global.value as string | null) &&
-    !isNaN(Number(filter.global.value))
-  ) {
+  const globalValue: string = String(filter.global.value ?? "").trim();
+  if (hasFilterContent(filter.global.value) && /^\d+$/.test(globalValue)) {
     // A raw number in the global field is likely just a badge ID and therefore sufficient
     return true;
   }
@@ -26,7 +24,7 @@ export function hasMinimalFilter(filter: RawAttendeeFilter): boolean {
   ];
   // At least two characters in any of the specified filters are required to show the results
   for (const minFilterField of minFilterFields) {
-    if (isValidNameFilter(<string | null>filter[minFilterField].value)) {
+    if (isValidNameFilter(filter[minFilterField].value)) {
       return true;
     }
   }

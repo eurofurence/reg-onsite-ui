@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col items-center gap-2">
-    <GoodieTreeTable :nodes="props.nodes" />
+    <GoodieTreeTable :nodes="props.nodes" :columns="columns" />
     <div class="flex justify-end w-full">
       <Button class="h-10 aspect-square" v-tooltip.top="'Export as CSV'" @click="exportAsCSV">
         <i class="pi pi-external-link" />
@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import GoodieTreeTable from "@/components/items/GoodieTreeTable.vue";
+import GoodieTreeTable, { type ColumnDef } from "@/components/items/GoodieTreeTable.vue";
 import { downloadCSV } from "@/composables/logic/downloadCSV";
 import type { GoodieTreeNode } from "@/types/internal/goodies";
 import Button from "@/volt/Button.vue";
@@ -18,14 +18,24 @@ import Button from "@/volt/Button.vue";
 interface Props { nodes: GoodieTreeNode[]; }
 const props = defineProps<Props>();
 
+const columns: ColumnDef[] = [
+  { field: "issuedCount", header: "Issued" },
+  { field: "reservedCount", header: "Reserved" },
+  { field: "entitledCount", header: "Entitled" },
+  { field: "soldCount", header: "Sold" },
+  { field: "inventoryCount", header: "Inventory" },
+  { field: "neededReserveCount", header: "Needed Reserve" },
+  { field: "freeToSellCount", header: "Free to Sell" },
+];
+
 function exportAsCSV(): void {
-  const headers = ["Item", "Issued", "Reserved", "Owed"];
+  const headers = ["Item", "Issued", "Reserved", "Entitled", "Sold", "Inventory", "Needed Reserve", "Free to Sell"];
   const rows: string[][] = [];
   for (const node of props.nodes) {
-    rows.push([node.data.label, String(node.data.issuedCount ?? 0), String(node.data.reservedCount ?? 0), String(node.data.boughtCount ?? 0)]);
+    rows.push([node.data.label, String(node.data.issuedCount ?? 0), String(node.data.reservedCount ?? 0), String(node.data.entitledCount ?? 0), String(node.data.soldCount ?? 0), String(node.data.inventoryCount ?? 0), String(node.data.neededReserveCount ?? 0), String(node.data.freeToSellCount ?? 0)]);
     for (const child of node.children ?? []) {
       const childLabel = child.data.value.startsWith("tshirt") ? `  T-Shirt ${child.data.label}` : `  ${child.data.label}`;
-      rows.push([childLabel, String(child.data.issuedCount ?? 0), String(child.data.reservedCount ?? 0), String(child.data.boughtCount ?? 0)]);
+      rows.push([childLabel, String(child.data.issuedCount ?? 0), String(child.data.reservedCount ?? 0), String(child.data.entitledCount ?? 0), String(child.data.soldCount ?? 0), String(child.data.inventoryCount ?? 0), String(child.data.neededReserveCount ?? 0), String(child.data.freeToSellCount ?? 0)]);
     }
   }
   const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(";")).join("\n");

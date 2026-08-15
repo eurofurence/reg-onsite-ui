@@ -5,6 +5,7 @@ export async function postApi(api: string, data: any): Promise<Response> {
   return smartFetch(getUrl(api), {
     method: "POST",
     credentials: "include",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 }

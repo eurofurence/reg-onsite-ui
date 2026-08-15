@@ -237,6 +237,23 @@ async function searchTarget(): Promise<void> {
   targetLoading.value = false;
 }
 
+function sameItems(a: ConcreteGoodieValue[], b: ConcreteGoodieValue[]): boolean {
+  if (a.length !== b.length) return false;
+  const bSet = new Set(b);
+  return a.every((item) => bSet.has(item));
+}
+
+function addInfoUnchangedSince(
+  current: ApiSponsorDeskAddInfo,
+  snapshot: ApiSponsorDeskAddInfo
+): boolean {
+  return (
+    sameItems(current.reservedItems, snapshot.reservedItems) &&
+    sameItems(current.pastItems, snapshot.pastItems) &&
+    sameItems(current.issuedItems, snapshot.issuedItems)
+  );
+}
+
 async function executeTransfer(): Promise<void> {
   if (!canTransfer.value) return;
   const srcInfo = sourceAddInfo.value!;
@@ -245,13 +262,32 @@ async function executeTransfer(): Promise<void> {
   const srcRegNum = sourceRegNum.value as RegNumber;
   const tgtRegNum = targetRegNum.value as RegNumber;
 
+  transferLoading.value = true;
+  const [freshSrcInfo, freshTgtInfo] = await Promise.all([
+    attendeeService.addInfos.getSponsorDeskAddInfo(errorHandler, srcRegNum),
+    attendeeService.addInfos.getSponsorDeskAddInfo(errorHandler, tgtRegNum),
+  ]);
+  const currentSrcInfo = freshSrcInfo ? { ...getEmptySponsorDeskAddInfo(), ...freshSrcInfo } : getEmptySponsorDeskAddInfo();
+  const currentTgtInfo = freshTgtInfo ? { ...getEmptySponsorDeskAddInfo(), ...freshTgtInfo } : getEmptySponsorDeskAddInfo();
+
+  if (!addInfoUnchangedSince(currentSrcInfo, srcInfo) || !addInfoUnchangedSince(currentTgtInfo, tgtInfo)) {
+    transferLoading.value = false;
+    props.toastService.add({
+      severity: ToastSeverity.warn,
+      summary: "Transfer aborted",
+      detail: "Source or target items changed since you selected them. Please search again and retry.",
+      life: 8000,
+    });
+    return;
+  }
+
   const fromReserved = selectedFromReserved.value;
   const fromPast = selectedFromPast.value;
   const fromIssued = selectedFromIssued.value;
   const allSelected = [...fromReserved, ...fromPast, ...fromIssued];
 
-  const updatedSource: ApiSponsorDeskAddInfo = deepCopy(srcInfo);
-  const updatedTarget: ApiSponsorDeskAddInfo = deepCopy(tgtInfo);
+  const updatedSource: ApiSponsorDeskAddInfo = deepCopy(currentSrcInfo);
+  const updatedTarget: ApiSponsorDeskAddInfo = deepCopy(currentTgtInfo);
 
   updatedSource.reservedItems = updatedSource.reservedItems.filter((i) => !fromReserved.includes(i));
   updatedSource.pastItems = updatedSource.pastItems.filter((i) => !fromPast.includes(i));
@@ -264,7 +300,6 @@ async function executeTransfer(): Promise<void> {
     }
   }
 
-  transferLoading.value = true;
   const [srcResult, tgtResult] = await Promise.all([
     attendeeService.addInfos.putSponsorDeskAddInfo(errorHandler, srcRegNum, updatedSource),
     attendeeService.addInfos.putSponsorDeskAddInfo(errorHandler, tgtRegNum, updatedTarget),

@@ -36,8 +36,16 @@ export function sortAttendees<Type extends TransformedAttendeeInfo>(
       if (!sortSetting.order || !sortSetting.field) {
         continue;
       }
-      const fieldValue1: string | number = sortSetting.get(item1);
-      const fieldValue2: string | number = sortSetting.get(item2);
+      let fieldValue1: string | number;
+      let fieldValue2: string | number;
+      try {
+        fieldValue1 = sortSetting.get(item1);
+        fieldValue2 = sortSetting.get(item2);
+      } catch {
+        // Unsupported sort field (e.g. a misconfigured ColumnDefinition) —
+        // skip this criterion instead of crashing the whole table render.
+        continue;
+      }
       if (typeof fieldValue1 === "string" && typeof fieldValue2 === "string") {
         const cmpResult: number =
           fieldValue1.localeCompare(fieldValue2) * sortSetting.order;

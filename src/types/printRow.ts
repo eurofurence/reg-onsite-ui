@@ -1,21 +1,23 @@
 export interface PrintRow {
   id: string
   idValue: string
-  nameValue: string
+  nicknameValue: string
   countryValue: string
   packageValue: string
   flagValue: string
   badgeTypeId: string
+  customValues: Record<string, string>
 }
 
 export function createEmptyPrintRow(badgeTypeId: string): PrintRow {
   return {
     id: crypto.randomUUID(),
     idValue: '',
-    nameValue: '',
+    nicknameValue: '',
     countryValue: '',
     packageValue: '',
     flagValue: '',
     badgeTypeId,
+    customValues: {},
   }
 }

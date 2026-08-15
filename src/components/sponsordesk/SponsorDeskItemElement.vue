@@ -203,7 +203,7 @@ const selectedVariantRef: Ref<LabeledValue<string> | null> =
 watch(
   selectedConcreteGoodieValueListRef,
   (new_value: ConcreteGoodieValue[], _old_value: ConcreteGoodieValue[]) => {
-    lookupVariant(new_value);
+    selectedVariantRef.value = lookupVariant(new_value);
   }
 );
 

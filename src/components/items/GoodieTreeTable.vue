@@ -55,13 +55,12 @@
 </template>
 
 <script setup lang="ts">
-import { getSponsorDeskConfig } from "@/composables/api/attsrv/additional-info/getSponsorDeskConfig";
 import type { ConcreteGoodieValue } from "@/config/convention";
 import type { GoodieTreeNode } from "@/types/internal/goodies";
 import Checkbox from "@/volt/Checkbox.vue";
 import DataTable from "@/volt/DataTable.vue";
 import { Column } from "primevue";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 
 export interface ColumnDef { field: string; header: string; }
 
@@ -80,34 +79,17 @@ const props = withDefaults(defineProps<Props>(), {
   columns: () => [
     { field: "issuedCount", header: "Issued" },
     { field: "reservedCount", header: "Reserved" },
-    { field: "boughtCount", header: "Owed" },
+    { field: "entitledCount", header: "Entitled" },
     { field: "soldCount", header: "Sold" },
+    { field: "inventoryCount", header: "Inventory" },
   ],
   showCheckboxes: false,
 });
 
 const selectedItems = defineModel<ConcreteGoodieValue[]>("selectedItems");
 
-// --- sold items (loaded from reg #0) ---
-const soldCountMap = ref<Map<string, number>>(new Map());
-
-onMounted(async () => {
-  const config = await getSponsorDeskConfig(() => {});
-  if (!config?.soldItems?.length) return;
-  const map = new Map<string, number>();
-  for (const item of config.soldItems) map.set(item, (map.get(item) ?? 0) + 1);
-  soldCountMap.value = map;
-});
-
-function nodeSoldCount(node: GoodieTreeNode): number {
-  if (node.children?.length) {
-    return node.children.reduce((sum, c) => sum + (soldCountMap.value.get(c.key) ?? 0), 0);
-  }
-  return soldCountMap.value.get(node.key) ?? 0;
-}
-
 // --- sort ---
-const sortField = ref<string>("boughtCount");
+const sortField = ref<string>("entitledCount");
 const sortOrder = ref<1 | -1>(-1);
 
 function toggleSort(field: string): void {
@@ -133,18 +115,18 @@ const flatItems = computed<FlatRow[]>(() => {
   const field = sortField.value;
   const order = sortOrder.value;
   const compare = (a: GoodieTreeNode, b: GoodieTreeNode): number => {
-    const aVal = field === "soldCount" ? nodeSoldCount(a) : ((a.data as any)[field] ?? 0);
-    const bVal = field === "soldCount" ? nodeSoldCount(b) : ((b.data as any)[field] ?? 0);
+    const aVal = (a.data as any)[field] ?? 0;
+    const bVal = (b.data as any)[field] ?? 0;
     if (typeof aVal === "string" && typeof bVal === "string") return order * aVal.localeCompare(bVal);
     return order * (Number(aVal) - Number(bVal));
   };
   const result: FlatRow[] = [];
   for (const node of [...props.nodes].sort(compare)) {
     const isExpanded = !!expandedRows.value[node.key];
-    result.push({ ...node.data, key: node.key, soldCount: nodeSoldCount(node), hasChildren: !!(node.children?.length), isExpanded, depth: 0 });
+    result.push({ ...node.data, key: node.key, hasChildren: !!(node.children?.length), isExpanded, depth: 0 });
     if (isExpanded && node.children?.length) {
       for (const child of [...node.children].sort(compare)) {
-        result.push({ ...child.data, key: child.key, soldCount: soldCountMap.value.get(child.key) ?? 0, hasChildren: false, isExpanded: false, depth: 1 });
+        result.push({ ...child.data, key: child.key, hasChildren: false, isExpanded: false, depth: 1 });
       }
     }
   }

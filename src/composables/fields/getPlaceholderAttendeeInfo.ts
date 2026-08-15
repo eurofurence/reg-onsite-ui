@@ -42,6 +42,7 @@ const placeholderAttendeeInfo: TransformedAttendeeInfo = {
   zip: null,
   transId: null,
   transSponsorChoice: null,
+  transDayAttendance: null,
 };
 
 export function getPlaceholderAttendeeInfo<

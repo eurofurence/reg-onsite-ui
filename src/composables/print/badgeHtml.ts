@@ -1,49 +1,104 @@
 import * as bwipjs from 'bwip-js/browser'
-import type { BackgroundFit, BadgeType, TextAlign } from '@/types/badgeType'
+import type { BackgroundFit, BadgeType, CustomBarcodeFieldState, FieldPosition, FieldSize, FontSizeOverflowMode, TextAlign, TextFieldState } from '@/types/badgeType'
 
-const JUSTIFY_CONTENT_BY_ALIGN: Record<TextAlign, string> = {
-  left: 'flex-start',
-  center: 'center',
-  right: 'flex-end',
+const TEXT_ANCHOR_BY_ALIGN: Record<TextAlign, string> = {
+  left: 'start',
+  center: 'middle',
+  right: 'end',
 }
 
-const CM_PER_INCH = 2.54
-const BADGE_WIDTH_CM = 8.56
-const BADGE_HEIGHT_CM = 5.4
-const CARD_ASPECT_RATIO = BADGE_WIDTH_CM / BADGE_HEIGHT_CM
-const NAME_MAX_LENGTH = 100
-const DEFAULT_DPI = 96
-export const BADGE_WIDTH_PX = BADGE_WIDTH_CM / CM_PER_INCH * DEFAULT_DPI
-const BADGE_HEIGHT_PX = BADGE_WIDTH_PX / CARD_ASPECT_RATIO
+const DEFAULT_TRUNCATE_LENGTH = 100
+export const DEFAULT_DPI = 96
+export const MM_PER_INCH = 25.4
+const PT_PER_INCH = 72
 
-function badgeWidthPxAtDpi(dpi: number): number {
-  return BADGE_WIDTH_CM / CM_PER_INCH * dpi
+export function widthPxAtDpi(widthMm: number, dpi: number): number {
+  return widthMm / MM_PER_INCH * dpi
+}
+
+function ptToPxAtDpi(pt: number, dpi: number): number {
+  return pt / PT_PER_INCH * dpi
+}
+
+export function fontFamilyNameFor(fieldId: string, badgeTypeId: string): string {
+  return `badge-font-${fieldId}-${badgeTypeId}`
+}
+
+// blob: URLs (from file uploads) only resolve within the document that
+// created them — embedding one directly in the SVG breaks once that SVG is
+// rendered in a different document (print iframe, PDF converter). Inlining
+// as a data URI makes the SVG fully self-contained everywhere it's used.
+//
+// Bounded LRU: badge backgrounds/fonts are re-resolved often during a long
+// onsite session, and each entry can be sizable (embedded font/image data),
+// so entries are evicted oldest-first past DATA_URL_CACHE_MAX_ENTRIES instead
+// of growing unbounded for the lifetime of the page.
+const DATA_URL_CACHE_MAX_ENTRIES = 50
+const dataUrlCache = new Map<string, Promise<string>>()
+
+export async function resolveToDataUrl(url: string): Promise<string> {
+  if (!url || url.startsWith('data:')) {
+    return url
+  }
+  let cached = dataUrlCache.get(url)
+  if (cached) {
+    // Refresh recency: re-insert so this entry counts as most-recently-used.
+    dataUrlCache.delete(url)
+    dataUrlCache.set(url, cached)
+  } else {
+    cached = (async () => {
+      const response = await fetch(url)
+      const blob = await response.blob()
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = () => reject(reader.error)
+        reader.readAsDataURL(blob)
+      })
+    })()
+    dataUrlCache.set(url, cached)
+    while (dataUrlCache.size > DATA_URL_CACHE_MAX_ENTRIES) {
+      const oldestKey = dataUrlCache.keys().next().value
+      if (oldestKey === undefined) break
+      dataUrlCache.delete(oldestKey)
+    }
+  }
+  try {
+    return await cached
+  } catch {
+    dataUrlCache.delete(url)
+    return url
+  }
 }
 
 let measureContext: CanvasRenderingContext2D | null = null
 
-function fitFontSize(text: string, pixelWidth: number, pixelHeight: number, fontFamily: string): number {
+export function fitFontSize(text: string, pixelWidth: number, pixelHeight: number, fontFamily: string, dpi = DEFAULT_DPI): number {
+  const minFontSizePx = 8 / DEFAULT_DPI * dpi
+  const maxFontSizePx = 60 / DEFAULT_DPI * dpi
   if (!measureContext) {
     measureContext = document.createElement('canvas').getContext('2d')
   }
   if (!measureContext || !text || pixelWidth <= 0 || pixelHeight <= 0) {
-    return 8
+    return minFontSizePx
   }
   const referenceFontSizePx = 100
   measureContext.font = `${referenceFontSizePx}px ${fontFamily}`
   const referenceWidth = measureContext.measureText(text).width
-  const horizontalPadding = 4
+  const horizontalPadding = 4 / DEFAULT_DPI * dpi
   const widthFitSizePx =
     (pixelWidth - horizontalPadding) / referenceWidth * referenceFontSizePx
+  // Cap at 80% of box height to leave vertical breathing room around the
+  // glyphs (ascenders/descenders render outside the nominal font-size box).
   const heightCapPx = pixelHeight * 0.8
-  return Math.min(Math.max(Math.min(widthFitSizePx, heightCapPx), 8), 60)
+  // No floor here: forcing text up to minFontSizePx when the box (width or
+  // height) genuinely can't fit it at that size guarantees overflow instead
+  // of a merely-small, but actually fitting, size. minFontSizePx only guards
+  // the degenerate empty-box/empty-text case handled above.
+  return Math.max(1, Math.min(widthFitSizePx, heightCapPx, maxFontSizePx))
 }
 
-function fontFaceHtml(familyName: string, fontUrl: string): string {
-  return `@font-face { font-family: '${familyName}'; src: url('${fontUrl}') format('opentype'); }`
-}
-
-async function loadFontForMeasurement(familyName: string, fontUrl: string): Promise<void> {
+export async function loadFontForMeasurement(familyName: string, fontUrl: string): Promise<void> {
   if (document.fonts.check(`1px ${familyName}`)) {
     return
   }
@@ -56,7 +111,7 @@ async function loadFontForMeasurement(familyName: string, fontUrl: string): Prom
   }
 }
 
-function escapeHtml(text: string): string {
+function escapeXml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -65,38 +120,144 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;')
 }
 
-interface FieldBox {
+export interface FieldBox {
   left: number
   top: number
   width: number
   height: number
 }
 
-function toFieldBox(pos: { x: number; y: number }, size: { width: number; height: number }): FieldBox {
-  return { left: pos.x, top: pos.y, width: size.width, height: size.height }
+export function fieldBoxPx(pos: FieldPosition, size: FieldSize, cardWidthPx: number, cardHeightPx: number): FieldBox {
+  return {
+    left: pos.x / 100 * cardWidthPx,
+    top: pos.y / 100 * cardHeightPx,
+    width: size.width / 100 * cardWidthPx,
+    height: size.height / 100 * cardHeightPx,
+  }
 }
 
-function renderDataMatrixDataUrl(
+export interface BarcodeMarkup {
+  viewBox: string
+  innerSvg: string
+}
+
+export function barcodeMarkup(
+  style: string,
   inverted: boolean,
   idValue: string,
-  dataMatrixWidthPercent: number,
-  dataMatrixHeightPercent: number,
-  cardWidthPxAtDpi: number,
-  cardHeightPxAtDpi: number,
-): string {
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.round(dataMatrixWidthPercent / 100 * cardWidthPxAtDpi)
-  canvas.height = Math.round(dataMatrixHeightPercent / 100 * cardHeightPxAtDpi)
-  bwipjs.toCanvas(canvas, {
-    bcid: 'datamatrix',
+  color = '000000',
+  transparentBackground = false,
+): BarcodeMarkup {
+  const barcolor = inverted ? 'FFFFFF' : color
+  const bwipOpts: Parameters<typeof bwipjs.toSVG>[0] = {
+    bcid: style,
     text: idValue || ' ',
-    barcolor: inverted ? 'FFFFFF' : '000000',
-    backgroundcolor: inverted ? '000000' : 'FFFFFF',
-  })
-  return canvas.toDataURL()
+    barcolor,
+  }
+  if (!transparentBackground) {
+    bwipOpts.backgroundcolor = inverted ? '000000' : 'FFFFFF'
+  }
+  const rawSvg = bwipjs.toSVG(bwipOpts)
+  const viewBoxMatch = /viewBox="([^"]+)"/.exec(rawSvg)
+  const viewBox = viewBoxMatch?.[1] ?? '0 0 24 24'
+  const innerSvg = rawSvg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '')
+  return { viewBox, innerSvg }
 }
 
-function fieldDivHtml(options: {
+function renderBarcodeSvg(
+  style: string,
+  inverted: boolean,
+  idValue: string,
+  box: FieldBox,
+  color = '000000',
+  transparentBackground = false,
+): string {
+  const { viewBox, innerSvg } = barcodeMarkup(style, inverted, idValue, color, transparentBackground)
+  return `<svg x="${box.left}" y="${box.top}" width="${box.width}" height="${box.height}" viewBox="${viewBox}">${innerSvg}</svg>`
+}
+
+function renderCustomBarcode(
+  field: CustomBarcodeFieldState,
+  idValue: string,
+  cardWidthPxAtPrintDpi: number,
+  cardHeightPxAtPrintDpi: number,
+): string {
+  const boxPx = fieldBoxPx(field.pos, field.size, cardWidthPxAtPrintDpi, cardHeightPxAtPrintDpi)
+  return renderBarcodeSvg(
+    field.style,
+    field.inverted,
+    idValue,
+    boxPx,
+    field.color ?? '000000',
+    field.transparentBackground ?? false,
+  )
+}
+
+export function textAnchorFor(align: TextAlign): string {
+  return TEXT_ANCHOR_BY_ALIGN[align]
+}
+
+export function textXFor(box: FieldBox, align: TextAlign): number {
+  const xByAlign: Record<TextAlign, number> = {
+    left: box.left,
+    center: box.left + box.width / 2,
+    right: box.left + box.width,
+  }
+  return xByAlign[align]
+}
+
+export interface TextLine {
+  text: string
+  y: number
+}
+
+export interface TextLayout {
+  textX: number
+  singleLineY: number
+  lines: TextLine[]
+}
+
+// Baseline positioning uses actual measured glyph ascent/descent (falling
+// back to a rough 0.35em split if canvas measurement is unavailable) so
+// text is vertically centered by its real rendered geometry, not a guess.
+export function computeTextLayout(
+  box: FieldBox,
+  fontSizePx: number,
+  fontFamily: string,
+  text: string,
+  align: TextAlign,
+  isWrapping?: boolean,
+  lineHeightPx?: number,
+): TextLayout {
+  const textX = textXFor(box, align)
+  if (!measureContext) {
+    measureContext = document.createElement('canvas').getContext('2d')
+  }
+  let ascent = fontSizePx * 0.35
+  let descent = fontSizePx * -0.35
+  if (measureContext) {
+    measureContext.font = `${fontSizePx}px ${fontFamily}`
+    const metrics = measureContext.measureText(text || ' ')
+    ascent = metrics.actualBoundingBoxAscent
+    descent = -metrics.actualBoundingBoxDescent
+  }
+  const textHeight = ascent - descent
+
+  if (!isWrapping || lineHeightPx == null) {
+    const singleLineY = box.top + box.height / 2 - textHeight / 2 + ascent
+    return { textX, singleLineY, lines: [{ text, y: singleLineY }] }
+  }
+  const lines = text.split('\n')
+  const totalHeight = lines.length * lineHeightPx
+  const firstBaselineY = box.top + box.height / 2 - totalHeight / 2 + (lineHeightPx - textHeight) / 2 + ascent
+  return {
+    textX,
+    singleLineY: firstBaselineY,
+    lines: lines.map((line, index) => ({ text: line, y: firstBaselineY + index * lineHeightPx })),
+  }
+}
+
+function textFieldSvg(options: {
   text: string
   fontFamily: string
   box: FieldBox
@@ -106,236 +267,264 @@ function fieldDivHtml(options: {
   borderEnabled?: boolean
   borderColor?: string
   isWrapping?: boolean
-  lineHeight?: number
+  lineHeightPx?: number
+  clip?: boolean
 }): string {
-  const { text, fontFamily, box, fontSizePx, color, align, borderEnabled, borderColor, isWrapping, lineHeight } = options
-  const styleParts = [
-    'position:absolute',
-    `left:${box.left}%`,
-    `top:${box.top}%`,
-    `width:${box.width}%`,
-    `height:${box.height}%`,
-    'display:flex',
-    `align-items:${isWrapping ? 'flex-start' : 'center'}`,
-    'overflow:hidden',
-    isWrapping ? 'white-space:pre-wrap' : 'white-space:nowrap',
-    'padding:0 4px',
-    `font-family:${fontFamily}`,
-    `font-size:${fontSizePx}px`,
-    `color:#${color}`,
-    `justify-content:${JUSTIFY_CONTENT_BY_ALIGN[align]}`,
-  ]
-  if (borderEnabled) {
-    styleParts.push(`-webkit-text-stroke:1px #${borderColor ?? '000000'}`)
+  const { text, fontFamily, box, fontSizePx, color, align, borderEnabled, borderColor, isWrapping, lineHeightPx, clip } = options
+  const anchor = textAnchorFor(align)
+  const strokeAttrs = borderEnabled ? ` stroke="#${borderColor ?? '000000'}" stroke-width="1"` : ''
+  const commonAttrs = `font-family="${fontFamily}" font-size="${fontSizePx}" fill="#${color}" text-anchor="${anchor}"${strokeAttrs}`
+
+  const layout = computeTextLayout(box, fontSizePx, fontFamily, text, align, isWrapping, lineHeightPx)
+
+  let textMarkup: string
+  if (!isWrapping || lineHeightPx == null) {
+    textMarkup = `<text x="${layout.textX}" y="${layout.singleLineY}" ${commonAttrs}>${escapeXml(text)}</text>`
+  } else {
+    const tspans = layout.lines
+      .map((line) => `<tspan x="${layout.textX}" y="${line.y}">${escapeXml(line.text)}</tspan>`)
+      .join('')
+    textMarkup = `<text ${commonAttrs}>${tspans}</text>`
   }
-  if (lineHeight != null) {
-    styleParts.push(`line-height:${lineHeight}cm`)
+
+  if (!clip) {
+    return textMarkup
   }
-  const style = styleParts.join(';')
-  return `<div style="${style}">${escapeHtml(text)}</div>`
+  const clipId = `text-clip-${Math.random().toString(36).slice(2)}`
+  return `
+    <clipPath id="${clipId}"><rect x="${box.left}" y="${box.top}" width="${box.width}" height="${box.height}" /></clipPath>
+    <g clip-path="url(#${clipId})">${textMarkup}</g>`
 }
 
-export async function renderBadgeHtml(
+export interface BackgroundImageAttrs {
+  x: string
+  y: string
+  width: string
+  height: string
+  preserveAspectRatio: string
+  transform?: string
+  clip: boolean
+}
+
+export function backgroundImageAttrs(
+  fit: BackgroundFit,
+  alignH: string,
+  alignV: string,
+  cardWidthPx: number,
+  cardHeightPx: number,
+): BackgroundImageAttrs {
+  if (fit === 'fill') {
+    return { x: '0', y: '0', width: `${cardWidthPx}`, height: `${cardHeightPx}`, preserveAspectRatio: 'none', clip: false }
+  }
+  if (fit === 'cover' || fit === 'contain') {
+    const align: Record<string, string> = { left: 'x Min', center: 'x Mid', right: 'x Max' }
+    const vAlign: Record<string, string> = { top: 'YMin', center: 'YMid', bottom: 'YMax' }
+    const hPart = (align[alignH] ?? 'xMid').replace('x ', 'x')
+    const preserveAspectRatio = `${hPart}${vAlign[alignV] ?? 'YMid'} ${fit === 'cover' ? 'slice' : 'meet'}`
+    return { x: '0', y: '0', width: `${cardWidthPx}`, height: `${cardHeightPx}`, preserveAspectRatio, clip: false }
+  }
+  // fit-width / fit-height: scale to one dimension, keep native aspect ratio, clip to card via a clipPath.
+  if (fit === 'fit-width') {
+    const yByAlign: Record<string, string> = { top: '0', center: '50%', bottom: '100%' }
+    const translateY = alignV === 'top' ? '0' : alignV === 'bottom' ? '-100%' : '-50%'
+    return {
+      x: '0', y: yByAlign[alignV] ?? '50%', width: `${cardWidthPx}`, height: 'auto',
+      preserveAspectRatio: 'xMidYMid meet', transform: `translate(0, ${translateY})`, clip: true,
+    }
+  }
+  const xByAlign: Record<string, string> = { left: '0', center: '50%', right: '100%' }
+  const translateX = alignH === 'left' ? '0' : alignH === 'right' ? '-100%' : '-50%'
+  return {
+    x: xByAlign[alignH] ?? '50%', y: '0', width: 'auto', height: `${cardHeightPx}`,
+    preserveAspectRatio: 'xMidYMid meet', transform: `translate(${translateX}, 0)`, clip: true,
+  }
+}
+
+function backgroundImageSvg(
+  href: string,
+  fit: BackgroundFit,
+  alignH: string,
+  alignV: string,
+  cardWidthPx: number,
+  cardHeightPx: number,
+): string {
+  const attrs = backgroundImageAttrs(fit, alignH, alignV, cardWidthPx, cardHeightPx)
+  const transformAttr = attrs.transform ? ` transform="${attrs.transform}"` : ''
+  const image = `<image href="${href}" x="${attrs.x}" y="${attrs.y}" width="${attrs.width}" height="${attrs.height}" preserveAspectRatio="${attrs.preserveAspectRatio}"${transformAttr} />`
+  if (!attrs.clip) {
+    return image
+  }
+  const clipId = `bg-clip-${Math.random().toString(36).slice(2)}`
+  return `
+    <clipPath id="${clipId}"><rect x="0" y="0" width="${cardWidthPx}" height="${cardHeightPx}" /></clipPath>
+    <g clip-path="url(#${clipId})">
+      ${image}
+    </g>`
+}
+
+interface RenderedTextField {
+  key: string
+  markup: string
+}
+
+export interface DisplayText {
+  displayValue: string
+  isWrapping: boolean
+  wrappedValue: string
+}
+
+export function resolveDisplayText(field: TextFieldState, rawValue: string): DisplayText {
+  const truncateAt = field.truncateAt ?? DEFAULT_TRUNCATE_LENGTH
+  const displayValue = rawValue.length > truncateAt
+    ? rawValue.slice(0, truncateAt) + '...'
+    : rawValue
+  const isWrapping = field.wrapAt != null && displayValue.length > field.wrapAt
+  const wrappedValue = isWrapping
+    ? displayValue.slice(0, field.wrapAt!) + '\n' + displayValue.slice(field.wrapAt!)
+    : displayValue
+  return { displayValue, isWrapping, wrappedValue }
+}
+
+export function fontFamilyFor(field: { fontUrl: string }, fontFamilyName: string): string {
+  return field.fontUrl ? `'${fontFamilyName}', sans-serif` : 'sans-serif'
+}
+
+export interface FontSizeResult {
+  fontSizePx: number
+  clip: boolean
+}
+
+export function computeFontSizePx(
+  field: TextFieldState,
+  displayText: DisplayText,
+  fontFamily: string,
+  boxPx: FieldBox,
+  dpi: number,
+): FontSizeResult {
+  const { displayValue, isWrapping } = displayText
+
+  function autoFitFontSizePx(): number {
+    return isWrapping
+      ? fitFontSize(
+          [displayValue.slice(0, field.wrapAt!), displayValue.slice(field.wrapAt!)].reduce((a, b) => a.length >= b.length ? a : b),
+          boxPx.width,
+          boxPx.height / 2,
+          fontFamily,
+          dpi,
+        )
+      : fitFontSize(displayValue, boxPx.width, boxPx.height, fontFamily, dpi)
+  }
+
+  const overflowMode: FontSizeOverflowMode = field.overflowMode ?? 'shrink'
+  if (field.fontSizePt == null) {
+    return { fontSizePx: autoFitFontSizePx(), clip: true }
+  }
+  const requestedFontSizePx = ptToPxAtDpi(field.fontSizePt, dpi)
+  if (overflowMode === 'shrink') {
+    return { fontSizePx: Math.min(autoFitFontSizePx(), requestedFontSizePx), clip: true }
+  }
+  return { fontSizePx: requestedFontSizePx, clip: overflowMode === 'clip' }
+}
+
+export function lineHeightPxFor(field: TextFieldState, isWrapping: boolean, fontSizePx: number, cardHeightPxAtPrintDpi: number): number | undefined {
+  if (!isWrapping) {
+    return undefined
+  }
+  return field.wrapLineHeight != null
+    ? field.wrapLineHeight / 100 * cardHeightPxAtPrintDpi
+    : fontSizePx * 1.2
+}
+
+function renderTextField(
+  key: string,
+  field: TextFieldState,
+  rawValue: string,
+  badgeTypeId: string,
+  cardWidthPxAtPrintDpi: number,
+  cardHeightPxAtPrintDpi: number,
+  dpi: number,
+): { fontUrl: string; fontFamilyName: string; render: () => string } {
+  const displayText = resolveDisplayText(field, rawValue)
+  const boxPx = fieldBoxPx(field.pos, field.size, cardWidthPxAtPrintDpi, cardHeightPxAtPrintDpi)
+  const fontFamilyName = fontFamilyNameFor(key, badgeTypeId)
+  const fontFamily = fontFamilyFor(field, fontFamilyName)
+
+  return {
+    fontUrl: field.fontUrl,
+    fontFamilyName,
+    render: () => {
+      const { fontSizePx, clip } = computeFontSizePx(field, displayText, fontFamily, boxPx, dpi)
+      const lineHeightPx = lineHeightPxFor(field, displayText.isWrapping, fontSizePx, cardHeightPxAtPrintDpi)
+      return textFieldSvg({
+        text: displayText.wrappedValue,
+        fontFamily,
+        box: boxPx,
+        fontSizePx,
+        color: field.color,
+        align: field.align,
+        borderEnabled: field.borderEnabled,
+        borderColor: field.borderColor,
+        isWrapping: displayText.isWrapping,
+        lineHeightPx,
+        clip,
+      })
+    },
+  }
+}
+
+export async function renderBadgeSvg(
   badgeType: BadgeType,
-  idValue: string,
-  nameValue: string,
-  countryValue: string,
-  rotate = false,
+  fieldValues: Record<string, string>,
+  cardWidthMm: number,
+  cardHeightMm: number,
   dpi = DEFAULT_DPI,
 ): Promise<string> {
-  const cardWidthCss = `${BADGE_WIDTH_CM}cm`
-  const cardHeightCss = `${BADGE_HEIGHT_CM}cm`
+  const cardWidthPxAtPrintDpi = widthPxAtDpi(cardWidthMm, dpi)
+  const cardHeightPxAtPrintDpi = cardWidthPxAtPrintDpi * (cardHeightMm / cardWidthMm)
 
-  const badgeWidthPxAtPrintDpi = badgeWidthPxAtDpi(dpi)
-  const badgeHeightPxAtPrintDpi = badgeWidthPxAtPrintDpi / CARD_ASPECT_RATIO
+  const barcodeSvgMarkup = badgeType.fields.customBarcodes
+    .filter((field) => field.enabled)
+    .map((field) => renderCustomBarcode(field, fieldValues[field.id] ?? '', cardWidthPxAtPrintDpi, cardHeightPxAtPrintDpi))
+    .join('\n')
 
-  const idField = badgeType.fields.id
-  const nameField = badgeType.fields.name
-  const countryField = badgeType.fields.country
-  const dataMatrixField = badgeType.fields.datamatrix
-
-  const truncateAt = nameField.truncateAt ?? NAME_MAX_LENGTH
-  const displayName = nameValue.length > truncateAt
-    ? nameValue.slice(0, truncateAt) + '...'
-    : nameValue
-  const nameIsWrapping = nameField.wrapAt != null && displayName.length > nameField.wrapAt
-  const wrappedDisplayName = nameIsWrapping
-    ? displayName.slice(0, nameField.wrapAt!) + '\n' + displayName.slice(nameField.wrapAt!)
-    : displayName
-
-  const idBox = toFieldBox(idField.pos, idField.size)
-  const nameBox = toFieldBox(nameField.pos, nameField.size)
-  const countryBox = toFieldBox(countryField.pos, countryField.size)
-  const dataMatrixBox = toFieldBox(dataMatrixField.pos, dataMatrixField.size)
-
-  const dataMatrixDataUrl = dataMatrixField.enabled
-    ? renderDataMatrixDataUrl(
-        dataMatrixField.inverted,
-        idValue,
-        dataMatrixBox.width,
-        dataMatrixBox.height,
-        badgeWidthPxAtPrintDpi,
-        badgeHeightPxAtPrintDpi,
-      )
+  const { url: backgroundUrl, fit: backgroundFit, alignH, alignV } = badgeType.background
+  const resolvedBackgroundUrl = backgroundUrl ? await resolveToDataUrl(backgroundUrl) : ''
+  const backgroundImageSvgMarkup = resolvedBackgroundUrl
+    ? backgroundImageSvg(resolvedBackgroundUrl, backgroundFit, alignH, alignV, cardWidthPxAtPrintDpi, cardHeightPxAtPrintDpi)
     : ''
 
-  function bgImgStyle(fit: BackgroundFit, alignH: string, alignV: string): string {
-    if (fit === 'fit-width') {
-      const vPos: Record<string, string> = { top: 'top:0', center: 'top:50%;transform:translateY(-50%)', bottom: 'bottom:0' }
-      return `position:absolute;width:100%;height:auto;left:0;right:0;${vPos[alignV] ?? vPos.center}`
-    }
-    if (fit === 'fit-height') {
-      const hPos: Record<string, string> = { left: 'left:0', center: 'left:50%;transform:translateX(-50%)', right: 'right:0' }
-      return `position:absolute;height:100%;width:auto;top:0;bottom:0;${hPos[alignH] ?? hPos.center}`
-    }
-    const objectFit: Record<string, string> = { cover: 'cover', contain: 'contain', fill: 'fill' }
-    return `position:absolute;inset:0;width:100%;height:100%;object-fit:${objectFit[fit] ?? 'cover'};object-position:${alignH} ${alignV}`
-  }
+  const prepared = badgeType.fields.custom.map((field) => ({
+    key: field.id,
+    enabled: field.enabled,
+    ...renderTextField(field.id, field, fieldValues[field.id] ?? '', badgeType.id, cardWidthPxAtPrintDpi, cardHeightPxAtPrintDpi, dpi),
+  }))
 
-  const alignH = badgeType.backgroundAlignH ?? 'center'
-  const alignV = badgeType.backgroundAlignV ?? 'center'
-  const backgroundImageHtml = badgeType.backgroundUrl
-    ? `<img src="${badgeType.backgroundUrl}" style="${bgImgStyle(badgeType.backgroundFit ?? 'cover', alignH, alignV)}" />`
-    : ''
-
-  const fontFaces: string[] = []
-
-  function resolveFontFamily(fontUrl: string, familyName: string, fallback: string): string {
-    if (!fontUrl) {
-      return fallback
-    }
-    fontFaces.push(fontFaceHtml(familyName, fontUrl))
-    return `'${familyName}', ${fallback}`
-  }
-
-  const idFontFamilyName = `badge-font-id-${badgeType.id}`
-  const nameFontFamilyName = `badge-font-name-${badgeType.id}`
-  const countryFontFamilyName = `badge-font-country-${badgeType.id}`
-
-  const idFontFamily = resolveFontFamily(idField.fontUrl, idFontFamilyName, 'monospace')
-  const nameFontFamily = resolveFontFamily(nameField.fontUrl, nameFontFamilyName, 'sans-serif')
-  const countryFontFamily = resolveFontFamily(countryField.fontUrl, countryFontFamilyName, 'sans-serif')
-  const fontFaceStyleHtml = fontFaces.length > 0 ? `<style>${fontFaces.join('\n')}</style>` : ''
-
-  await Promise.all([
-    idField.fontUrl ? loadFontForMeasurement(idFontFamilyName, idField.fontUrl) : Promise.resolve(),
-    nameField.fontUrl ? loadFontForMeasurement(nameFontFamilyName, nameField.fontUrl) : Promise.resolve(),
-    countryField.fontUrl ? loadFontForMeasurement(countryFontFamilyName, countryField.fontUrl) : Promise.resolve(),
-  ])
-
-  const idFontSizePx = fitFontSize(
-    idValue,
-    idBox.width / 100 * BADGE_WIDTH_PX,
-    idBox.height / 100 * BADGE_HEIGHT_PX,
-    idFontFamily,
+  const resolvedFontUrls = await Promise.all(
+    prepared.map((entry) => entry.fontUrl ? resolveToDataUrl(entry.fontUrl) : Promise.resolve('')),
   )
-  const nameFontSizePx = nameIsWrapping
-    ? fitFontSize(
-        [displayName.slice(0, nameField.wrapAt!), displayName.slice(nameField.wrapAt!)].reduce((a, b) => a.length >= b.length ? a : b),
-        nameBox.width / 100 * BADGE_WIDTH_PX,
-        nameBox.height / 100 * BADGE_HEIGHT_PX / 2,
-        nameFontFamily,
-      )
-    : fitFontSize(
-        displayName,
-        nameBox.width / 100 * BADGE_WIDTH_PX,
-        nameBox.height / 100 * BADGE_HEIGHT_PX,
-        nameFontFamily,
-      )
-  const countryFontSizePx = fitFontSize(
-    countryValue,
-    countryBox.width / 100 * BADGE_WIDTH_PX,
-    countryBox.height / 100 * BADGE_HEIGHT_PX,
-    countryFontFamily,
+  await Promise.all(
+    prepared.map((entry, index) => resolvedFontUrls[index] ? loadFontForMeasurement(entry.fontFamilyName, resolvedFontUrls[index]) : Promise.resolve()),
   )
 
-  const cardStyle = [
-    'position:relative',
-    `width:${cardWidthCss}`,
-    `height:${cardHeightCss}`,
-    'margin:0 auto',
-    'overflow:hidden',
-    `background-color:#${badgeType.backgroundColor ?? 'ffffff'}`,
-    'print-color-adjust:exact',
-    '-webkit-print-color-adjust:exact',
-  ].join(';')
+  const renderedTextFields: RenderedTextField[] = prepared
+    .filter((entry) => entry.enabled)
+    .map((entry) => ({ key: entry.key, markup: entry.render() }))
 
-  const dataMatrixStyle = [
-    'position:absolute',
-    `left:${dataMatrixBox.left}%`,
-    `top:${dataMatrixBox.top}%`,
-    `width:${dataMatrixBox.width}%`,
-    `height:${dataMatrixBox.height}%`,
-  ].join(';')
+  const fontFaces = prepared
+    .map((entry, index) => resolvedFontUrls[index] ? `@font-face { font-family: '${entry.fontFamilyName}'; src: url('${resolvedFontUrls[index]}') format('opentype'); }` : '')
+    .filter(Boolean)
 
-  const cardHtml = `
-    <div style="${cardStyle}">
-      ${backgroundImageHtml}
-      ${idField.enabled ? fieldDivHtml({
-        text: idValue,
-        fontFamily: idFontFamily,
-        box: idBox,
-        fontSizePx: idFontSizePx,
-        color: idField.color,
-        align: idField.align,
-        borderEnabled: idField.borderEnabled,
-        borderColor: idField.borderColor,
-      }) : ''}
-      ${nameField.enabled ? fieldDivHtml({
-        text: wrappedDisplayName,
-        fontFamily: nameFontFamily,
-        box: nameBox,
-        fontSizePx: nameFontSizePx,
-        color: nameField.color,
-        align: nameField.align,
-        borderEnabled: nameField.borderEnabled,
-        borderColor: nameField.borderColor,
-        isWrapping: nameIsWrapping,
-        lineHeight: nameIsWrapping && nameField.wrapLineHeight != null ? nameField.wrapLineHeight / 100 * BADGE_HEIGHT_CM : undefined,
-      }) : ''}
-      ${countryField.enabled ? fieldDivHtml({
-        text: countryValue,
-        fontFamily: countryFontFamily,
-        box: countryBox,
-        fontSizePx: countryFontSizePx,
-        color: countryField.color,
-        align: countryField.align,
-        borderEnabled: countryField.borderEnabled,
-        borderColor: countryField.borderColor,
-      }) : ''}
-      ${dataMatrixField.enabled ? `
-      <div style="${dataMatrixStyle}">
-        <img src="${dataMatrixDataUrl}" style="width:100%;height:100%" />
-      </div>` : ''}
-    </div>
+  const fontFaceStyleSvg = fontFaces.length > 0 ? `<style>${fontFaces.join('\n')}</style>` : ''
+
+  const cardSvg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${cardWidthMm}mm" height="${cardHeightMm}mm" viewBox="0 0 ${cardWidthPxAtPrintDpi} ${cardHeightPxAtPrintDpi}" font-family="sans-serif">
+      <defs>${fontFaceStyleSvg}</defs>
+      <rect x="0" y="0" width="${cardWidthPxAtPrintDpi}" height="${cardHeightPxAtPrintDpi}" fill="#${badgeType.background.color}" />
+      ${backgroundImageSvgMarkup}
+      ${renderedTextFields.map((entry) => entry.markup).join('\n')}
+      ${barcodeSvgMarkup}
+    </svg>
   `
 
-  if (!rotate) {
-    return `${fontFaceStyleHtml}${cardHtml}`
-  }
-
-  const rotatedWrapperStyle = [
-    'position:relative',
-    `width:${cardHeightCss}`,
-    `height:${cardWidthCss}`,
-    'margin:0 auto',
-  ].join(';')
-
-  const rotatedCardStyle = [
-    'position:absolute',
-    `width:${cardWidthCss}`,
-    `height:${cardHeightCss}`,
-    'top:50%',
-    'left:50%',
-    'transform:translate(-50%, -50%) rotate(90deg)',
-  ].join(';')
-
-  return `
-    ${fontFaceStyleHtml}
-    <div style="${rotatedWrapperStyle}">
-      <div style="${rotatedCardStyle}">
-        ${cardHtml}
-      </div>
-    </div>
-  `
+  return cardSvg
 }

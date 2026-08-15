@@ -3,6 +3,7 @@ import { getMainConRoleChoice } from "@/composables/fields/conrole/getMainConRol
 import { getCountryName } from "@/composables/fields/country/getCountryName";
 import { getConBookValue } from "@/composables/fields/flags/getValues";
 import {
+  getDayAttendanceValues,
   getGoodieValue,
   getSponsorValue,
 } from "@/composables/fields/packages/getValues";
@@ -19,7 +20,7 @@ import type {
 function removeLeadingZerosFromDate(value: IsoBirthdayStr): TrimmedBirthdayStr {
   const dateComponents: number[] = value.split("-").map(Number);
   if (dateComponents.length !== 3) {
-    throw new Error(`Invalid date encountered: ${value}`);
+    return value as unknown as TrimmedBirthdayStr;
   }
   const [year, month, day] = <[number, number, number]>dateComponents;
   return `${year}-${month.toString()}-${day.toString()}` as TrimmedBirthdayStr;
@@ -59,6 +60,7 @@ export function transformAttendee(
       transConbookChoice: getConBookValue(attendee.flags_list),
       transSponsorChoice: getSponsorValue(attendee.packages_list),
       transGoodieChoice: getGoodieValue(attendee.packages_list),
+      transDayAttendance: getDayAttendanceValues(attendee.packages_list),
       transCanCheckin: canCheckin(attendee),
     },
   };

@@ -14,7 +14,7 @@ function internalErrorHandler(
       detail: errorInfo.errorDetail,
       life: 10000,
     });
-  } else {
+  } else if (import.meta.env.DEV) {
     console.error(`${summary}: ${JSON.stringify(errorInfo.errorDetail)}`);
   }
 }

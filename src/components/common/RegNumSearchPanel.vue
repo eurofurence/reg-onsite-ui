@@ -5,6 +5,7 @@
   ></span>
   <GroupPanel icon="pi-search" label="User Selection">
     <InputFieldWithKeyPad
+      ref="inputFieldWithKeyPad"
       v-model="inputRegNumber"
       @numberSubmit="onSearchRegNumber"
       :shortcutScopes="props.shortcutScopes"
@@ -30,16 +31,20 @@ import { authService } from "@/composables/services/authService";
 import type { ShortcutScope } from "@/composables/services/keyboardService";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import { ButtonSeverity } from "@/types/internal/primevue";
-import { onMounted, ref, useId, type Ref } from "vue";
+import { onMounted, ref, useId, useTemplateRef, type Ref } from "vue";
 
 const inputRegNumber: Ref<RegNumber | null> = ref<RegNumber | null>(null);
+const inputFieldWithKeyPad =
+  useTemplateRef<typeof InputFieldWithKeyPad>("inputFieldWithKeyPad");
 
 setupEventListener(window, "hashchange", ensureValidRoute);
 
 async function ensureValidRoute(): Promise<void> {
   const regNumber: RegNumber | null = getRegNumberFromRoute();
   setRegNumberRoute(regNumber);
-  emit("onSearchRegNumber", regNumber);
+  if (regNumber !== null) {
+    emit("onSearchRegNumber", regNumber);
+  }
 }
 
 onMounted(ensureValidRoute);
@@ -63,4 +68,9 @@ const props: Props = defineProps<Props>();
 const emit: CallableFunction = defineEmits(["onSearchRegNumber"]);
 const componentId: string = generateId(useId());
 
+async function focus(): Promise<void> {
+  await inputFieldWithKeyPad.value?.focusRegNumberInput();
+}
+
+defineExpose({ focus });
 </script>

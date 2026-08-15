@@ -55,6 +55,7 @@
       chartType="bar"
       cssClass="w-192"
       v-bind:data="attendanceData"
+      @chartSelect="(v) => emit('filterSelect', { field: 'transDayAttendance', value: v })"
     />
     <AttendeeChart
       label="Interests"
@@ -74,109 +75,62 @@
       cssClass="w-192"
       v-bind:data="fursuitData"
     />
-    <div class="flex flex-col">
-      <AttendeeChart
-        label="Countries"
-        chartType="bar"
-        cssClass="w-192"
-        :chartOptions="isLogCountries ? barlogYChartOptions : {}"
-        v-bind:data="
-          getStatsFromProperty(
-            statsRef,
-            'country',
-            getConventionSetup().metadata.forCountry.list,
-            {
-              color: ColorsPalette.primary_400,
-            }
-          )
-        "
-        @chartSelect="(v) => emit('filterSelect', { field: 'country', value: v })"
-      />
-      <div class="flex flex-row flex-grow mx-auto">
-        <div><ToggleSwitch v-model="isLogCountries" /></div>
-        <div class="pl-2">Log</div>
-      </div>
-    </div>
-    <div class="flex flex-col">
-      <AttendeeChart
-        label="Languages"
-        chartType="bar"
-        cssClass="w-192"
-        :chartOptions="isLogLanguages ? barlogYChartOptions : {}"
-        v-bind:data="languageData"
-      />
-      <div class="flex flex-row flex-grow mx-auto">
-        <div><ToggleSwitch v-model="isLogLanguages" /></div>
-        <div class="pl-2">Log</div>
-      </div>
-    </div>
-    <div class="flex flex-col">
-      <AttendeeChart
-        label="Age"
-        chartType="bar"
-        cssClass="w-192"
-        :chartOptions="isLogAge ? barlogYChartOptions : {}"
-        v-bind:data="
-          getStatsFromProperty(statsRef, 'transAge', [], {
-            color: ColorsPalette.green_400,
-            sort: 'label',
-          })
-        "
-      />
-      <div class="flex flex-row flex-grow mx-auto">
-        <div><ToggleSwitch v-model="isLogAge" /></div>
-        <div class="pl-2">Log</div>
-      </div>
-    </div>
+    <AttendeeChart
+      label="Benefactor Packages per Registration"
+      chartType="bar"
+      cssClass="w-192"
+      v-bind:data="benefactorPackageCountData"
+    />
+    <AttendeeChartWithLogToggle
+      label="Countries"
+      v-bind:data="
+        getStatsFromProperty(
+          statsRef,
+          'country',
+          getConventionSetup().metadata.forCountry.list,
+          {
+            color: ColorsPalette.primary_400,
+          }
+        )
+      "
+      @chartSelect="(v) => emit('filterSelect', { field: 'country', value: v })"
+    />
+    <AttendeeChartWithLogToggle label="Languages" v-bind:data="languageData" />
+    <AttendeeChartWithLogToggle
+      label="Age"
+      v-bind:data="
+        getStatsFromProperty(statsRef, 'transAge', [], {
+          color: ColorsPalette.green_400,
+          sort: 'label',
+        })
+      "
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import AttendeeChart from "@/components/statistics/AttendeeChart.vue";
-import { getColorFromStyle } from "@/composables/colors/getColorFromStyle";
-import { getColorVariants } from "@/composables/colors/getColorVariants";
+import AttendeeChartWithLogToggle from "@/components/statistics/AttendeeChartWithLogToggle.vue";
 import { getDiagramDataFromList } from "@/composables/statistics/getDiagramDataFromList";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import {
   computeAttendeeStatisticEntries,
   type AttendeeStatisticEntry,
 } from "@/composables/statistics/computeAttendeeStatisticEntries";
+import { getAttendanceChartData } from "@/composables/statistics/getAttendanceChartData";
+import { getBenefactorPackageCountChartData } from "@/composables/statistics/getBenefactorPackageCountChartData";
+import { getFursuitChartData } from "@/composables/statistics/getFursuitChartData";
 import { getStatsFromProperty } from "@/composables/statistics/getStatsFromProperty";
+import { getTshirtChartData } from "@/composables/statistics/getTshirtChartData";
 import { ColorsPalette } from "@/composables/theme/colors";
-import { AttendeeApiAttendance } from "@/config/metadata/packages/metadataForAttendance";
-import { metadataListForTShirtTypesInternal, TShirtType } from "@/config/metadata/tshirt/metadataForTShirtTypes";
-import { UnusedPackages } from "@/types/external/attsrv/attendees/attendee";
-import { NoPackage } from "@/types/internal/missing";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { ChartData } from "@/types/internal/statistics";
 import type { FilterFieldValue } from "@/types/internal/filter";
-import ToggleSwitch from "@/volt/ToggleSwitch.vue";
-import { computed, ref, type ComputedRef, type ModelRef, type Ref } from "vue";
+import { computed, type ComputedRef, type ModelRef } from "vue";
 
 const emit = defineEmits<{
   filterSelect: [selection: { field: FilterFieldValue; value: string }];
 }>();
-
-const isLogCountries: Ref<boolean> = ref(false);
-const isLogAge: Ref<boolean> = ref(false);
-const isLogLanguages: Ref<boolean> = ref(false);
-
-const barlogYChartOptions: any = {
-  plugins: {
-    legend: {
-      labels: {
-        usePointStyle: true,
-      },
-    },
-  },
-  scales: {
-    y: {
-      min: 0.9,
-      display: true,
-      type: "logarithmic",
-    },
-  },
-};
 
 const attendeeInfosRef: ModelRef<TransformedAttendeeInfo[]> = defineModel<
   TransformedAttendeeInfo[]
@@ -184,70 +138,21 @@ const attendeeInfosRef: ModelRef<TransformedAttendeeInfo[]> = defineModel<
 const statsRef: ComputedRef<AttendeeStatisticEntry[]> =
   computeAttendeeStatisticEntries(attendeeInfosRef);
 
-const attendanceApiValues = new Set<string>(Object.values(AttendeeApiAttendance));
+const attendanceData: ComputedRef<ChartData> = computed(() =>
+  getAttendanceChartData(statsRef.value)
+);
 
-const attendanceData: ComputedRef<ChartData> = computed(() => {
-  const values = statsRef.value.map((a) => {
-    const pkg = (a.packages_list ?? []).find((p) => attendanceApiValues.has(p.name));
-    return pkg?.name ?? AttendeeApiAttendance.full;
-  });
-  return getDiagramDataFromList(
-    values,
-    getConventionSetup().metadata.forDayAttendance.list,
-    { color: ColorsPalette.primary_400 }
-  );
-});
+const tshirtData: ComputedRef<ChartData> = computed(() =>
+  getTshirtChartData(statsRef.value)
+);
 
-const tshirtData: ComputedRef<ChartData> = computed(() => {
-  const countMap: Record<string, number> = {};
-  for (const a of statsRef.value) {
-    if (a.transGoodieChoice !== null && a.transGoodieChoice !== NoPackage.no_package) {
-      const size = a.tshirt_size ?? TShirtType.regular_unknown;
-      countMap[size] = (countMap[size] || 0) + 1;
-    }
-  }
-  const [main, alt] = getColorVariants(ColorsPalette.orange_400);
-  const bgColor = getColorFromStyle(main);
-  const hoverColor = getColorFromStyle(alt);
-  return {
-    labels: metadataListForTShirtTypesInternal.map((m) => m.label),
-    values: metadataListForTShirtTypesInternal.map((m) => m.value),
-    datasets: [
-      {
-        label: "Count",
-        data: metadataListForTShirtTypesInternal.map((m) => countMap[m.value] || 0),
-        backgroundColor: metadataListForTShirtTypesInternal.map(() => bgColor),
-        hoverBackgroundColor: metadataListForTShirtTypesInternal.map(() => hoverColor),
-      },
-    ],
-  };
-});
+const fursuitData: ComputedRef<ChartData> = computed(() =>
+  getFursuitChartData(statsRef.value)
+);
 
-const fursuitData: ComputedRef<ChartData> = computed(() => {
-  let badgeCount = 0;
-  let addCount = 0;
-  for (const a of statsRef.value) {
-    for (const pkg of a.packages_list ?? []) {
-      if (pkg.name === UnusedPackages.fursuit_badge) badgeCount += pkg.count;
-      if (pkg.name === UnusedPackages.fursuit_add) addCount += pkg.count;
-    }
-  }
-  const [main, alt] = getColorVariants(ColorsPalette.purple_400);
-  const bgColor = getColorFromStyle(main);
-  const hoverColor = getColorFromStyle(alt);
-  return {
-    labels: ["Fursuit Badge", "Fursuit Add-on"],
-    values: [UnusedPackages.fursuit_badge, UnusedPackages.fursuit_add],
-    datasets: [
-      {
-        label: "Count",
-        data: [badgeCount, addCount],
-        backgroundColor: [bgColor, bgColor],
-        hoverBackgroundColor: [hoverColor, hoverColor],
-      },
-    ],
-  };
-});
+const benefactorPackageCountData: ComputedRef<ChartData> = computed(() =>
+  getBenefactorPackageCountChartData(statsRef.value)
+);
 
 const languageData: ComputedRef<ChartData> = computed(() => {
   const values = statsRef.value.flatMap((a) => a.spoken_languages_list ?? []);

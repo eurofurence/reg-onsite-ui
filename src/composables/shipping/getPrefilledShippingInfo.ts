@@ -1,3 +1,4 @@
+import { getConcreteVariantItemValue } from "@/composables/items/getConcreteVariantItemValue";
 import { getGoodieFromConcreteItem } from "@/composables/items/getGoodieFromConcreteItem";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import { getEmptyShippingAddInfo } from "@/composables/shipping/getEmptyShippingAddInfo";
@@ -12,6 +13,7 @@ import {
 import type { ApiShippingAddInfo } from "@/types/external/attsrv/additional-info/shipping";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import type { LabeledValue } from "@/types/internal/infos";
 
 function getTShirtTypeFromMissingItems(
   missingItems: ConcreteGoodieValue[]
@@ -27,23 +29,18 @@ function getTShirtTypeFromMissingItems(
   if (!goodie) {
     return;
   }
+  return goodie.variants?.find(
+    (variant: LabeledValue<TShirtTypeValue>) =>
+      getConcreteVariantItemValue(goodie, variant) === missingTShirtValue
+  )?.value;
 }
 
-export function getPrefilledShippingInfo<Type extends TransformedAttendeeInfo>(
-  storedAttendeeInfo: Type,
+export function resolveTShirtSizeAndShape(
+  storedAttendeeInfo: TransformedAttendeeInfo,
   missingItems: ConcreteGoodieValue[]
-): ApiShippingAddInfo {
-  let result = getEmptyShippingAddInfo();
-  result.id = storedAttendeeInfo.id || (0 as RegNumber);
-  result.nickname = storedAttendeeInfo.nickname || "";
-  result.first_name = storedAttendeeInfo.first_name || "";
-  result.last_name = storedAttendeeInfo.last_name || "";
-  result.street = storedAttendeeInfo.street || "";
-  result.zip = storedAttendeeInfo.zip || "";
-  result.email = storedAttendeeInfo.email || "";
-  result.city = storedAttendeeInfo.city || "";
-  result.country = (storedAttendeeInfo.country || "") as CountryCode;
-  result.state = storedAttendeeInfo.state || "";
+): Pick<ApiShippingAddInfo, "tshirt_size" | "tshirt_shape"> {
+  const result: Pick<ApiShippingAddInfo, "tshirt_size" | "tshirt_shape"> =
+    getEmptyShippingAddInfo();
 
   const tshirtType: TShirtTypeValue =
     getTShirtTypeFromMissingItems(missingItems) ||
@@ -61,5 +58,30 @@ export function getPrefilledShippingInfo<Type extends TransformedAttendeeInfo>(
       }
     }
   );
+  return result;
+}
+
+export function getPrefilledShippingInfo<Type extends TransformedAttendeeInfo>(
+  storedAttendeeInfo: Type,
+  missingItems: ConcreteGoodieValue[]
+): ApiShippingAddInfo {
+  let result = getEmptyShippingAddInfo();
+  result.id = storedAttendeeInfo.id ?? (0 as RegNumber);
+  result.nickname = storedAttendeeInfo.nickname || "";
+  result.first_name = storedAttendeeInfo.first_name || "";
+  result.last_name = storedAttendeeInfo.last_name || "";
+  result.street = storedAttendeeInfo.street || "";
+  result.zip = storedAttendeeInfo.zip || "";
+  result.email = storedAttendeeInfo.email || "";
+  result.city = storedAttendeeInfo.city || "";
+  result.country = (storedAttendeeInfo.country || "") as CountryCode;
+  result.state = storedAttendeeInfo.state || "";
+
+  const { tshirt_size, tshirt_shape } = resolveTShirtSizeAndShape(
+    storedAttendeeInfo,
+    missingItems
+  );
+  result.tshirt_size = tshirt_size;
+  result.tshirt_shape = tshirt_shape;
   return result;
 }

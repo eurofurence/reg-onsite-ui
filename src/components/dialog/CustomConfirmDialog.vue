@@ -29,7 +29,7 @@ import {
   type KeyboardServiceEvent,
 } from "@/composables/services/keyboardService";
 import Dialog from "@/volt/Dialog.vue";
-import { ref, watch, type Ref } from "vue";
+import { onUnmounted, ref, watch, type Ref } from "vue";
 
 interface Props {
   shortcutLabel: ShortcutScope;
@@ -76,7 +76,7 @@ async function onEnter(event: KeyboardServiceEvent): Promise<boolean> {
   return false;
 }
 
-keyboardService.registerShortcuts(
+const unregisterEnter = keyboardService.registerShortcuts(
   props.shortcutLabel,
   ShortcutEvent.keydown,
   ShortcutKey.enter,
@@ -91,12 +91,17 @@ async function onEscape(event: KeyboardServiceEvent): Promise<boolean> {
   return false;
 }
 
-keyboardService.registerShortcuts(
+const unregisterEscape = keyboardService.registerShortcuts(
   props.shortcutLabel,
   ShortcutEvent.keydown,
   ShortcutKey.escape,
   onEscape
 );
+
+onUnmounted(() => {
+  unregisterEnter();
+  unregisterEscape();
+});
 
 function hideConfirmDialog(): void {
   isVisible.value = false;

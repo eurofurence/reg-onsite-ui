@@ -8,7 +8,32 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import { ToastSeverity } from "@/types/internal/primevue";
 import type { AttendeeDataOptions } from "@/types/internal/system/regdesk";
 import type { ToastMessageOptions } from "primevue";
-import { onMounted, type Ref } from "vue";
+import { onMounted, watch, type Ref } from "vue";
+
+function waitForNonEmptyList(
+  transformedAttendeeListRef: Ref<TransformedAttendeeInfo[]>,
+  timeoutDuration: number
+): Promise<void> {
+  if (transformedAttendeeListRef.value.length > 0) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    const stopWatch = watch(
+      () => transformedAttendeeListRef.value.length,
+      (length) => {
+        if (length > 0) {
+          stopWatch();
+          clearTimeout(timeoutHandle);
+          resolve();
+        }
+      }
+    );
+    const timeoutHandle = setTimeout(() => {
+      stopWatch();
+      resolve();
+    }, timeoutDuration);
+  });
+}
 
 export function restoreSelectionFromRoute(
   toastService: OnsiteToastService,
@@ -29,24 +54,10 @@ export function restoreSelectionFromRoute(
       summary: `Opening previously selected registration #${regNumber}`,
       life: timeoutDuration,
     };
-    dataOptionsRef.value.filterConfig.filterValues = {
-      ...getDefaultAttendeeFilterValues(),
-      ...{
-        badge_id: { value: `${regNumber}`, matchMode: "startsWith" },
-      },
-    };
+    const previousFilterValues = dataOptionsRef.value.filterConfig.filterValues;
     toastService.add(toastMessage);
-    let waitForAttendeeList = true;
-    setTimeout(() => {
-      waitForAttendeeList = false;
-    }, timeoutDuration);
     try {
-      while (
-        transformedAttendeeListRef.value.length === 0 &&
-        waitForAttendeeList === true
-      ) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
+      await waitForNonEmptyList(transformedAttendeeListRef, timeoutDuration);
     } finally {
       toastService.remove(toastMessage);
     }
@@ -69,6 +80,15 @@ export function restoreSelectionFromRoute(
       return;
     }
     selectedAttendeeRef.value = matchingAttendee[0] as TransformedAttendeeInfo;
+    // Pre-filter the table to the restored attendee, but only once we know
+    // the selection actually succeeded, and only if the user hasn't changed
+    // the filter in the meantime (e.g. while data was still loading).
+    if (dataOptionsRef.value.filterConfig.filterValues === previousFilterValues) {
+      dataOptionsRef.value.filterConfig.filterValues = {
+        ...getDefaultAttendeeFilterValues(),
+        badge_id: { value: `${regNumber}`, matchMode: "startsWith" },
+      };
+    }
     toastService.add({
       severity: ToastSeverity.success,
       summary: `Restored previously selected registration #${regNumber}`,

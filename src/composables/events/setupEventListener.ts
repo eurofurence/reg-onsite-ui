@@ -1,10 +1,11 @@
 import { onMounted, onUnmounted } from "vue";
 
-export function setupEventListener(
-  target: any,
+export function setupEventListener<EventType extends Event>(
+  target: EventTarget,
   event: string,
-  callback: CallableFunction
+  callback: (event: EventType) => void
 ): void {
-  onMounted(() => target.addEventListener(event, callback));
-  onUnmounted(() => target.removeEventListener(event, callback));
+  const listener = callback as EventListener;
+  onMounted(() => target.addEventListener(event, listener));
+  onUnmounted(() => target.removeEventListener(event, listener));
 }

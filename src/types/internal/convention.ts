@@ -1,5 +1,8 @@
 import type { Branded } from "@/composables/brand";
-import type { MetadataRecord } from "@/composables/collection_tools/metadata/getMetadataEntryFromRecord";
+import type {
+  MetadataRecord,
+  PartialMetadataRecord,
+} from "@/composables/collection_tools/metadata/getMetadataEntryFromRecord";
 import type { AbstractGoodieValue, GoodieConfig } from "@/config/convention";
 import type { ConRole } from "@/config/metadata/flags/metadataForConRoles";
 import type { CountryCode } from "@/config/metadata/metadataForCountry";
@@ -73,20 +76,6 @@ export type AuthGroupValue = `${AuthGroups}`;
 
 export type ThemeColorPalette = { [key: string]: string };
 
-export interface ConventionSettings {
-  links: {
-    logoPath: string;
-    idpDashboardLink: URL;
-    privacyLink: URL;
-    imprintLink: URL;
-  };
-  colorPalette: ThemeColorPalette;
-  maxRegNumber: RegNumber;
-  minAge: AgeInYears;
-  metadata: ConventionSharedMetadata;
-  auth: Partial<Record<AuthGroupValue, IdpGroupId[]>>;
-}
-
 export type ConDays = Branded<number, "ConDays">;
 
 export interface ConventionIterationSettings {
@@ -104,9 +93,36 @@ export interface ConventionIterationSettings {
   };
 }
 
+export interface ConventionIteration {
+  label: string;
+  settings: ConventionIterationSettings;
+  record: PartialMetadataRecord<GoodieConfig>;
+}
+
 export interface ConventionInventorySettings {
   sponsordesk: AbstractGoodieValue[];
   constore: AbstractGoodieValue[];
+}
+
+export interface ConventionSettings {
+  links: {
+    logoPath: string;
+    idpDashboardLink: URL;
+    privacyLink: URL;
+    imprintLink: URL;
+  };
+  colorPalette: ThemeColorPalette;
+  maxRegNumber: RegNumber;
+  minAge: AgeInYears;
+  metadata: ConventionSharedMetadata;
+  auth: Partial<Record<AuthGroupValue, IdpGroupId[]>>;
+  // first entry is the current iteration
+  iterations: ConventionIteration[];
+  // lookup of all goodies across all iterations, even retired ones
+  goodiesRecord: MetadataRecord<GoodieConfig>;
+  // goodies belonging to the current iteration only
+  currentGoodiesRecord: PartialMetadataRecord<GoodieConfig>;
+  inventory: ConventionInventorySettings;
 }
 
 interface ConventionMetadata extends ConventionSharedMetadata {

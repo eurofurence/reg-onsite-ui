@@ -9,3 +9,7 @@ dependencies = [
     "pyjwt[crypto]>=2.13.0",
     "uvicorn[standard]>=0.52.1",
 ]
+
+[build-system]
+requires = ["uv_build>=0.11.25,<0.12.0"]
+build-backend = "uv_build"

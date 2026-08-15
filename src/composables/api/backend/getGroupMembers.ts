@@ -1,5 +1,5 @@
 import { fetchResultWrapper } from "@/composables/api/base/fetchResultWrapper";
-import { getApi } from "@/composables/api/base/getApi";
+import { postApi } from "@/composables/api/base/postApi";
 import { type RestErrorHandler, restErrorWrapper } from "@/composables/api/base/restErrorWrapper";
 import type { IdpGroupId } from "@/types/external/authsrv/frontenduserinfo";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
@@ -11,7 +11,7 @@ interface GroupMembersResponse {
 }
 
 async function fetchGroupMembers(groupId: IdpGroupId, idpToken: string): FetchResultPromise<GroupMembersResponse, ApiError> {
-  const response = await getApi(`onsite/api/group-members/${encodeURIComponent(groupId)}?idp_token=${encodeURIComponent(idpToken)}`);
+  const response = await postApi(`onsite/api/v1/groups/${encodeURIComponent(groupId)}/attendees`, { idpToken });
   return fetchResultWrapper<GroupMembersResponse>(response);
 }
 

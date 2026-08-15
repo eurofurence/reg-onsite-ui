@@ -4,114 +4,40 @@
       <Card>
         <template #content>
           <div class="grid grid-cols-2 gap-3 pb-3 onsite-nav">
-            <Fieldset
-              legend="Registration"
-              :disabled="
-                checkDisabled(AuthGroups.registration, AuthGroups.security)
-              "
-              v-if="checkShown(AuthGroups.registration, AuthGroups.security)"
-            >
-              <div class="flex flex-col gap-3 m-2">
-                <LinkButton :href="getLink('/regdesk')" class="w-full">
-                  <i class="pi pi-id-card" />Registration Desk
-                </LinkButton>
-                <LinkButton :href="getLink('/cashierdesk')" class="w-full">
-                  <i class="pi pi-money-bill" />Cashier Desk
-                </LinkButton>
-                <LinkButton :href="getLink('/quickregdesk')" class="w-full">
-                  <i class="pi pi-bolt" />Quick Registration Desk
-                </LinkButton>
-                <LinkButton :href="getLink('/badge')" class="w-full">
-                  <i class="pi pi-credit-card" />Badge Management
-                </LinkButton>
-              </div>
-            </Fieldset>
-            <Fieldset legend="Goodies">
-              <div class="flex flex-col gap-3 m-2">
-                <LinkButton
-                  :disabled="checkDisabled(AuthGroups.sponsorDesk)"
-                  v-if="checkShown(AuthGroups.sponsorDesk)"
-                  :href="getLink('/sponsordesk')"
-                  class="w-full"
-                >
-                  <i class="pi pi-heart-fill pr-2" />Sponsor Desk<br />(First
-                  Day)
-                </LinkButton>
-                <LinkButton
-                  :disabled="checkDisabled(AuthGroups.dealersDen)"
-                  v-if="checkShown(AuthGroups.dealersDen)"
-                  :href="getLink('/constore')"
-                  class="w-full"
-                >
-                  <i class="pi pi-shopping-cart pr-2" />Con Store Desk<br />(In
-                  the DD)
-                </LinkButton>
-                <LinkButton :href="getLink('/shipping')" class="w-full">
-                  <i class="pi pi-envelope" />Shipping Form
-                </LinkButton>
-                <LinkButton
-                  :disabled="checkDisabled(AuthGroups.director)"
-                  v-if="checkShown(AuthGroups.director)"
-                  :href="getLink('/items')"
-                  class="w-full"
-                >
-                  <i class="pi pi-box pr-2" />Item Management
-                </LinkButton>
-              </div>
-            </Fieldset>
-            <Fieldset
-              legend="Statistics"
-              :disabled="
-                checkDisabled(
-                  AuthGroups.dealersDen,
-                  AuthGroups.registration,
-                  AuthGroups.security
-                )
-              "
-              v-if="
-                checkShown(
-                  AuthGroups.dealersDen,
-                  AuthGroups.registration,
-                  AuthGroups.security
-                )
-              "
-            >
-              <div class="flex flex-col gap-3 m-2">
-                <LinkButton :href="getLink('/stats')" class="w-full">
-                  <i class="pi pi-chart-line" />Statistics
-                </LinkButton>
-              </div>
-            </Fieldset>
-            <Fieldset
-              legend="Dealer's Den"
-              :disabled="checkDisabled(AuthGroups.dealersDen)"
-              v-if="checkShown(AuthGroups.dealersDen)"
-            >
-              <div class="flex flex-col gap-3 m-2">
-                <LinkButton
-                  :href="environmentSettings.dealerFrontdeskUrl.toString()"
-                  class="w-full"
-                >
-                  <i class="pi pi-palette" />DD Checkin Desk
-                </LinkButton>
-              </div>
-            </Fieldset>
-            <Fieldset legend="Other Services">
-              <div class="flex flex-col gap-3 m-2">
-                <LinkButton
-                  href="https://critter.eurofurence.org"
-                  class="w-full"
-                >
-                  <i class="pi pi-briefcase" />Critter System
-                </LinkButton>
-                <LinkButton
-                  href="https://stream.eurofurence.org"
-                  class="w-full"
-                >
-                  <i class="pi pi-video" />Live Stream
-                </LinkButton>
-              </div>
-            </Fieldset>
+            <template v-for="fieldset in allFieldsets" :key="fieldset.legend">
+              <Fieldset
+                :legend="fieldset.legend"
+                :disabled="checkDisabled(...(fieldset.authGroups ?? []))"
+                v-if="checkShown(...(fieldset.authGroups ?? []))"
+              >
+                <div class="flex flex-col gap-3 m-2">
+                  <template
+                    v-for="item in fieldset.items"
+                    :key="item.label"
+                  >
+                    <LinkButton
+                      :disabled="
+                        checkDisabled(
+                          ...(item.authGroups ?? fieldset.authGroups ?? [])
+                        )
+                      "
+                      v-if="
+                        checkShown(
+                          ...(item.authGroups ?? fieldset.authGroups ?? [])
+                        )
+                      "
+                      :href="resolveLink(item.link)"
+                      class="w-full"
+                    >
+                      <i :class="item.icon" />{{ item.label
+                      }}<template v-if="item.sublabel"
+                        ><br />{{ item.sublabel }}</template
+                      >
+                    </LinkButton>
+                  </template>
+                </div>
+              </Fieldset>
+            </template>
           </div>
           <LabeledToggleSwitch
             label="Show disabled apps"
@@ -128,12 +54,19 @@ import LabeledToggleSwitch from "@/components/common/LabeledToggleSwitch.vue";
 import LinkButton from "@/components/common/LinkButton.vue";
 import { environmentSettings } from "@/composables/services/environmentService";
 import { isInAnyGroup } from "@/composables/state/authState";
-import { AuthGroups, type AuthGroupValue } from "@/types/internal/convention";
+import { navConfig } from "@/config/nav";
+import { type AuthGroupValue } from "@/types/internal/convention";
+import type { NavLink } from "@/types/internal/nav";
 import Card from "@/volt/Card.vue";
 import Fieldset from "@/volt/Fieldset.vue";
-import { ref, type Ref } from "vue";
+import { computed, ref, type Ref } from "vue";
 
 const showDisabled: Ref<boolean> = ref(false);
+
+const allFieldsets = computed(() => [
+  ...navConfig,
+  ...environmentSettings.externalFieldsets,
+]);
 
 function checkDisabled(...groupNameList: AuthGroupValue[]) {
   return !isInAnyGroup(...groupNameList);
@@ -145,5 +78,12 @@ function checkShown(...groupNameList: AuthGroupValue[]) {
 
 function getLink(relativePath: string): string {
   return `${import.meta.env.BASE_URL}${relativePath}`;
+}
+
+function resolveLink(link: NavLink): string {
+  if (link.kind === "internal") {
+    return getLink(link.path);
+  }
+  return link.url.toString();
 }
 </script>

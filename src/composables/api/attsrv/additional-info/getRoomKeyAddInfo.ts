@@ -9,7 +9,7 @@ export async function getRoomKeyAddInfo(
 ): Promise<ApiRoomKeyAddInfo | null | undefined> {
   return await getAddInfo<ApiRoomKeyAddInfo>(
     "Attendee Key Service",
-    "shipping", // FIXME!
+    "roomkey",
     errorHandler,
     regNumber
   );

@@ -75,10 +75,7 @@ import { getItemDisplayLabel } from "@/composables/items/getItemDisplayLabel";
 import { getGoodieLabel } from "@/composables/items/getGoodieLabel";
 import { FROM_SIZE_SUFFIX, FROM_SIZE_VARIANT_VALUE, isFromSizeItem } from "@/composables/items/fromSizeUtils";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
-import type { ConcreteGoodieValue } from "@/config/convention";
-import { iterationEF2024 } from "@/config/convention/eurofurence/ef2024";
-import { iterationEF2025 } from "@/config/convention/eurofurence/ef2025";
-import { iterationEF2026 } from "@/config/convention/eurofurence/ef2026";
+import { conventionIterations, currentIterationLabel, type ConcreteGoodieValue } from "@/config/convention";
 import Fieldset from "@/volt/Fieldset.vue";
 import RadioButton from "@/volt/RadioButton.vue";
 import Select from "@/volt/Select.vue";
@@ -89,17 +86,13 @@ const goodieLevels = getConventionSetup().metadata.forGoodiesLevels.list;
 const conRoles = getConventionSetup().metadata.forConRole.list.filter((r) => r.value !== "<no_flag>");
 const goodiesRecord = getConventionSetup().metadata.forAbstractGoodies.record;
 
-const iterationsWithGoodies = [
-  { label: "EF 2026", settings: iterationEF2026 },
-  { label: "EF 2025", settings: iterationEF2025 },
-  { label: "EF 2024", settings: iterationEF2024 },
-];
+const iterationsWithGoodies = conventionIterations;
 
 type ItemsMode = "manual" | "package" | "flag";
 const itemsMode = useLocalStorage<ItemsMode>("item-assign-items-mode", "manual");
-const pkgIter = useLocalStorage<string | null>("item-assign-pkg-iter", "EF 2026");
+const pkgIter = useLocalStorage<string | null>("item-assign-pkg-iter", currentIterationLabel);
 const pkgKey = useLocalStorage<string | null>("item-assign-pkg-key", null);
-const flagIter = useLocalStorage<string | null>("item-assign-flag-iter", "EF 2026");
+const flagIter = useLocalStorage<string | null>("item-assign-flag-iter", currentIterationLabel);
 const flagKey = useLocalStorage<string | null>("item-assign-flag-key", null);
 const pkgVariants = useLocalStorage<Record<string, string | null>>("item-assign-pkg-variants", {});
 const flagVariants = useLocalStorage<Record<string, string | null>>("item-assign-flag-variants", {});

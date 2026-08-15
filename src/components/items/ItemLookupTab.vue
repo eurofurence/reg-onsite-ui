@@ -4,6 +4,7 @@
     <!-- Controls -->
     <div class="flex gap-2 items-center flex-wrap">
       <Button icon="pi pi-clipboard" label="Paste from Clipboard" @click="pasteFromClipboard" severity="secondary" />
+      <Button icon="pi pi-plus" label="Add Row" @click="addRawRow" severity="secondary" :disabled="rawData.length === 0" />
       <Button icon="pi pi-trash" label="Clear" @click="clearData" severity="danger" outlined :disabled="rawData.length === 0" />
       <span v-if="rawData.length > 0" class="text-xs text-surface-400">{{ rawData.length }} row(s), {{ numColumns }} column(s)</span>
     </div>
@@ -14,34 +15,33 @@
       <!-- Input table with mapping header -->
       <div class="flex flex-col gap-2 flex-1 min-w-0">
         <div class="text-xs text-surface-500 font-medium">Assign columns</div>
-        <div class="border border-surface-300 dark:border-surface-600 rounded-md overflow-auto max-h-96">
-          <table class="text-sm">
-            <thead class="sticky top-0 bg-surface-100 dark:bg-surface-800 z-10">
-              <tr>
-                <th v-for="(_, ci) in numColumns" :key="ci" class="px-1 py-1 text-xs font-normal">
-                  <Select
-                    :modelValue="columnMapping[ci] ?? ''"
-                    @update:modelValue="setColumnMapping(ci, $event)"
-                    :options="FIELD_OPTIONS"
-                    optionLabel="label"
-                    optionValue="value"
-                    class="w-28 text-xs"
-                  />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(row, ri) in rawData" :key="ri"
-                class="border-t border-surface-200 dark:border-surface-700 hover:bg-surface-50 dark:hover:bg-surface-800/50">
-                <td v-for="(cell, ci) in row" :key="ci"
-                  class="px-2 py-0.5 text-xs whitespace-nowrap max-w-48 truncate"
-                  :class="columnMapping[ci] ? '' : 'text-surface-400'">
-                  {{ cell }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <DataTable :value="rawData" class="max-h-96" scrollable scrollHeight="24rem" size="small">
+          <Column v-for="(_, ci) in numColumns" :key="ci">
+            <template #header>
+              <Select
+                :modelValue="columnMapping[ci] ?? ''"
+                @update:modelValue="setColumnMapping(ci, $event)"
+                :options="FIELD_OPTIONS"
+                optionLabel="label"
+                optionValue="value"
+                class="w-28 text-xs"
+              />
+            </template>
+            <template #body="{ data }">
+              <span
+                class="text-xs whitespace-nowrap max-w-48 truncate block"
+                :class="columnMapping[ci] ? '' : 'text-surface-400'"
+              >{{ data[ci] }}</span>
+            </template>
+          </Column>
+          <Column style="width: 2.5rem">
+            <template #body="{ index }">
+              <button @click="removeRawRow(index)" class="text-surface-400 hover:text-red-500 w-5 h-5 flex items-center justify-center">
+                <i class="pi pi-times text-xs" />
+              </button>
+            </template>
+          </Column>
+        </DataTable>
       </div>
 
       <!-- Results table -->
@@ -49,43 +49,38 @@
         <div class="text-xs text-surface-500 font-medium">
           Results — {{ results.filter(r => r.found).length }} found, {{ results.filter(r => !r.found).length }} not found
         </div>
-        <div class="border border-surface-300 dark:border-surface-600 rounded-md overflow-auto max-h-96">
-          <table class="text-sm">
-            <thead class="sticky top-0 bg-surface-100 dark:bg-surface-800 z-10">
-              <tr>
-                <th v-for="field in mappedFields" :key="'h-' + field"
-                  class="px-3 py-1 text-left text-xs font-medium text-surface-400">
-                  {{ fieldLabel(field) }}
-                </th>
-                <th class="px-3 py-1 text-left text-xs font-medium">Matched ID</th>
-                <th class="px-3 py-1 text-left text-xs font-medium">Matched Nick</th>
-                <th class="px-3 py-1 text-left text-xs font-medium w-6"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(result, ri) in results" :key="ri"
-                class="border-t border-surface-200 dark:border-surface-700"
-                :class="result.found ? '' : 'text-surface-400'">
-                <td v-for="field in mappedFields" :key="'c-' + field"
-                  class="px-3 py-0.5 text-xs text-surface-400">
-                  {{ inputFieldValue(result.input, field) }}
-                </td>
-                <td class="px-3 py-0.5 text-xs font-mono">{{ result.id ?? '—' }}</td>
-                <td class="px-3 py-0.5 text-xs">
-                  {{ result.nickname ?? '' }}
-                  <i
-                    v-if="nicknameWarning(result)"
-                    class="pi pi-exclamation-triangle text-amber-500 ml-1"
-                    v-tooltip="'Nickname mismatch: input was \'' + (result.input.nickname ?? '') + '\''"
-                  />
-                </td>
-                <td class="px-3 py-0.5 text-xs">
-                  <i v-if="!result.found" class="pi pi-exclamation-triangle text-amber-500" v-tooltip="'Not found'" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <DataTable :value="results" class="max-h-96" scrollable scrollHeight="24rem" size="small">
+          <Column v-for="field in mappedFields" :key="field" :header="fieldLabel(field)">
+            <template #body="{ data }">
+              <span class="text-xs text-surface-400">{{ inputFieldValue(data.input, field) }}</span>
+            </template>
+          </Column>
+          <Column header="Matched ID">
+            <template #body="{ data }">
+              <span class="text-xs font-mono">{{ data.id ?? '—' }}</span>
+            </template>
+          </Column>
+          <Column header="Matched Nick">
+            <template #body="{ data }">
+              <span class="text-xs">
+                {{ data.nickname ?? '' }}
+                <i
+                  v-if="nicknameWarning(data)"
+                  class="pi pi-exclamation-triangle text-amber-500 ml-1"
+                  v-tooltip="'Nickname mismatch: input was \'' + (data.input.nickname ?? '') + '\''"
+                />
+              </span>
+            </template>
+          </Column>
+          <Column style="width: 2.5rem">
+            <template #body="{ data, index }">
+              <i v-if="!data.found" class="pi pi-exclamation-triangle text-amber-500" v-tooltip="'Not found'" />
+              <button @click="removeResultRow(index)" class="text-surface-400 hover:text-red-500 w-5 h-5 flex items-center justify-center">
+                <i class="pi pi-times text-xs" />
+              </button>
+            </template>
+          </Column>
+        </DataTable>
       </div>
     </div>
 
@@ -113,7 +108,9 @@ import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerF
 import type { OnsiteToastService } from "@/composables/services/toastService";
 import { ToastSeverity } from "@/types/internal/primevue";
 import Button from "@/volt/Button.vue";
+import DataTable from "@/volt/DataTable.vue";
 import Select from "@/volt/Select.vue";
+import { Column } from "primevue";
 import { useLocalStorage } from "@vueuse/core";
 import { computed, ref } from "vue";
 
@@ -165,6 +162,18 @@ async function pasteFromClipboard(): Promise<void> {
 function clearData(): void {
   rawData.value = [];
   results.value = [];
+}
+
+function addRawRow(): void {
+  rawData.value = [...rawData.value, Array(numColumns.value).fill("")];
+}
+
+function removeRawRow(index: number): void {
+  rawData.value = rawData.value.filter((_, i) => i !== index);
+}
+
+function removeResultRow(index: number): void {
+  results.value = results.value.filter((_, i) => i !== index);
 }
 
 // Lookup

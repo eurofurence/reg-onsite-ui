@@ -1,8 +1,13 @@
 import type { MetadataRecord } from "@/composables/collection_tools/metadata/getMetadataEntryFromRecord";
+import { GoodiesLevel } from "@/config/metadata/packages/metadataForPerks";
 import {
   metadataListForTShirtTypesInternal,
   type TShirtTypeValue,
 } from "@/config/metadata/tshirt/metadataForTShirtTypes";
+import type {
+  ConDays,
+  ConventionIterationSettings,
+} from "@/types/internal/convention";
 import type { GenericGoodieConfig } from "@/types/internal/goodies";
 import type { LabeledValue } from "@/types/internal/infos";
 
@@ -44,3 +49,26 @@ export const metadataRecordForGoodies2023: MetadataRecord<EFGoodieConfig2023> =
       label: "Scarf (2023)",
     },
   };
+
+export const iterationEF2023: ConventionIterationSettings = {
+  conDates: { start: new Date("2023-09-03"), days: 4 as ConDays },
+  vip: { regNumberList: [] },
+  goodies: {
+    forPackage: {
+      [GoodiesLevel.tshirt]: [AbstractEFGoodieWithVariants2023.tshirt_2023],
+      [GoodiesLevel.sponsor]: [
+        AbstractEFGoodieWithVariants2023.tshirt_2023,
+        AbstractEFGoodieWithoutVariants2023.pin_2023,
+        AbstractEFGoodieWithoutVariants2023.cup_2023,
+      ],
+      [GoodiesLevel.super_sponsor]: [
+        AbstractEFGoodieWithVariants2023.tshirt_2023,
+        AbstractEFGoodieWithoutVariants2023.pin_2023,
+        AbstractEFGoodieWithoutVariants2023.cup_2023,
+        AbstractEFGoodieWithoutVariants2023.scarf_2023,
+      ],
+    },
+    forFlag: {},
+    forRegNumber: {},
+  },
+};

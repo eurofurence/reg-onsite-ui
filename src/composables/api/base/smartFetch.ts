@@ -27,6 +27,17 @@ async function confirmLogout(): Promise<boolean> {
   return await isSessionExpired();
 }
 
+let pendingConfirmLogout: Promise<boolean> | null = null;
+
+async function confirmLogoutOnce(): Promise<boolean> {
+  if (pendingConfirmLogout === null) {
+    pendingConfirmLogout = confirmLogout().finally(() => {
+      pendingConfirmLogout = null;
+    });
+  }
+  return await pendingConfirmLogout;
+}
+
 export async function smartFetch(
   fetchUrl: URL,
   fetchParameters: RequestInit
@@ -36,7 +47,7 @@ export async function smartFetch(
     return response;
   }
   // Confirm Logout
-  if (await confirmLogout()) {
+  if (await confirmLogoutOnce()) {
     return response;
   }
   // Try again if relogin succeeded

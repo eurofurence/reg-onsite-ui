@@ -1,9 +1,9 @@
 import { dirtyState } from "@/composables/state/dirtyState";
-import { computed, type ComputedRef } from "vue";
+import { computed, unref, type ComputedRef } from "vue";
 
 export const isDirty: ComputedRef<boolean> = computed(() => {
   for (const key in dirtyState) {
-    if (dirtyState[key] === true) {
+    if (unref(dirtyState[key]) === true) {
       return true;
     }
   }

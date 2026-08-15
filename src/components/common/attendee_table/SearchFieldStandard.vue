@@ -3,6 +3,7 @@
     <AutoComplete
       v-model="modelValueRef"
       @item-select="onItemSelect"
+      @keydown.enter.prevent.stop="onEnter"
       class="search-column-filter"
       :placeholder="props.placeholder"
       :suggestions="suggestionsRef"
@@ -12,6 +13,7 @@
   <div v-else>
     <InputText
       v-model="modelValueRef"
+      @keydown.enter.prevent.stop="onEnter"
       class="search-column-filter"
       :placeholder="placeholder"
     />
@@ -30,6 +32,10 @@ const suggestionsRef: Ref<string[]> = ref<string[]>([]);
 
 function onItemSelect(): void {
   matchModeRef.value = "equals";
+}
+
+function onEnter(): void {
+  matchModeRef.value = matchModeRef.value === "equals" ? "contains" : "equals";
 }
 
 const computedAutoCompleteDataRef: ComputedRef<[string, string][]> = computed<

@@ -17,8 +17,7 @@ async function postAddInfo<AddInfoType>(
     `attsrv/api/rest/v1/attendees/${regNumber}/additional-info/${addInfoArea}`,
     itemData
   );
-  const data = await response.body?.getReader()?.read();
-  return fetchResultWrapper<any>(response, data);
+  return fetchResultWrapper<any>(response);
 }
 
 export async function putAddInfo<AddInfoType>(

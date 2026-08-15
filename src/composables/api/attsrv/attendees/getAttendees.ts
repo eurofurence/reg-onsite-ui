@@ -4,6 +4,7 @@ import {
   type RestErrorHandler,
   restErrorWrapper,
 } from "@/composables/api/base/restErrorWrapper";
+import { isInAnyGroup } from "@/composables/state/authState";
 import type {
   ApiAttendeeInfo,
   ApiFindResponse,
@@ -12,17 +13,18 @@ import type {
   PackageApiValue,
 } from "@/types/external/attsrv/attendees/attendee";
 import type { ApiError } from "@/types/external/error";
+import { AuthGroups } from "@/types/internal/convention";
 import type { FetchResultPromise } from "@/types/internal/rest";
 
 export async function fetchAttendees(
   match_any_params: ApiSearchType<PackageApiValue, FlagApiValue>[]
 ): FetchResultPromise<ApiFindResponse, ApiError> {
-  const response: Response = await postApi(
-    `attsrv/api/rest/v1/attendees/find`,
-    {
-      match_any: match_any_params,
-    }
-  );
+  const api: string = isInAnyGroup(AuthGroups.admin)
+    ? `onsite/api/v1/attendees/search`
+    : `attsrv/api/rest/v1/attendees/find`;
+  const response: Response = await postApi(api, {
+    match_any: match_any_params,
+  });
   return fetchResultWrapper<ApiFindResponse>(response);
 }
 

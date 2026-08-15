@@ -129,7 +129,6 @@ async function handleSearch(
   > = attendeeService.getAttendeeByRegNumber(collectErrors, regNumber);
   const apiSDAddInfoPromise: Promise<ApiSponsorDeskAddInfo | null | undefined> =
     attendeeService.addInfos.getSponsorDeskAddInfo(collectErrors, regNumber);
-  Promise.allSettled([transformedAttendeeInfoPromise, apiSDAddInfoPromise]);
   const transformedAttendeeInfo: TransformedAttendeeInfo | null | undefined =
     await transformedAttendeeInfoPromise;
   const apiSDAddInfo: ApiSponsorDeskAddInfo | null | undefined =

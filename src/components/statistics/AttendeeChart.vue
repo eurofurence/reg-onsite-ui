@@ -1,7 +1,14 @@
 <template>
   <div class="grid-cols-1">
     <label class="flex justify-center">{{ props.label }}</label>
+    <div
+      v-if="props.data.values.length === 0"
+      :class="[props.cssClass, 'flex items-center justify-center text-surface-400 text-sm']"
+    >
+      No data
+    </div>
     <Chart
+      v-else
       :type="props.chartType"
       :data="props.data"
       :options="props?.chartOptions || defaultChartOptions"

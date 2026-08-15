@@ -7,6 +7,7 @@ export interface SponsorDeskConfigRecord {
   availableItems?: ConcreteGoodieValue[];
   soldItems?: ConcreteGoodieValue[];
   sumupMapping?: Record<string, string>;
+  inventoryCounts?: Record<string, number>;
 }
 
 const CONFIG_REG = 0 as RegNumber;

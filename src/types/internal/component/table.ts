@@ -16,6 +16,7 @@ export const enum ColumnType {
   tag,
   checkin,
   dues,
+  attendance,
 }
 
 export interface ColumnFilterConfig {
@@ -32,6 +33,7 @@ interface GenericColumn extends LabeledValue<keyof TransformedAttendeeInfo> {
   sortEnabled: boolean;
   filterConfig?: ColumnFilterConfig;
   dataType?: "numeric" | "date";
+  sortFieldOverride?: keyof TransformedAttendeeInfo;
 }
 
 interface StandardColumn extends GenericColumn {
@@ -39,7 +41,12 @@ interface StandardColumn extends GenericColumn {
   maxLength: number;
 }
 
-interface CountryColumn extends GenericColumn {
+export interface AttendanceColumn extends GenericColumn {
+  columnType: ColumnType.attendance;
+  configItems: LabeledValue<string>[];
+}
+
+export interface CountryColumn extends GenericColumn {
   columnType: ColumnType.country;
 }
 
@@ -47,7 +54,7 @@ interface BirthdayColumn extends GenericColumn {
   columnType: ColumnType.birthday;
 }
 
-interface TagColumn extends GenericColumn {
+export interface TagColumn extends GenericColumn {
   columnType: ColumnType.tag;
   configItems: OptionalColoredIconLabeledValue<string>[];
 }
@@ -66,7 +73,8 @@ export type ColumnDefinition =
   | BirthdayColumn
   | TagColumn
   | CheckinColumn
-  | DuesColumn;
+  | DuesColumn
+  | AttendanceColumn;
 
 export const enum TableFilterDisplay {
   menu = "menu",

@@ -28,14 +28,39 @@
       class="flex flex-row gap-5 justify-center"
       v-if="filterStatusRef !== FilterStatus.raw"
     >
-      <div v-for="columnDefinition of setupColumnDefinitionList">
+      <div v-for="columnDefinition of chartOrderedTagColumns" class="flex flex-col gap-1">
+        <label>{{ columnDefinition.label }}</label>
         <SearchFieldTag
           v-model="filterOptionsRef[columnDefinition.value as AllFilterFieldValues].value"
           :columnDefinition="columnDefinition"
           :configItems="columnDefinition.configItems"
           placeholder="Search"
-          v-if="columnDefinition.columnType === ColumnType.tag"
         />
+      </div>
+      <div v-if="attendanceColumn" class="flex flex-col gap-1">
+        <label>{{ attendanceColumn.label }}</label>
+        <SearchFieldAttendance
+          v-model="filterOptionsRef[attendanceColumn.value as AllFilterFieldValues].value"
+          :columnDefinition="attendanceColumn"
+          :configItems="attendanceColumn.configItems"
+        />
+      </div>
+      <div v-if="countryColumn" class="flex flex-col gap-1">
+        <label>{{ countryColumn.label }}</label>
+        <SearchFieldCountry
+          v-model="filterOptionsRef.country.value"
+          :columnDefinition="countryColumn"
+          :autoCompleteData="attendeeInfosRef"
+        />
+      </div>
+      <div class="flex items-end">
+        <Button
+          class="h-12 aspect-square"
+          v-tooltip.top="'Reset filters'"
+          @click="onResetFilters()"
+        >
+          <i class="pi pi-filter-slash" />
+        </Button>
       </div>
     </div>
     <div>
@@ -45,8 +70,11 @@
 </template>
 
 <script setup lang="ts">
+import SearchFieldAttendance from "@/components/common/attendee_table/SearchFieldAttendance.vue";
+import SearchFieldCountry from "@/components/common/attendee_table/SearchFieldCountry.vue";
 import SearchFieldTag from "@/components/common/attendee_table/SearchFieldTag.vue";
 import AttendeeChartCollection from "@/components/statistics/AttendeeChartCollection.vue";
+import { deepCopy } from "@/composables/deepCopy";
 import { generateId } from "@/composables/generateId";
 import { getFilteredAttendees } from "@/composables/sort_and_filter/getFilteredAttendees";
 import { AttendeeApiStatus } from "@/config/metadata/metadataForStatus";
@@ -55,12 +83,19 @@ import {
   setupColumnDefinitionList,
 } from "@/config/system/regdesk";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
-import { ColumnType } from "@/types/internal/component/table";
+import {
+  ColumnType,
+  type AttendanceColumn,
+  type ColumnDefinition,
+  type CountryColumn,
+  type TagColumn,
+} from "@/types/internal/component/table";
 import type {
   AllFilterFieldValues,
   FilterFieldValue,
   RawAttendeeFilter,
 } from "@/types/internal/filter";
+import Button from "@/volt/Button.vue";
 import RadioButton from "@/volt/RadioButton.vue";
 import { FilterMatchMode } from "@primevue/core/api";
 import {
@@ -78,27 +113,85 @@ const enum FilterStatus {
 }
 type FilterStatusValue = `${FilterStatus}`;
 
-const filterStatusRef: Ref<FilterStatusValue> = ref(FilterStatus.raw);
+interface Props {
+  filters?: RawAttendeeFilter;
+}
+const props = defineProps<Props>();
+
+const filterStatusRef: Ref<FilterStatusValue> = ref(
+  props.filters ? FilterStatus.filtered : FilterStatus.raw
+);
 const attendeeInfosRef: ModelRef<TransformedAttendeeInfo[]> = defineModel<
   TransformedAttendeeInfo[]
 >({ required: true });
-const filterOptionsRef: Ref<RawAttendeeFilter> = ref({
-  ...getDefaultAttendeeFilterValues(),
-  ...{
-    status: {
-      value: [
-        AttendeeApiStatus.new,
-        AttendeeApiStatus.approved,
-        AttendeeApiStatus.partially_paid,
-        AttendeeApiStatus.paid,
-        AttendeeApiStatus.checked_in,
-        AttendeeApiStatus.cancelled,
-        AttendeeApiStatus.deleted,
-      ],
-      matchMode: FilterMatchMode.IN,
-    },
-  },
-});
+function getInitialFilterValues(): RawAttendeeFilter {
+  return (
+    props.filters ?? {
+      ...getDefaultAttendeeFilterValues(),
+      ...{
+        status: {
+          value: [
+            AttendeeApiStatus.new,
+            AttendeeApiStatus.approved,
+            AttendeeApiStatus.partially_paid,
+            AttendeeApiStatus.paid,
+            AttendeeApiStatus.checked_in,
+            AttendeeApiStatus.cancelled,
+            AttendeeApiStatus.deleted,
+          ],
+          matchMode: FilterMatchMode.IN,
+        },
+      },
+    }
+  );
+}
+
+const initialFilterValues: RawAttendeeFilter = getInitialFilterValues();
+const filterOptionsRef: Ref<RawAttendeeFilter> = ref(
+  deepCopy(initialFilterValues)
+);
+
+function onResetFilters(): void {
+  filterOptionsRef.value = deepCopy(initialFilterValues);
+}
+
+const chartFieldOrder: FilterFieldValue[] = [
+  "status",
+  "transSponsorChoice",
+  "transConbookChoice",
+  "transConRole",
+];
+
+const chartOrderedTagColumns: TagColumn[] = chartFieldOrder
+  .map((field: FilterFieldValue) =>
+    setupColumnDefinitionList.find(
+      (columnDefinition: ColumnDefinition) => columnDefinition.value === field
+    )
+  )
+  .filter(
+    (columnDefinition): columnDefinition is TagColumn =>
+      columnDefinition !== undefined &&
+      columnDefinition.columnType === ColumnType.tag
+  );
+
+const attendanceColumnDefinition: ColumnDefinition | undefined =
+  setupColumnDefinitionList.find(
+    (columnDefinition: ColumnDefinition) =>
+      columnDefinition.value === "transDayAttendance"
+  );
+const attendanceColumn: AttendanceColumn | undefined =
+  attendanceColumnDefinition?.columnType === ColumnType.attendance
+    ? attendanceColumnDefinition
+    : undefined;
+
+const countryColumnDefinition: ColumnDefinition | undefined =
+  setupColumnDefinitionList.find(
+    (columnDefinition: ColumnDefinition) => columnDefinition.value === "country"
+  );
+const countryColumn: CountryColumn | undefined =
+  countryColumnDefinition?.columnType === ColumnType.country
+    ? countryColumnDefinition
+    : undefined;
 
 const filteredListRef: ComputedRef<TransformedAttendeeInfo[]> = computed(() => {
   if (filterStatusRef.value === FilterStatus.raw) {
