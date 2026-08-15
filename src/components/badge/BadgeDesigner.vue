@@ -18,6 +18,7 @@ import ToggleSwitch from '@/volt/ToggleSwitch.vue'
 import { computed, ref, watch, watchEffect } from 'vue'
 
 const props = defineProps<{ badgeTypes: BadgeType[]; availableParentOptions: BadgeType[] }>()
+const emit = defineEmits<{ 'field-drag-start': []; 'field-drag-end': [] }>()
 
 const NAME_MAX_LENGTH = 100
 
@@ -52,6 +53,9 @@ const previewFieldValues = computed<Record<string, string>>(() => {
 const attendeeSourcedCustomFields = computed(() =>
   resolvedBadgeType.value.fields.custom.filter((field) => field.source.kind === 'attendee'),
 )
+const hasIdField = computed(() => resolvedBadgeType.value.fields.custom.some((field) => field.source.kind === 'id'))
+const hasNicknameField = computed(() => resolvedBadgeType.value.fields.custom.some((field) => field.source.kind === 'nickname'))
+const hasCountryField = computed(() => resolvedBadgeType.value.fields.custom.some((field) => field.source.kind === 'country'))
 const resolvedCustomFields = computed(() => resolvedBadgeType.value.fields.custom)
 const resolvedCustomBarcodes = computed(() => resolvedBadgeType.value.fields.customBarcodes)
 
@@ -129,9 +133,9 @@ async function downloadPdf() {
     <Fieldset legend="Badge Values" class="w-full">
       <div class="flex flex-col items-center gap-4 p-2">
         <div class="flex flex-wrap gap-6">
-          <label class="flex flex-col text-sm text-slate-600">ID <InputText v-model="idValue" class="p-0" /></label>
-          <label class="flex flex-col text-sm text-slate-600">Nickname <InputText v-model="nicknameValue" :maxlength="NAME_MAX_LENGTH" class="p-0" /></label>
-          <label class="flex flex-col text-sm text-slate-600">Country <InputText v-model="countryValue" class="p-0" /></label>
+          <label v-if="hasIdField" class="flex flex-col text-sm text-slate-600">ID <InputText v-model="idValue" class="p-0" /></label>
+          <label v-if="hasNicknameField" class="flex flex-col text-sm text-slate-600">Nickname <InputText v-model="nicknameValue" :maxlength="NAME_MAX_LENGTH" class="p-0" /></label>
+          <label v-if="hasCountryField" class="flex flex-col text-sm text-slate-600">Country <InputText v-model="countryValue" class="p-0" /></label>
           <label v-for="field in attendeeSourcedCustomFields" :key="field.id" class="flex flex-col text-sm text-slate-600">
             {{ field.label }}
             <InputText :model-value="customValues[field.id] ?? ''" class="p-0" @update:model-value="(value: string) => { customValues[field.id] = value }" />
@@ -150,6 +154,8 @@ async function downloadPdf() {
         v-model:fields="fields"
         :resolved-badge-type="resolvedBadgeType"
         :field-values="previewFieldValues"
+        @drag-start="emit('field-drag-start')"
+        @drag-end="emit('field-drag-end')"
       />
     </Fieldset>
 

@@ -13,6 +13,8 @@ import InputText from '@/volt/InputText.vue'
 import Select from '@/volt/Select.vue'
 import SelectButton from '@/volt/SelectButton.vue'
 import ToggleSwitch from '@/volt/ToggleSwitch.vue'
+import UnitInput from '@/components/badge/UnitInput.vue'
+import UrlInputText from '@/components/badge/UrlInputText.vue'
 import { computed, ref } from 'vue'
 
 const props = defineProps<{ hasParent?: boolean; resolvedCustomFields?: CustomTextFieldState[]; resolvedCustomBarcodes?: CustomBarcodeFieldState[]; sampleIdValue?: string }>()
@@ -38,19 +40,29 @@ function contentLabel(source: CustomFieldSource): string {
 }
 
 
-type FieldUnit = 'percent' | 'cm'
-const UNIT_OPTIONS: FieldUnit[] = ['percent', 'cm']
-const UNIT_LABELS: Record<FieldUnit, string> = { percent: '%', cm: 'cm' }
-const fieldUnit = ref<FieldUnit>('percent')
+type FieldUnit = 'percent' | 'cm' | 'mm'
+const UNIT_OPTIONS: FieldUnit[] = ['percent', 'cm', 'mm']
+const UNIT_LABELS: Record<FieldUnit, string> = { percent: '%', cm: 'cm', mm: 'mm' }
+const fieldUnit = ref<FieldUnit>('mm')
 
 const cardWidthCm = computed(() => printSettingsRef.value.cardWidthMm / 10)
 const cardHeightCm = computed(() => printSettingsRef.value.cardHeightMm / 10)
 const cardAspectRatio = computed(() => cardWidthCm.value / cardHeightCm.value)
 
-function widthToDisplay(v: number) { return fieldUnit.value === 'cm' ? v / 100 * cardWidthCm.value : v }
-function heightToDisplay(v: number) { return fieldUnit.value === 'cm' ? v / 100 * cardHeightCm.value : v }
-function widthFromDisplay(v: number) { return fieldUnit.value === 'cm' ? v / cardWidthCm.value * 100 : v }
-function heightFromDisplay(v: number) { return fieldUnit.value === 'cm' ? v / cardHeightCm.value * 100 : v }
+const unitsPerCardWidth = computed<number | null>(() => {
+  if (fieldUnit.value === 'cm') return cardWidthCm.value
+  if (fieldUnit.value === 'mm') return printSettingsRef.value.cardWidthMm
+  return null
+})
+
+const unitsPerCardHeight = computed<number | null>(() => {
+  if (fieldUnit.value === 'cm') return cardHeightCm.value
+  if (fieldUnit.value === 'mm') return printSettingsRef.value.cardHeightMm
+  return null
+})
+
+function heightToDisplay(v: number) { const perCard = unitsPerCardHeight.value; return perCard != null ? v / 100 * perCard : v }
+function heightFromDisplay(v: number) { const perCard = unitsPerCardHeight.value; return perCard != null ? v / perCard * 100 : v }
 
 const fields = defineModel<BadgeTypeFields>('fields', { required: true })
 
@@ -247,10 +259,10 @@ const nicknameField = computed(() => fields.value.custom.find((field) => field.s
             <InputText v-if="row.local.source.kind === 'static'" v-model="row.local.source.text" class="w-32 p-1 text-xs" />
             <span v-else>{{ contentLabel(row.local.source) }}</span>
           </td>
-          <td class="pr-4"><InputNumber :model-value="widthToDisplay(row.local.pos.x)" :min="0" :max="widthToDisplay(100)" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number | null) => { row.local!.pos = clampPosAndSize({ ...row.local!.pos, x: widthFromDisplay(v ?? 0) }, row.local!.size).pos }" /></td>
-          <td class="pr-4"><InputNumber :model-value="heightToDisplay(row.local.pos.y)" :min="0" :max="heightToDisplay(100)" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number | null) => { row.local!.pos = clampPosAndSize({ ...row.local!.pos, y: heightFromDisplay(v ?? 0) }, row.local!.size).pos }" /></td>
-          <td class="pr-4"><InputNumber :model-value="widthToDisplay(row.local.size.width)" :min="widthToDisplay(MIN_FIELD_WIDTH_PERCENT)" :max="widthToDisplay(100)" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number | null) => { const c = clampPosAndSize(row.local!.pos, { ...row.local!.size, width: widthFromDisplay(v ?? MIN_FIELD_WIDTH_PERCENT) }); row.local!.pos = c.pos; row.local!.size = c.size }" /></td>
-          <td class="pr-4"><InputNumber :model-value="heightToDisplay(row.local.size.height)" :min="heightToDisplay(MIN_FIELD_HEIGHT_PERCENT)" :max="heightToDisplay(100)" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number | null) => { const c = clampPosAndSize(row.local!.pos, { ...row.local!.size, height: heightFromDisplay(v ?? MIN_FIELD_HEIGHT_PERCENT) }); row.local!.pos = c.pos; row.local!.size = c.size }" /></td>
+          <td class="pr-4"><UnitInput :model-value="row.local.pos.x" :units-per-full="unitsPerCardWidth" :min="0" :max="100" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number) => { row.local!.pos = clampPosAndSize({ ...row.local!.pos, x: v }, row.local!.size).pos }" /></td>
+          <td class="pr-4"><UnitInput :model-value="row.local.pos.y" :units-per-full="unitsPerCardHeight" :min="0" :max="100" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number) => { row.local!.pos = clampPosAndSize({ ...row.local!.pos, y: v }, row.local!.size).pos }" /></td>
+          <td class="pr-4"><UnitInput :model-value="row.local.size.width" :units-per-full="unitsPerCardWidth" :min="MIN_FIELD_WIDTH_PERCENT" :max="100" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number) => { const c = clampPosAndSize(row.local!.pos, { ...row.local!.size, width: v }); row.local!.pos = c.pos; row.local!.size = c.size }" /></td>
+          <td class="pr-4"><UnitInput :model-value="row.local.size.height" :units-per-full="unitsPerCardHeight" :min="MIN_FIELD_HEIGHT_PERCENT" :max="100" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number) => { const c = clampPosAndSize(row.local!.pos, { ...row.local!.size, height: v }); row.local!.pos = c.pos; row.local!.size = c.size }" /></td>
           <td class="pr-4">
             <div class="flex items-center gap-2">
               <input type="color" :value="`#${row.local.color}`" class="h-8 w-8 cursor-pointer rounded border border-slate-300" @input="row.local!.color = ($event.target as HTMLInputElement).value.slice(1)" />
@@ -265,14 +277,14 @@ const nicknameField = computed(() => fields.value.custom.find((field) => field.s
           </td>
           <td class="pr-4">
             <div class="flex items-center gap-2">
-              <InputText v-model="row.local.fontUrl" class="w-32 p-1 text-xs" placeholder="Font URL (.otf)" />
+              <UrlInputText v-model="row.local.fontUrl" class="w-32 p-1 text-xs" placeholder="Font URL (.otf)" />
               <Button label="Browse..." size="small" @click="customFontFileInputs[row.local.id]?.click()" />
               <input :ref="(el) => { customFontFileInputs[row.local!.id] = el as HTMLInputElement }" type="file" accept=".otf" class="hidden" @change="onCustomFontFileChange($event, row.local!)" />
             </div>
           </td>
           <td class="pr-4">
             <div class="flex items-center gap-2">
-              <InputNumber v-model="row.local.fontSizePt" :min="1" suffix="pt" input-class="w-16" placeholder="auto" />
+              <InputNumber v-model="row.local.fontSizePt" :min="1" :max-fraction-digits="2" suffix="pt" input-class="w-16" placeholder="auto" />
               <Select
                 v-if="row.local.fontSizePt != null"
                 :model-value="row.local.overflowMode ?? 'shrink'"
@@ -303,16 +315,16 @@ const nicknameField = computed(() => fields.value.custom.find((field) => field.s
           <td v-if="hasParent" class="pr-4"><ToggleSwitch :model-value="false" @update:model-value="removeCustomBarcode(row.local!.id)" /></td>
           <td class="pr-4"><ToggleSwitch v-model="row.local.enabled" /></td>
           <td class="pr-4">{{ contentLabel(row.local.source) }}</td>
-          <td class="pr-4"><InputNumber :model-value="widthToDisplay(row.local.pos.x)" :min="0" :max="widthToDisplay(100)" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number | null) => { row.local!.pos = clampPosAndSize({ ...row.local!.pos, x: widthFromDisplay(v ?? 0) }, row.local!.size).pos }" /></td>
-          <td class="pr-4"><InputNumber :model-value="heightToDisplay(row.local.pos.y)" :min="0" :max="heightToDisplay(100)" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number | null) => { row.local!.pos = clampPosAndSize({ ...row.local!.pos, y: heightFromDisplay(v ?? 0) }, row.local!.size).pos }" /></td>
-          <td class="pr-4"><InputNumber :model-value="widthToDisplay(row.local.size.width)" :min="widthToDisplay(MIN_FIELD_WIDTH_PERCENT)" :max="widthToDisplay(100)" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number | null) => { const c = isRowBarcodeSquare(row.local!.style) ? clampSquarePosAndSize(row.local!.pos, widthFromDisplay(v ?? MIN_FIELD_WIDTH_PERCENT), cardAspectRatio) : clampPosAndSize(row.local!.pos, { ...row.local!.size, width: widthFromDisplay(v ?? MIN_FIELD_WIDTH_PERCENT) }); row.local!.pos = c.pos; row.local!.size = c.size }" /></td>
-          <td class="pr-4"><InputNumber :model-value="heightToDisplay(row.local.size.height)" :min="heightToDisplay(MIN_FIELD_HEIGHT_PERCENT)" :max="heightToDisplay(100)" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" :disabled="isRowBarcodeSquare(row.local.style)" @update:model-value="(v: number | null) => { const c = clampPosAndSize(row.local!.pos, { ...row.local!.size, height: heightFromDisplay(v ?? MIN_FIELD_HEIGHT_PERCENT) }); row.local!.pos = c.pos; row.local!.size = c.size }" /></td>
+          <td class="pr-4"><UnitInput :model-value="row.local.pos.x" :units-per-full="unitsPerCardWidth" :min="0" :max="100" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number) => { row.local!.pos = clampPosAndSize({ ...row.local!.pos, x: v }, row.local!.size).pos }" /></td>
+          <td class="pr-4"><UnitInput :model-value="row.local.pos.y" :units-per-full="unitsPerCardHeight" :min="0" :max="100" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number) => { row.local!.pos = clampPosAndSize({ ...row.local!.pos, y: v }, row.local!.size).pos }" /></td>
+          <td class="pr-4"><UnitInput :model-value="row.local.size.width" :units-per-full="unitsPerCardWidth" :min="MIN_FIELD_WIDTH_PERCENT" :max="100" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" @update:model-value="(v: number) => { const c = isRowBarcodeSquare(row.local!.style) ? clampSquarePosAndSize(row.local!.pos, v, cardAspectRatio) : clampPosAndSize(row.local!.pos, { ...row.local!.size, width: v }); row.local!.pos = c.pos; row.local!.size = c.size }" /></td>
+          <td class="pr-4"><UnitInput :model-value="row.local.size.height" :units-per-full="unitsPerCardHeight" :min="MIN_FIELD_HEIGHT_PERCENT" :max="100" :max-fraction-digits="2" :suffix="UNIT_LABELS[fieldUnit]" input-class="w-20" :disabled="isRowBarcodeSquare(row.local.style)" @update:model-value="(v: number) => { const c = clampPosAndSize(row.local!.pos, { ...row.local!.size, height: v }); row.local!.pos = c.pos; row.local!.size = c.size }" /></td>
           <td class="pr-4">
             <label class="flex items-center gap-2"><ToggleSwitch v-model="row.local.inverted" /> Invert</label>
           </td>
           <td class="pr-4">
             <div class="flex items-center gap-2">
-              <input type="color" :value="`#${row.local.color ?? '000000'}`" class="h-8 w-8 cursor-pointer rounded border border-slate-300" :disabled="row.local.inverted" :class="row.local.inverted ? 'opacity-40 cursor-not-allowed' : ''" @input="row.local!.color = ($event.target as HTMLInputElement).value.slice(1)" />
+              <input type="color" :value="`#${row.local.color ?? '000000'}`" class="h-8 w-8 cursor-pointer rounded border border-slate-300" @input="row.local!.color = ($event.target as HTMLInputElement).value.slice(1)" />
               <label class="flex items-center gap-2"><ToggleSwitch v-model="row.local.transparentBackground" /> Transparent</label>
             </div>
           </td>

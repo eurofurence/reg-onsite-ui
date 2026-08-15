@@ -3,7 +3,7 @@ import type { BackgroundAlignH, BackgroundAlignV, BackgroundFit, BadgeTypeBackgr
 import Button from '@/volt/Button.vue'
 import Select from '@/volt/Select.vue'
 import SelectButton from '@/volt/SelectButton.vue'
-import InputText from '@/volt/InputText.vue'
+import UrlInputText from '@/components/badge/UrlInputText.vue'
 import { ref, onUnmounted } from 'vue'
 
 const BG_FIT_OPTIONS: BackgroundFit[] = ['cover', 'contain', 'fill', 'fit-width', 'fit-height']
@@ -32,13 +32,14 @@ function onBackgroundFileChange(event: Event) {
   backgroundObjectUrl = URL.createObjectURL(file)
   background.value.url = backgroundObjectUrl
 }
+
 </script>
 
 <template>
   <div class="flex items-center gap-3 self-start text-sm text-slate-600" :class="disabled ? 'opacity-50 pointer-events-none' : ''">
     <span>Background</span>
     <input type="color" :value="`#${background.color}`" class="h-8 w-8 cursor-pointer rounded border border-slate-300" @input="background.color = ($event.target as HTMLInputElement).value.slice(1)" />
-    <InputText v-model="background.url" class="p-0" placeholder="https://..." />
+    <UrlInputText v-model="background.url" class="p-0" placeholder="https://..." />
     <Button label="Browse..." size="small" @click="pickBackgroundFile" />
     <input ref="backgroundFileInput" type="file" accept="image/*" class="hidden" @change="onBackgroundFileChange" />
     <Select v-model="background.fit" :options="BG_FIT_OPTION_OBJECTS" option-label="label" option-value="value" class="w-32" />

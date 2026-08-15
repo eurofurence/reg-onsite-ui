@@ -36,7 +36,8 @@ export function fontFamilyNameFor(fieldId: string, badgeTypeId: string): string 
 const DATA_URL_CACHE_MAX_ENTRIES = 50
 const dataUrlCache = new Map<string, Promise<string>>()
 
-export async function resolveToDataUrl(url: string): Promise<string> {
+export async function resolveToDataUrl(rawUrl: string): Promise<string> {
+  const url = rawUrl.trim()
   if (!url || url.startsWith('data:')) {
     return url
   }
@@ -48,6 +49,9 @@ export async function resolveToDataUrl(url: string): Promise<string> {
   } else {
     cached = (async () => {
       const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.status}`)
+      }
       const blob = await response.blob()
       return new Promise<string>((resolve, reject) => {
         const reader = new FileReader()
@@ -98,14 +102,25 @@ export function fitFontSize(text: string, pixelWidth: number, pixelHeight: numbe
   return Math.max(1, Math.min(widthFitSizePx, heightCapPx, maxFontSizePx))
 }
 
+// Tracks which fontUrl is currently loaded per family, so changing a field's
+// font URL is detected and reloaded rather than skipped as already-registered.
+const loadedFontUrlByFamily = new Map<string, string>()
+
 export async function loadFontForMeasurement(familyName: string, fontUrl: string): Promise<void> {
-  if (document.fonts.check(`1px ${familyName}`)) {
+  const previouslyLoadedUrl = loadedFontUrlByFamily.get(familyName)
+  if (previouslyLoadedUrl === fontUrl && document.fonts.check(`1px ${familyName}`)) {
     return
   }
   const fontFace = new FontFace(familyName, `url(${JSON.stringify(fontUrl)})`)
   try {
     await fontFace.load()
+    for (const existingFace of document.fonts) {
+      if (existingFace.family === familyName) {
+        document.fonts.delete(existingFace)
+      }
+    }
     document.fonts.add(fontFace)
+    loadedFontUrlByFamily.set(familyName, fontUrl)
   } catch {
     // Measurement falls back to the next font in the family list.
   }
@@ -148,6 +163,7 @@ export function barcodeMarkup(
   color = '000000',
   transparentBackground = false,
 ): BarcodeMarkup {
+  // Inverted swaps bars/background: white bars on `color` instead of the reverse.
   const barcolor = inverted ? 'FFFFFF' : color
   const bwipOpts: Parameters<typeof bwipjs.toSVG>[0] = {
     bcid: style,
@@ -155,7 +171,7 @@ export function barcodeMarkup(
     barcolor,
   }
   if (!transparentBackground) {
-    bwipOpts.backgroundcolor = inverted ? '000000' : 'FFFFFF'
+    bwipOpts.backgroundcolor = inverted ? color : 'FFFFFF'
   }
   const rawSvg = bwipjs.toSVG(bwipOpts)
   const viewBoxMatch = /viewBox="([^"]+)"/.exec(rawSvg)
@@ -258,6 +274,7 @@ export function computeTextLayout(
 }
 
 function textFieldSvg(options: {
+  fieldId: string
   text: string
   fontFamily: string
   box: FieldBox
@@ -270,10 +287,10 @@ function textFieldSvg(options: {
   lineHeightPx?: number
   clip?: boolean
 }): string {
-  const { text, fontFamily, box, fontSizePx, color, align, borderEnabled, borderColor, isWrapping, lineHeightPx, clip } = options
+  const { fieldId, text, fontFamily, box, fontSizePx, color, align, borderEnabled, borderColor, isWrapping, lineHeightPx, clip } = options
   const anchor = textAnchorFor(align)
   const strokeAttrs = borderEnabled ? ` stroke="#${borderColor ?? '000000'}" stroke-width="1"` : ''
-  const commonAttrs = `font-family="${fontFamily}" font-size="${fontSizePx}" fill="#${color}" text-anchor="${anchor}"${strokeAttrs}`
+  const commonAttrs = `data-field-id="${fieldId}" font-family="${fontFamily}" font-size="${fontSizePx}" fill="#${color}" text-anchor="${anchor}"${strokeAttrs}`
 
   const layout = computeTextLayout(box, fontSizePx, fontFamily, text, align, isWrapping, lineHeightPx)
 
@@ -435,6 +452,15 @@ export function lineHeightPxFor(field: TextFieldState, isWrapping: boolean, font
     : fontSizePx * 1.2
 }
 
+export interface TextFieldLayout {
+  fieldId: string
+  color: string
+  align: TextAlign
+  box: FieldBox
+  fontSizePx: number
+  lines: TextLine[]
+}
+
 function renderTextField(
   key: string,
   field: TextFieldState,
@@ -443,19 +469,27 @@ function renderTextField(
   cardWidthPxAtPrintDpi: number,
   cardHeightPxAtPrintDpi: number,
   dpi: number,
-): { fontUrl: string; fontFamilyName: string; render: () => string } {
+): { fontUrl: string; fontFamilyName: string; render: () => string; layout: () => TextFieldLayout } {
   const displayText = resolveDisplayText(field, rawValue)
   const boxPx = fieldBoxPx(field.pos, field.size, cardWidthPxAtPrintDpi, cardHeightPxAtPrintDpi)
   const fontFamilyName = fontFamilyNameFor(key, badgeTypeId)
   const fontFamily = fontFamilyFor(field, fontFamilyName)
 
+  function computeLayout() {
+    const { fontSizePx, clip } = computeFontSizePx(field, displayText, fontFamily, boxPx, dpi)
+    const lineHeightPx = lineHeightPxFor(field, displayText.isWrapping, fontSizePx, cardHeightPxAtPrintDpi)
+    const textLayout = computeTextLayout(boxPx, fontSizePx, fontFamily, displayText.wrappedValue, field.align, displayText.isWrapping, lineHeightPx)
+    return { fontSizePx, clip, textLayout }
+  }
+
   return {
     fontUrl: field.fontUrl,
     fontFamilyName,
     render: () => {
-      const { fontSizePx, clip } = computeFontSizePx(field, displayText, fontFamily, boxPx, dpi)
+      const { fontSizePx, clip } = computeLayout()
       const lineHeightPx = lineHeightPxFor(field, displayText.isWrapping, fontSizePx, cardHeightPxAtPrintDpi)
       return textFieldSvg({
+        fieldId: key,
         text: displayText.wrappedValue,
         fontFamily,
         box: boxPx,
@@ -469,16 +503,32 @@ function renderTextField(
         clip,
       })
     },
+    layout: () => {
+      const { fontSizePx, textLayout } = computeLayout()
+      return {
+        fieldId: key,
+        color: field.color,
+        align: field.align,
+        box: boxPx,
+        fontSizePx,
+        lines: textLayout.lines,
+      }
+    },
   }
 }
 
-export async function renderBadgeSvg(
+export interface RenderedBadgeSvg {
+  svg: string
+  textFieldLayouts: TextFieldLayout[]
+}
+
+async function renderBadgeSvgWithLayouts(
   badgeType: BadgeType,
   fieldValues: Record<string, string>,
   cardWidthMm: number,
   cardHeightMm: number,
   dpi = DEFAULT_DPI,
-): Promise<string> {
+): Promise<RenderedBadgeSvg> {
   const cardWidthPxAtPrintDpi = widthPxAtDpi(cardWidthMm, dpi)
   const cardHeightPxAtPrintDpi = cardWidthPxAtPrintDpi * (cardHeightMm / cardWidthMm)
 
@@ -510,6 +560,10 @@ export async function renderBadgeSvg(
     .filter((entry) => entry.enabled)
     .map((entry) => ({ key: entry.key, markup: entry.render() }))
 
+  const textFieldLayouts: TextFieldLayout[] = prepared
+    .filter((entry) => entry.enabled)
+    .map((entry) => entry.layout())
+
   const fontFaces = prepared
     .map((entry, index) => resolvedFontUrls[index] ? `@font-face { font-family: '${entry.fontFamilyName}'; src: url('${resolvedFontUrls[index]}') format('opentype'); }` : '')
     .filter(Boolean)
@@ -526,5 +580,26 @@ export async function renderBadgeSvg(
     </svg>
   `
 
-  return cardSvg
+  return { svg: cardSvg, textFieldLayouts }
+}
+
+export async function renderBadgeSvg(
+  badgeType: BadgeType,
+  fieldValues: Record<string, string>,
+  cardWidthMm: number,
+  cardHeightMm: number,
+  dpi = DEFAULT_DPI,
+): Promise<string> {
+  const { svg } = await renderBadgeSvgWithLayouts(badgeType, fieldValues, cardWidthMm, cardHeightMm, dpi)
+  return svg
+}
+
+export async function renderBadgeSvgForPdf(
+  badgeType: BadgeType,
+  fieldValues: Record<string, string>,
+  cardWidthMm: number,
+  cardHeightMm: number,
+  dpi = DEFAULT_DPI,
+): Promise<RenderedBadgeSvg> {
+  return renderBadgeSvgWithLayouts(badgeType, fieldValues, cardWidthMm, cardHeightMm, dpi)
 }

@@ -43,14 +43,50 @@ export function ensureBadgeConfigLoaded(
   return badgeConfigLoadPromise;
 }
 
+const SAVE_THROTTLE_MS = 1000;
+
+function currentBadgeConfigPayload(): string {
+  return JSON.stringify({
+    badgeTypes: badgeTypesRef.value,
+    printSettings: printSettingsRef.value,
+    badgeMapping: badgeMappingRef.value,
+  });
+}
+
+let lastSavedPayload: string | null = null;
+let lastSaveTime = 0;
+let pendingSave: Promise<void> | null = null;
+
+async function putBadgeConfig(errorHandler: RestErrorHandler): Promise<void> {
+  const payload = currentBadgeConfigPayload();
+  if (payload === lastSavedPayload) {
+    return;
+  }
+  lastSavedPayload = payload;
+  lastSaveTime = Date.now();
+  await putRegDeskConfig(errorHandler, { badge: JSON.parse(payload) });
+}
+
 export async function saveBadgeConfig(
   errorHandler: RestErrorHandler,
 ): Promise<void> {
-  await putRegDeskConfig(errorHandler, {
-    badge: {
-      badgeTypes: badgeTypesRef.value,
-      printSettings: printSettingsRef.value,
-      badgeMapping: badgeMappingRef.value,
-    },
-  });
+  if (currentBadgeConfigPayload() === lastSavedPayload) {
+    return;
+  }
+  if (pendingSave) {
+    return pendingSave;
+  }
+  const elapsed = Date.now() - lastSaveTime;
+  if (elapsed >= SAVE_THROTTLE_MS) {
+    await putBadgeConfig(errorHandler);
+    return;
+  }
+  pendingSave = new Promise<void>((resolve) => {
+    setTimeout(resolve, SAVE_THROTTLE_MS - elapsed);
+  })
+    .then(() => putBadgeConfig(errorHandler))
+    .finally(() => {
+      pendingSave = null;
+    });
+  return pendingSave;
 }

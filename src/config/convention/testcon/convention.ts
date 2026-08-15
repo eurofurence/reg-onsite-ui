@@ -56,7 +56,7 @@ const testConGoodiesRecord = {
   ...metadataRecordForGoodies2026,
 };
 
-export const conventionSettingsForTestCon: ConventionSettings = {
+export const conventionSettingsForTC: ConventionSettings = {
   maxRegNumber: 99999 as RegNumber,
   minAge: 18 as AgeInYears,
   colorPalette: testConPrimaryColors,
@@ -127,7 +127,7 @@ export type AbstractTCGoodieValue =
   | `${AbstractTCGoodieWithoutVariants}`
   | AbstractTCGoodieWithVariantsValue;
 
-export interface ConventionGoodieTypesForTestCon {
+export interface ConventionGoodieTypesForTC {
   concreteGoodieValue: ConcreteTCGoodieValue;
   goodieConfig: TCGoodieConfig;
   abstractGoodieValue: AbstractTCGoodieValue;

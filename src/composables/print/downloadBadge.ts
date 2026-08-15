@@ -1,4 +1,6 @@
-import { fontFamilyNameFor, renderBadgeSvg } from '@/composables/print/badgeHtml'
+import { fontFamilyNameFor, renderBadgeSvg, renderBadgeSvgForPdf } from '@/composables/print/badgeHtml'
+import type { TextFieldLayout } from '@/composables/print/badgeHtml'
+import { buildOutlinedTextField } from '@/composables/print/textOutline'
 import { printSettingsRef } from '@/composables/services/badgeConfigStore'
 import type { BadgeType } from '@/types/badgeType'
 import { jsPDF } from 'jspdf'
@@ -13,26 +15,63 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-async function fetchFontBase64(fontUrl: string): Promise<string | null> {
+async function fetchFontBuffer(fontUrl: string): Promise<ArrayBuffer | null> {
   try {
     const response = await fetch(fontUrl)
-    const buffer = await response.arrayBuffer()
-    let binary = ''
-    for (const byte of new Uint8Array(buffer)) binary += String.fromCharCode(byte)
-    return btoa(binary)
+    if (!response.ok) {
+      return null
+    }
+    return await response.arrayBuffer()
   } catch {
     return null
   }
 }
 
-async function registerCustomFonts(doc: jsPDF, resolvedBadgeType: BadgeType) {
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  let binary = ''
+  for (const byte of new Uint8Array(buffer)) binary += String.fromCharCode(byte)
+  return btoa(binary)
+}
+
+// jsPDF can only embed TrueType-outline fonts, not CFF-flavored OpenType
+// (sfnt tag 'OTTO'), which is what most desktop-authored .otf files are.
+function isUnsupportedCffOpenType(buffer: ArrayBuffer): boolean {
+  if (buffer.byteLength < 4) {
+    return false
+  }
+  const sfntVersion = new TextDecoder('ascii').decode(new Uint8Array(buffer, 0, 4))
+  return sfntVersion === 'OTTO'
+}
+
+// Embeddable fonts register with jsPDF directly; unsupported CFF/OTTO fonts
+// are instead outlined into SVG <path> geometry (via textOutline.ts) and
+// swapped in for the field's <text> node, since svg2pdf.js can render paths
+// without any font embedded.
+async function registerCustomFonts(
+  doc: jsPDF,
+  resolvedBadgeType: BadgeType,
+  svgElement: Element,
+  textFieldLayouts: TextFieldLayout[],
+) {
+  const layoutsByFieldId = new Map(textFieldLayouts.map((layout) => [layout.fieldId, layout]))
   const fieldsWithFont = resolvedBadgeType.fields.custom.filter((field) => field.fontUrl)
   for (const field of fieldsWithFont) {
-    const base64 = await fetchFontBase64(field.fontUrl)
-    if (!base64) continue
+    const buffer = await fetchFontBuffer(field.fontUrl)
+    if (!buffer) continue
+    if (isUnsupportedCffOpenType(buffer)) {
+      const layout = layoutsByFieldId.get(field.id)
+      const textNode = svgElement.querySelector(`[data-field-id="${field.id}"]`)
+      if (!layout || !textNode) continue
+      const outlined = buildOutlinedTextField(buffer, field.id, layout.color, layout.box, layout.fontSizePx, layout.align, layout.lines)
+      const pathNode = svgElement.ownerDocument!.createElementNS('http://www.w3.org/2000/svg', 'path')
+      pathNode.setAttribute('d', outlined.pathData)
+      pathNode.setAttribute('fill', `#${outlined.color}`)
+      textNode.replaceWith(pathNode)
+      continue
+    }
     const fontFamilyName = fontFamilyNameFor(field.id, resolvedBadgeType.id)
     const vfsFilename = `${fontFamilyName}.otf`
-    doc.addFileToVFS(vfsFilename, base64)
+    doc.addFileToVFS(vfsFilename, arrayBufferToBase64(buffer))
     doc.addFont(vfsFilename, fontFamilyName, 'normal')
   }
 }
@@ -53,7 +92,7 @@ export async function downloadBadgePdf(
   filenameBase: string,
 ) {
   const printSettings = printSettingsRef.value
-  const svg = await renderBadgeSvg(resolvedBadgeType, fieldValues, printSettings.cardWidthMm, printSettings.cardHeightMm, printSettings.dpi)
+  const { svg, textFieldLayouts } = await renderBadgeSvgForPdf(resolvedBadgeType, fieldValues, printSettings.cardWidthMm, printSettings.cardHeightMm, printSettings.dpi)
   const svgElement = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement
 
   const doc = new jsPDF({
@@ -61,7 +100,7 @@ export async function downloadBadgePdf(
     unit: 'mm',
     format: [printSettings.cardWidthMm, printSettings.cardHeightMm],
   })
-  await registerCustomFonts(doc, resolvedBadgeType)
+  await registerCustomFonts(doc, resolvedBadgeType, svgElement, textFieldLayouts)
   await doc.svg(svgElement, { x: 0, y: 0, width: printSettings.cardWidthMm, height: printSettings.cardHeightMm })
   doc.save(`${filenameBase}.pdf`)
 }

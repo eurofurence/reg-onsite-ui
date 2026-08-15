@@ -53,13 +53,49 @@ const mappingTooltipByTypeId = computed(() => {
   return labels
 })
 
+// Suppresses the deep watch's autosave while a field drag is in progress.
+const isDraggingField = ref(false)
+
 watch(badgeTypes, () => {
+  if (isDraggingField.value) return
   saveBadgeConfig(props.errorHandler)
 }, { deep: true })
 
-const sortedBadgeTypes = computed(() =>
-  [...badgeTypes.value].sort((a, b) => a.name.localeCompare(b.name)),
-)
+function onFieldDragStart() {
+  isDraggingField.value = true
+}
+
+function onFieldDragEnd() {
+  isDraggingField.value = false
+  saveBadgeConfig(props.errorHandler)
+}
+
+interface BadgeTypeTreeEntry {
+  badgeType: BadgeType
+  depth: number
+}
+
+const sortedBadgeTypes = computed<BadgeTypeTreeEntry[]>(() => {
+  const childrenByParentId = new Map<string | null, BadgeType[]>()
+  for (const badgeType of badgeTypes.value) {
+    const siblings = childrenByParentId.get(badgeType.parentId) ?? []
+    siblings.push(badgeType)
+    childrenByParentId.set(badgeType.parentId, siblings)
+  }
+  for (const siblings of childrenByParentId.values()) {
+    siblings.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  const entries: BadgeTypeTreeEntry[] = []
+  function visit(parentId: string | null, depth: number) {
+    for (const badgeType of childrenByParentId.get(parentId) ?? []) {
+      entries.push({ badgeType, depth })
+      visit(badgeType.id, depth + 1)
+    }
+  }
+  visit(null, 0)
+  return entries
+})
 
 const selectedBadgeType = computed({
   get() {
@@ -194,25 +230,26 @@ function deleteSelected() {
       <h1 class="text-lg font-semibold text-slate-800">Badge Types</h1>
       <ul class="flex flex-col gap-1">
         <li
-          v-for="badgeType in sortedBadgeTypes"
-          :key="badgeType.id"
+          v-for="entry in sortedBadgeTypes"
+          :key="entry.badgeType.id"
           class="flex items-center gap-1 rounded px-2 py-1"
-          :class="badgeType.id === selectedId ? 'bg-slate-200' : 'hover:bg-slate-100'"
+          :class="entry.badgeType.id === selectedId ? 'bg-slate-200' : 'hover:bg-slate-100'"
         >
           <button
             type="button"
             class="flex-1 truncate text-left text-sm text-slate-700"
-            @pointerdown="selectBadgeType(badgeType.id)"
-            @click="selectBadgeType(badgeType.id)"
+            :style="{ paddingLeft: `${entry.depth * 2}ch` }"
+            @pointerdown="selectBadgeType(entry.badgeType.id)"
+            @click="selectBadgeType(entry.badgeType.id)"
           >
-            {{ badgeType.name }}
+            {{ entry.badgeType.name }}
           </button>
           <Badge
-            v-if="mappingCountByTypeId[badgeType.id]"
-            :value="mappingCountByTypeId[badgeType.id]"
+            v-if="mappingCountByTypeId[entry.badgeType.id]"
+            :value="mappingCountByTypeId[entry.badgeType.id]"
             severity="secondary"
             size="small"
-            v-tooltip="{ value: (mappingTooltipByTypeId[badgeType.id] ?? []).join('<br>'), escape: false }"
+            v-tooltip="{ value: (mappingTooltipByTypeId[entry.badgeType.id] ?? []).join('<br>'), escape: false }"
           />
         </li>
       </ul>
@@ -233,6 +270,8 @@ function deleteSelected() {
           :badge-types="badgeTypes"
           :available-parent-options="availableParentOptions"
           :key="selectedBadgeType.id"
+          @field-drag-start="onFieldDragStart"
+          @field-drag-end="onFieldDragEnd"
         />
       </template>
       <p v-else class="text-sm text-slate-500">No badge types yet.</p>

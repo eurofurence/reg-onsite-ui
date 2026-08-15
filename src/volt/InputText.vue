@@ -1,5 +1,6 @@
 <template>
   <InputText
+    ref="inputRef"
     unstyled
     :pt="theme"
     :ptOptions="{
@@ -18,6 +19,9 @@ import { ref } from "vue";
 
 interface Props extends /* @vue-ignore */ InputTextProps {}
 defineProps<Props>();
+
+const inputRef = ref<InstanceType<typeof InputText> | null>(null);
+defineExpose({ inputRef });
 
 const theme = ref<InputTextPassThroughOptions>({
   root: `appearance-none rounded-md outline-hidden

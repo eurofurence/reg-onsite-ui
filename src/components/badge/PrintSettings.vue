@@ -166,14 +166,12 @@ function buildCardDiagramStyle(extraRotationDeg: number) {
 const frontCardDiagramStyle = computed(() => buildCardDiagramStyle(0))
 const backCardDiagramStyle = computed(() => buildCardDiagramStyle(printSettings.value.backSideRotated180 ? 180 : 0))
 
-watch(
-  () => printSettings.value.orientation,
-  (orientation) => {
-    const deltaDeg = orientation === 'portrait' ? 90 : -90
-    printSettings.value.cardRotationDeg = (((printSettings.value.cardRotationDeg + deltaDeg) % 360 + 360) % 360) as CardRotationDeg
-  },
-  { flush: 'sync' },
-)
+// Handler instead of a `watch` so a bulk config load can't retrigger this.
+function setOrientation(orientation: Orientation) {
+  const deltaDeg = orientation === 'portrait' ? 90 : -90
+  printSettings.value.cardRotationDeg = (((printSettings.value.cardRotationDeg + deltaDeg) % 360 + 360) % 360) as CardRotationDeg
+  printSettings.value.orientation = orientation
+}
 
 function centerCardOnPage() {
   const { footprintWidthMm, footprintHeightMm } = cardFootprint.value
@@ -181,11 +179,10 @@ function centerCardOnPage() {
   printSettings.value.cardYMm = (pageDimensions.value.height - footprintHeightMm) / 2
 }
 
-watch(
-  () => printSettings.value.pageSize,
-  centerCardOnPage,
-  { flush: 'sync' },
-)
+function setPageSize(pageSize: PageSize) {
+  printSettings.value.pageSize = pageSize
+  centerCardOnPage()
+}
 
 watch(
   () => [
@@ -228,10 +225,11 @@ watch(
             <label class="flex flex-col gap-2 text-sm text-slate-600">
               Page Size
               <Select
-                v-model="printSettings.pageSize"
+                :model-value="printSettings.pageSize"
                 :options="PAGE_SIZE_OPTIONS"
                 :option-label="(option) => PAGE_SIZE_LABELS[option as PageSize]"
                 class="w-60"
+                @update:model-value="setPageSize"
               />
             </label>
 
@@ -247,9 +245,10 @@ watch(
             <label class="flex flex-col gap-2 text-sm text-slate-600">
               Orientation
               <SelectButton
-                v-model="printSettings.orientation"
+                :model-value="printSettings.orientation"
                 :options="ORIENTATION_OPTIONS"
                 :allow-empty="false"
+                @update:model-value="setOrientation"
               />
             </label>
           </div>
