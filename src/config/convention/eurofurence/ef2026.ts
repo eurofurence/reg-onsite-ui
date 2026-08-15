@@ -12,11 +12,15 @@ import type { GenericGoodieConfig } from "@/types/internal/goodies";
 import type { LabeledValue } from "@/types/internal/infos";
 
 export const enum AbstractEFGoodieWithoutVariants2026 {
-  messenger_bag_2026 = "messenger_bag_2026",
-  festival_3cups_2026 = "festival_3cups_2026",
+  key_chain_2026 = "key_chain_2026",
   paper_fan_2026 = "paper_fan_2026",
-  staff_coin_2026 = "staff_coin_2026",
+  festival_3cups_2026 = "festival_3cups_2026",
+  messenger_bag_2026 = "messenger_bag_2026",
   sponsor_pin_2026 = "attendee_pin_2026",
+
+  staff_coin_2026 = "staff_coin_2026",
+
+  drum_sticks_2026 = "drum_sticks_2026",
 
   critter_bookmark1_2026 = "critter_bookmark1_2026",
   critter_bookmark2_2026 = "critter_bookmark2_2026",
@@ -111,6 +115,9 @@ export const metadataRecordForGoodies2026: MetadataRecord<EFGoodieConfig2026> =
       label: "Staff T-Shirt",
       variants: metadataListForTShirtTypesInternal,
     },
+    [AbstractEFGoodieWithoutVariants2026.key_chain_2026]: {
+      label: "Key Chain",
+    },
     [AbstractEFGoodieWithoutVariants2026.paper_fan_2026]: {
       label: "Paper Fan",
     },
@@ -120,11 +127,14 @@ export const metadataRecordForGoodies2026: MetadataRecord<EFGoodieConfig2026> =
     [AbstractEFGoodieWithoutVariants2026.messenger_bag_2026]: {
       label: "Messenger Bag",
     },
-    [AbstractEFGoodieWithoutVariants2026.staff_coin_2026]: {
-      label: "Staff Coin",
-    },
     [AbstractEFGoodieWithoutVariants2026.sponsor_pin_2026]: {
       label: "Pin",
+    },
+    [AbstractEFGoodieWithoutVariants2026.drum_sticks_2026]: {
+      label: "Drum Sticks - MUST BE PAID! ⚠️",
+    },
+    [AbstractEFGoodieWithoutVariants2026.staff_coin_2026]: {
+      label: "Staff Coin",
     },
     [AbstractEFGoodieWithoutVariants2026.critter_bookmark1_2026]: {
       label: "Benefit: Bookmark EF",
@@ -304,6 +314,9 @@ export const iterationEF2026: ConventionIterationSettings = {
   vip: { regNumberList: [] },
   goodies: {
     forPackage: {
+      [GoodiesLevel.contributor]: [
+        AbstractEFGoodieWithoutVariants2026.key_chain_2026,
+      ],
       [GoodiesLevel.tshirt]: [
         AbstractEFGoodieWithVariants2026.tshirt_2026,
       ],
