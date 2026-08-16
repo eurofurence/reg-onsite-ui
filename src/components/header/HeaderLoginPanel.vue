@@ -66,7 +66,10 @@ import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import { attendeeService } from "@/composables/services/attendeeService";
 import { authService } from "@/composables/services/authService";
 import { OnsiteToastService } from "@/composables/services/toastService";
-import { authState } from "@/composables/state/authState";
+import {
+  authState,
+  markInitialAuthCheckSettled,
+} from "@/composables/state/authState";
 import type { ApiFrontendUserInfo } from "@/types/external/authsrv/frontenduserinfo";
 import type { AuthGroupValue } from "@/types/internal/convention";
 import type { DurationInMS } from "@/types/internal/common";
@@ -156,6 +159,7 @@ const regularTaskId = scheduleRegularTask(
 
 onMounted(async () => {
   await checkUserAccess();
+  markInitialAuthCheckSettled();
 });
 onUnmounted(() => {
   clearInterval(regularTaskId);

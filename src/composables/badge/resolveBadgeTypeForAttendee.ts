@@ -23,17 +23,22 @@ function attendeeMatchesFlagValue(
   return isSubsetOf(splitKeyParts(flagValue), attendeeFlags);
 }
 
-export function resolveBadgeTypeForAttendee(
+export interface ResolvedBadgeMapping {
+  packageValue: string;
+  flagValue: string;
+  badgeTypeId: string;
+}
+
+export function resolveBadgeMappingForAttendee(
   attendee: TransformedAttendeeInfo,
-  badgeMapping: BadgeMapping,
-  badgeTypes: BadgeType[]
-): BadgeType | null {
+  badgeMapping: BadgeMapping
+): ResolvedBadgeMapping | null {
   const attendeePackages: Set<string> = new Set(
     (attendee.packages_list ?? []).map((pkg) => pkg.name)
   );
   const attendeeFlags: Set<string> = new Set(attendee.flags_list ?? []);
 
-  let bestBadgeTypeId: string | null = null;
+  let best: ResolvedBadgeMapping | null = null;
   let bestSpecificity: number = -1;
   let bestSpecificityIsAmbiguous: boolean = false;
 
@@ -56,21 +61,34 @@ export function resolveBadgeTypeForAttendee(
       const specificity: number = packageParts.length + flagParts.length;
       if (specificity > bestSpecificity) {
         bestSpecificity = specificity;
-        bestBadgeTypeId = badgeTypeId;
+        best = { packageValue, flagValue, badgeTypeId };
         bestSpecificityIsAmbiguous = false;
       } else if (
         specificity === bestSpecificity &&
-        badgeTypeId !== bestBadgeTypeId
+        badgeTypeId !== best?.badgeTypeId
       ) {
         bestSpecificityIsAmbiguous = true;
       }
     }
   }
 
-  if (bestBadgeTypeId === null || bestSpecificityIsAmbiguous) {
+  if (best === null || bestSpecificityIsAmbiguous) {
+    return null;
+  }
+  return best;
+}
+
+export function resolveBadgeTypeForAttendee(
+  attendee: TransformedAttendeeInfo,
+  badgeMapping: BadgeMapping,
+  badgeTypes: BadgeType[]
+): BadgeType | null {
+  const resolved = resolveBadgeMappingForAttendee(attendee, badgeMapping);
+  if (resolved === null) {
     return null;
   }
   return (
-    badgeTypes.find((badgeType) => badgeType.id === bestBadgeTypeId) ?? null
+    badgeTypes.find((badgeType) => badgeType.id === resolved.badgeTypeId) ??
+    null
   );
 }

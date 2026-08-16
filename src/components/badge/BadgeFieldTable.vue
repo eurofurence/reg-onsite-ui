@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { MIN_FIELD_HEIGHT_PERCENT, MIN_FIELD_WIDTH_PERCENT, clampPosAndSize, clampSquarePosAndSize } from '@/components/badge/badgeFieldUtils'
 import { getBarcodeStyleOptions, isBarcodeStyleSquare } from '@/composables/badge/barcodeStyle'
+import { cacheBadgeMediaUpload, cacheBadgeMediaUrl } from '@/composables/badge/cacheBadgeMediaUrl'
 import { getFieldGetters } from '@/composables/sort_and_filter/getFieldGetters'
 import { printSettingsRef } from '@/composables/services/badgeConfigStore'
 import { createDefaultCustomBarcodeField, createDefaultCustomTextField } from '@/types/badgeType'
 import type { BadgeTypeFields, CustomBarcodeFieldState, CustomFieldSource, CustomTextFieldState, FontSizeOverflowMode, TextAlign } from '@/types/badgeType'
+import type { RestErrorInfo } from '@/types/internal/rest'
 import type { TransformedAttendeeInfo } from '@/types/internal/attendee'
 import Button from '@/volt/Button.vue'
 import Dialog from '@/volt/Dialog.vue'
@@ -158,16 +160,50 @@ function unlinkCustomBarcode(field: CustomBarcodeFieldState) {
 }
 
 const customFontFileInputs = ref<Record<string, HTMLInputElement | null>>({})
-const customFontObjectUrls = new Map<string, string>()
+const cachingFontFieldIds = ref<Record<string, boolean>>({})
+const fontCacheErrors = ref<Record<string, string | null>>({})
+const lastCommittedUserFontUrls = new Map<string, string>()
+const fontCommitGenerations = new Map<string, number>()
 
-function onCustomFontFileChange(event: Event, field: CustomTextFieldState) {
+function fontCacheErrorHandler(field: CustomTextFieldState): (info: RestErrorInfo) => void {
+  return (info) => { fontCacheErrors.value = { ...fontCacheErrors.value, [field.id]: `${info.serviceName}: ${info.errorCategory}` } }
+}
+
+async function commitUserFontUrl(field: CustomTextFieldState, value: string) {
+  field.userFontUrl = value
+  const trimmed = value.trim()
+  if (trimmed === (lastCommittedUserFontUrls.get(field.id) ?? '')) return
+  fontCacheErrors.value = { ...fontCacheErrors.value, [field.id]: null }
+  const generation = (fontCommitGenerations.get(field.id) ?? 0) + 1
+  fontCommitGenerations.set(field.id, generation)
+  if (!trimmed) {
+    lastCommittedUserFontUrls.set(field.id, trimmed)
+    field.fontUrl = ''
+    return
+  }
+  cachingFontFieldIds.value = { ...cachingFontFieldIds.value, [field.id]: true }
+  const result = await cacheBadgeMediaUrl(fontCacheErrorHandler(field), trimmed)
+  if (fontCommitGenerations.get(field.id) !== generation) return
+  cachingFontFieldIds.value = { ...cachingFontFieldIds.value, [field.id]: false }
+  if (result.cached) {
+    lastCommittedUserFontUrls.set(field.id, trimmed)
+    field.fontUrl = result.url
+  }
+}
+
+async function onCustomFontFileChange(event: Event, field: CustomTextFieldState) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
-  const previousUrl = customFontObjectUrls.get(field.id)
-  if (previousUrl) URL.revokeObjectURL(previousUrl)
-  const objectUrl = URL.createObjectURL(file)
-  customFontObjectUrls.set(field.id, objectUrl)
-  field.fontUrl = objectUrl
+  fontCacheErrors.value = { ...fontCacheErrors.value, [field.id]: null }
+  const generation = (fontCommitGenerations.get(field.id) ?? 0) + 1
+  fontCommitGenerations.set(field.id, generation)
+  cachingFontFieldIds.value = { ...cachingFontFieldIds.value, [field.id]: true }
+  const result = await cacheBadgeMediaUpload(fontCacheErrorHandler(field), file)
+  if (fontCommitGenerations.get(field.id) !== generation) return
+  cachingFontFieldIds.value = { ...cachingFontFieldIds.value, [field.id]: false }
+  if (result.cached) {
+    field.fontUrl = result.url
+  }
 }
 
 interface FieldSetup { fields: BadgeTypeFields }
@@ -276,10 +312,14 @@ const nicknameField = computed(() => fields.value.custom.find((field) => field.s
             </SelectButton>
           </td>
           <td class="pr-4">
-            <div class="flex items-center gap-2">
-              <UrlInputText v-model="row.local.fontUrl" class="w-32 p-1 text-xs" placeholder="Font URL (.otf)" />
-              <Button label="Browse..." size="small" @click="customFontFileInputs[row.local.id]?.click()" />
-              <input :ref="(el) => { customFontFileInputs[row.local!.id] = el as HTMLInputElement }" type="file" accept=".otf" class="hidden" @change="onCustomFontFileChange($event, row.local!)" />
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2">
+                <UrlInputText v-model="row.local.userFontUrl" :disabled="cachingFontFieldIds[row.local.id]" class="w-32 p-1 text-xs" placeholder="Font URL (.otf)" @commit="(v: string) => commitUserFontUrl(row.local!, v)" />
+                <i v-if="cachingFontFieldIds[row.local.id]" class="pi pi-spin pi-spinner" />
+                <Button label="Browse..." size="small" :disabled="cachingFontFieldIds[row.local.id]" @click="customFontFileInputs[row.local.id]?.click()" />
+                <input :ref="(el) => { customFontFileInputs[row.local!.id] = el as HTMLInputElement }" type="file" accept=".otf" class="hidden" @change="onCustomFontFileChange($event, row.local!)" />
+              </div>
+              <span v-if="fontCacheErrors[row.local.id]" class="text-xs text-red-600">{{ fontCacheErrors[row.local.id] }}</span>
             </div>
           </td>
           <td class="pr-4">

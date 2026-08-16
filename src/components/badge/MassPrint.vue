@@ -12,7 +12,7 @@ import Select from '@/volt/Select.vue'
 import Toolbar from '@/volt/Toolbar.vue'
 import { computed, ref, watch } from 'vue'
 import { resolveBadgeType } from '@/composables/badge/badgeTypeInheritance'
-import { resolveBadgeTypeForAttendee } from '@/composables/badge/resolveBadgeTypeForAttendee'
+import { resolveBadgeMappingForAttendee } from '@/composables/badge/resolveBadgeTypeForAttendee'
 import { useAttendeeDataOptions } from '@/composables/filter/useAttendeeDataOptions'
 import { renderBadgeSvg } from '@/composables/print/badgeHtml'
 import { printBadgePages } from '@/composables/print/printFrame'
@@ -51,15 +51,43 @@ const dataOptionsRef = useAttendeeDataOptions()
 const filling = ref(false)
 const fillStatusMessage = ref<string | null>(null)
 
-function buildPrintRowForAttendee(attendee: TransformedAttendeeInfo): PrintRow {
-  const resolvedBadgeType = resolveBadgeTypeForAttendee(attendee, badgeMapping.value, badgeTypes.value)
-  const badgeTypeId = resolvedBadgeType?.id ?? pasteTargetBadgeTypeId.value ?? ''
+function attendeeForSingleAttendance(
+  attendee: TransformedAttendeeInfo,
+  attendanceValue: string,
+): TransformedAttendeeInfo {
+  const otherAttendanceValues = new Set(
+    (attendee.transDayAttendance ?? []).filter((value) => value !== attendanceValue),
+  )
+  return {
+    ...attendee,
+    packages_list: (attendee.packages_list ?? []).filter((pkg) => !otherAttendanceValues.has(pkg.name)),
+  }
+}
+
+function buildPrintRowForAttendeeAttendance(
+  attendee: TransformedAttendeeInfo,
+  attendanceAttendee: TransformedAttendeeInfo,
+): PrintRow {
+  const resolvedMapping = resolveBadgeMappingForAttendee(attendanceAttendee, badgeMapping.value)
+  const badgeTypeId = resolvedMapping?.badgeTypeId ?? pasteTargetBadgeTypeId.value ?? ''
   return {
     ...createEmptyPrintRow(badgeTypeId),
     idValue: attendee.id === null ? '' : String(attendee.id),
     nicknameValue: attendee.nickname ?? '',
     countryValue: attendee.country ?? '',
+    packageValue: resolvedMapping?.packageValue ?? '',
+    flagValue: resolvedMapping?.flagValue ?? '',
   }
+}
+
+function buildPrintRowsForAttendee(attendee: TransformedAttendeeInfo): PrintRow[] {
+  const attendanceValues = attendee.transDayAttendance ?? []
+  if (attendanceValues.length <= 1) {
+    return [buildPrintRowForAttendeeAttendance(attendee, attendee)]
+  }
+  return attendanceValues.map((attendanceValue) =>
+    buildPrintRowForAttendeeAttendance(attendee, attendeeForSingleAttendance(attendee, attendanceValue)),
+  )
 }
 
 async function fillFromFilter() {
@@ -71,8 +99,9 @@ async function fillFromFilter() {
     dataOptionsRef.value.filterConfig.filterValues,
     dataOptionsRef.value.filterConfig.globalFilterFields,
   )
-  printRows.value.push(...matched.map(buildPrintRowForAttendee))
-  fillStatusMessage.value = `Added ${matched.length} attendee(s).`
+  const newRows = matched.flatMap(buildPrintRowsForAttendee)
+  printRows.value.push(...newRows)
+  fillStatusMessage.value = `Added ${newRows.length} row(s) for ${matched.length} attendee(s).`
   filling.value = false
 }
 

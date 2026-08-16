@@ -1,6 +1,7 @@
 import { getRegDeskConfig } from "@/composables/api/attsrv/additional-info/getRegDeskConfig";
 import { putRegDeskConfig } from "@/composables/api/attsrv/additional-info/putRegDeskConfig";
 import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
+import { revalidateBadgeMediaUrls } from "@/composables/badge/revalidateBadgeMediaUrls";
 import { createEmptyBadgeMapping, withNoFlag } from "@/types/badgeMapping";
 import type { BadgeMapping } from "@/types/badgeMapping";
 import { createDefaultBadgeType } from "@/types/badgeType";
@@ -30,6 +31,7 @@ export async function loadBadgeConfig(
   badgeMappingRef.value = badge?.badgeMapping
     ? withNoFlag(badge.badgeMapping)
     : createEmptyBadgeMapping();
+  await revalidateBadgeMediaUrls(badgeTypesRef.value, errorHandler);
 }
 
 let badgeConfigLoadPromise: Promise<void> | null = null;

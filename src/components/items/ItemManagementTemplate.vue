@@ -17,7 +17,7 @@
             >
               <i :class="item.icon" />
               {{ item.label }}
-              <i v-if="item.adminOnly" class="pi pi-shield text-xs ml-auto opacity-60" v-tooltip.right="'Admin only'" />
+              <i v-if="item.adminOnly" class="pi pi-shield text-xs ml-auto opacity-60" v-tooltip.right="'Restricted access: director'" />
             </a>
           </template>
         </Menu>

@@ -78,6 +78,7 @@ import { getEmptySponsorDeskAddInfo } from "@/composables/services/attendee/getE
 import { downloadCSV } from "@/composables/logic/downloadCSV";
 import { attendeeService } from "@/composables/services/attendeeService";
 import type { OnsiteToastService } from "@/composables/services/toastService";
+import { initialAuthCheckSettled } from "@/composables/state/authState";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
@@ -108,7 +109,10 @@ async function refresh(): Promise<void> {
   loading.value = false;
 }
 
-onMounted(refresh);
+onMounted(async () => {
+  await initialAuthCheckSettled;
+  await refresh();
+});
 
 const itemTreeNodes = computed<GoodieTreeNode[]>(() =>
   buildItemTree(infosMap.value, attendeeInfosList.value, configCounts.value.soldCount, configCounts.value.inventoryCount)

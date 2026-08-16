@@ -28,6 +28,7 @@ export interface TextFieldState extends FieldState {
   color: string
   align: TextAlign
   fontUrl: string
+  userFontUrl: string
   borderEnabled?: boolean
   borderColor?: string
   wrapAt?: number
@@ -80,6 +81,7 @@ export function createDefaultFieldInheritance(): FieldInheritance {
 
 export interface BadgeTypeBackground {
   url: string
+  userUrl: string
   fit: BackgroundFit
   alignH: BackgroundAlignH
   alignV: BackgroundAlignV
@@ -89,6 +91,7 @@ export interface BadgeTypeBackground {
 export function createDefaultBadgeTypeBackground(): BadgeTypeBackground {
   return {
     url: '',
+    userUrl: '',
     fit: 'cover',
     alignH: 'center',
     alignV: 'center',
@@ -124,6 +127,7 @@ export function createDefaultBadgeType(name: string): BadgeType {
           color: '000000',
           align: 'left',
           fontUrl: '',
+          userFontUrl: '',
         },
         {
           id: crypto.randomUUID(),
@@ -135,6 +139,7 @@ export function createDefaultBadgeType(name: string): BadgeType {
           color: '000000',
           align: 'left',
           fontUrl: '',
+          userFontUrl: '',
         },
         {
           id: crypto.randomUUID(),
@@ -146,6 +151,7 @@ export function createDefaultBadgeType(name: string): BadgeType {
           color: '000000',
           align: 'left',
           fontUrl: '',
+          userFontUrl: '',
         },
       ],
       customBarcodes: [
@@ -177,6 +183,7 @@ export function createDefaultCustomTextField(): CustomTextFieldState {
     color: '000000',
     align: 'left',
     fontUrl: '',
+    userFontUrl: '',
   }
 }
 

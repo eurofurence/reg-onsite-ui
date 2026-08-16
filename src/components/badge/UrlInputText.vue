@@ -3,8 +3,8 @@
 import InputText from '@/volt/InputText.vue'
 import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
-const props = defineProps<{ modelValue: string; placeholder?: string; class?: string }>()
-const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
+const props = defineProps<{ modelValue: string; placeholder?: string; class?: string; disabled?: boolean }>()
+const emit = defineEmits<{ 'update:modelValue': [value: string]; commit: [value: string] }>()
 
 const inputRef = ref<InstanceType<typeof InputText> | null>(null)
 let resizeObserver: ResizeObserver | undefined
@@ -21,6 +21,7 @@ function scrollToEnd() {
 function onBlur() {
   scrollToEnd()
   requestAnimationFrame(scrollToEnd)
+  emit('commit', props.modelValue)
 }
 
 watch(() => props.modelValue, () => {
@@ -48,6 +49,7 @@ onBeforeUnmount(() => {
     :model-value="modelValue"
     :class="props.class"
     :placeholder="placeholder"
+    :disabled="disabled"
     @update:model-value="(value: string) => emit('update:modelValue', value)"
     @blur="onBlur"
   />

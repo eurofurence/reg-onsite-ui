@@ -20,6 +20,16 @@ const defaultAuthState: AuthState = {
 
 export const authState: Ref<AuthState> = ref({ ...defaultAuthState });
 
+let resolveInitialAuthCheck: () => void;
+export const initialAuthCheckSettled: Promise<void> = new Promise(
+  (resolve) => {
+    resolveInitialAuthCheck = resolve;
+  }
+);
+export function markInitialAuthCheckSettled(): void {
+  resolveInitialAuthCheck();
+}
+
 function isIdpMember(
   ...groupIdListList: (IdpGroupId[] | undefined)[]
 ): boolean {

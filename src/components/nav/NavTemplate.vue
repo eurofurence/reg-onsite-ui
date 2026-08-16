@@ -6,10 +6,17 @@
           <div class="grid grid-cols-2 gap-3 pb-3 onsite-nav">
             <template v-for="fieldset in allFieldsets" :key="fieldset.legend">
               <Fieldset
-                :legend="fieldset.legend"
                 :disabled="checkDisabled(...(fieldset.authGroups ?? []))"
                 v-if="checkShown(...(fieldset.authGroups ?? []))"
               >
+                <template #legend>
+                  <span class="font-semibold">{{ fieldset.legend }}</span>
+                  <i
+                    v-if="fieldset.authGroups"
+                    class="pi pi-shield text-xs ml-1 opacity-60"
+                    v-tooltip.right="accessTooltip(fieldset.authGroups)"
+                  />
+                </template>
                 <div class="flex flex-col gap-3 m-2">
                   <template
                     v-for="item in fieldset.items"
@@ -32,7 +39,11 @@
                       <i :class="item.icon" />{{ item.label
                       }}<template v-if="item.sublabel"
                         ><br />{{ item.sublabel }}</template
-                      >
+                      ><i
+                        v-if="item.authGroups"
+                        class="pi pi-shield text-xs ml-auto opacity-60"
+                        v-tooltip.right="accessTooltip(item.authGroups)"
+                      />
                     </LinkButton>
                   </template>
                 </div>
@@ -74,6 +85,10 @@ function checkDisabled(...groupNameList: AuthGroupValue[]) {
 
 function checkShown(...groupNameList: AuthGroupValue[]) {
   return isInAnyGroup(...groupNameList) || showDisabled.value;
+}
+
+function accessTooltip(groupNameList: AuthGroupValue[]): string {
+  return `Restricted access: ${groupNameList.join(", ")}`;
 }
 
 function getLink(relativePath: string): string {
