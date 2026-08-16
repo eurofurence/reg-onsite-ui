@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { RestErrorHandler } from '@/composables/api/base/restErrorWrapper'
 import { getCardFootprint } from '@/composables/print/cardFootprint'
+import { forceRefreshBadgeMediaCache } from '@/composables/badge/revalidateBadgeMediaUrls'
 import { exportBadgeConfig, importBadgeConfig } from '@/composables/services/badgeConfigExport'
-import { saveBadgeConfig } from '@/composables/services/badgeConfigStore'
+import { badgeTypesRef, saveBadgeConfig } from '@/composables/services/badgeConfigStore'
 import { getOrientedPageDimensionsMm, PAGE_SIZE_DIMENSIONS_MM } from '@/types/printSettings'
 import type { CardRotationDeg, Dpi, Orientation, PageSize, PresetPageSize, PrintSettings } from '@/types/printSettings'
 import Button from '@/volt/Button.vue'
@@ -35,6 +36,17 @@ async function handleImport(event: Event) {
   }
   await importBadgeConfig(file, props.errorHandler)
   input.value = ''
+}
+
+const refreshingCache = ref(false)
+
+async function handleRefreshCache() {
+  refreshingCache.value = true
+  try {
+    await forceRefreshBadgeMediaCache(badgeTypesRef.value, props.errorHandler)
+  } finally {
+    refreshingCache.value = false
+  }
 }
 
 type CardSizePreset = 'CreditCard' | 'A7' | 'A6' | 'Custom'
@@ -336,6 +348,14 @@ watch(
           <div class="flex gap-2 p-2">
             <Button label="Export Badge Config" size="small" severity="secondary" @click="exportBadgeConfig" />
             <Button label="Import Badge Config" size="small" severity="secondary" @click="triggerImport" />
+            <Button
+              label="Force Refresh Media Cache"
+              size="small"
+              severity="secondary"
+              :loading="refreshingCache"
+              :disabled="refreshingCache"
+              @click="handleRefreshCache"
+            />
             <input
               ref="importInput"
               type="file"

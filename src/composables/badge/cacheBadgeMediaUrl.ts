@@ -9,39 +9,73 @@ export interface CacheBadgeMediaResult {
   cached: boolean
 }
 
-async function findExistingCacheUrl(sourceHash: string): Promise<string | undefined> {
-  const response = await fetch(getUrl(`onsite/api/v1/media/cache/${sourceHash}`), {
-    method: 'GET',
+async function findExistingCacheUrls(
+  sourceHashes: string[],
+): Promise<Map<string, string>> {
+  const response = await fetch(getUrl('onsite/api/v1/media/cache/lookup'), {
+    method: 'POST',
     credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source_hashes: sourceHashes }),
   })
   if (!response.ok) {
-    return undefined
+    return new Map()
   }
-  const resolvedKey = response.headers.get('X-Cache-Key')
-  if (!resolvedKey) {
-    return undefined
-  }
-  return getUrl(`onsite/api/v1/media/cache/${resolvedKey}`).toString()
+  const { keys }: { keys: Record<string, string> } = await response.json()
+  return new Map(
+    Object.entries(keys).map(([sourceHash, key]) => [
+      sourceHash,
+      getUrl(`onsite/api/v1/media/cache/${key}`).toString(),
+    ]),
+  )
 }
 
 export async function cacheBadgeMediaUrl(
   errorHandler: RestErrorHandler,
   sourceUrl: string,
+  force = false,
 ): Promise<CacheBadgeMediaResult> {
   const trimmed = sourceUrl.trim()
   if (!trimmed) {
     return { url: '', cached: true }
   }
-  const sourceHash = await sha256Hex(trimmed)
-  const existingUrl = await findExistingCacheUrl(sourceHash)
-  if (existingUrl !== undefined) {
-    return { url: existingUrl, cached: true }
+  if (!force) {
+    const sourceHash = await sha256Hex(trimmed)
+    const existingUrls = await findExistingCacheUrls([sourceHash])
+    const existingUrl = existingUrls.get(sourceHash)
+    if (existingUrl !== undefined) {
+      return { url: existingUrl, cached: true }
+    }
   }
-  const cachedUrl = await postCacheMediaUrl(errorHandler, trimmed)
+  const cachedUrl = await postCacheMediaUrl(errorHandler, trimmed, force)
   if (cachedUrl === undefined) {
     return { url: '', cached: false }
   }
   return { url: cachedUrl, cached: true }
+}
+
+export async function findCachedBadgeMediaUrls(
+  sourceUrls: string[],
+): Promise<Map<string, string>> {
+  const trimmedUrls = sourceUrls.map((sourceUrl) => sourceUrl.trim()).filter(Boolean)
+  const hashes = await Promise.all(trimmedUrls.map((sourceUrl) => sha256Hex(sourceUrl)))
+  const hashToUrls = new Map<string, string[]>()
+  trimmedUrls.forEach((sourceUrl, index) => {
+    const hash = hashes[index]
+    const urls = hashToUrls.get(hash) ?? []
+    urls.push(sourceUrl)
+    hashToUrls.set(hash, urls)
+  })
+  const existingUrls = await findExistingCacheUrls([...hashToUrls.keys()])
+  const result = new Map<string, string>()
+  for (const [hash, urls] of hashToUrls) {
+    const existingUrl = existingUrls.get(hash)
+    if (existingUrl === undefined) continue
+    for (const sourceUrl of urls) {
+      result.set(sourceUrl, existingUrl)
+    }
+  }
+  return result
 }
 
 export async function cacheBadgeMediaUpload(

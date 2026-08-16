@@ -16,9 +16,7 @@ _cache: OrderedDict[str, CachedMedia] = OrderedDict()
 
 
 def store_bytes(source: str, content: bytes, content_type: str) -> str:
-    source_hash = hashlib.sha256(source.encode()).hexdigest()
-    content_hash = hashlib.sha256(content).hexdigest()
-    key = f"{source_hash}-{content_hash}"
+    key = hashlib.sha256(source.encode()).hexdigest()
     _cache[key] = CachedMedia(
         source=source, content=content, content_type=content_type
     )
@@ -32,9 +30,9 @@ def get(key: str) -> CachedMedia | None:
     return _cache.get(key)
 
 
-def find_by_source_hash(source_hash: str) -> str | None:
-    prefix = f"{source_hash}-"
-    for key in reversed(_cache):
-        if key.startswith(prefix):
-            return key
-    return None
+def find_by_source_hashes(source_hashes: list[str]) -> dict[str, str]:
+    return {
+        source_hash: source_hash
+        for source_hash in source_hashes
+        if source_hash in _cache
+    }

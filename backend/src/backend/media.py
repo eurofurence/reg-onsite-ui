@@ -22,6 +22,14 @@ class CacheResponse(BaseModel):
     key: str
 
 
+class CacheLookupRequest(BaseModel):
+    source_hashes: list[str]
+
+
+class CacheLookupResponse(BaseModel):
+    keys: dict[str, str]
+
+
 async def _fetch_bounded(url: str) -> tuple[bytes, str]:
     async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
         async with client.stream("GET", url) as resp:
@@ -48,9 +56,9 @@ async def cache_url(
         raise HTTPException(status_code=400, detail="url must not be empty")
     if not request.force:
         source_hash = hashlib.sha256(url.encode()).hexdigest()
-        existing_key = media_cache.find_by_source_hash(source_hash)
-        if existing_key is not None:
-            return CacheResponse(key=existing_key)
+        existing = media_cache.find_by_source_hashes([source_hash])
+        if source_hash in existing:
+            return CacheResponse(key=source_hash)
     content, content_type = await _fetch_bounded(url)
     key = media_cache.store_bytes(url, content, content_type)
     return CacheResponse(key=key)
@@ -70,21 +78,19 @@ async def cache_upload(
     return CacheResponse(key=key)
 
 
+@router.post("/media/cache/lookup")
+async def lookup_cached_media(request: CacheLookupRequest) -> CacheLookupResponse:
+    keys = media_cache.find_by_source_hashes(request.source_hashes)
+    return CacheLookupResponse(keys=keys)
+
+
 @router.get("/media/cache/{key}")
 async def get_cached_media(key: str) -> Response:
-    resolved_key = key
     cached = media_cache.get(key)
     if cached is None:
-        resolved_key = media_cache.find_by_source_hash(key)
-        if resolved_key is not None:
-            cached = media_cache.get(resolved_key)
-    if cached is None or resolved_key is None:
         raise HTTPException(status_code=404, detail="not found")
     return Response(
         content=cached.content,
         media_type=cached.content_type,
-        headers={
-            "Cache-Control": "public, max-age=31536000, immutable",
-            "X-Cache-Key": resolved_key,
-        },
+        headers={"Cache-Control": "public, max-age=300"},
     )

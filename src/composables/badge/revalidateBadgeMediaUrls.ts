@@ -1,4 +1,4 @@
-import { cacheBadgeMediaUrl } from '@/composables/badge/cacheBadgeMediaUrl'
+import { cacheBadgeMediaUrl, findCachedBadgeMediaUrls } from '@/composables/badge/cacheBadgeMediaUrl'
 import type { RestErrorHandler } from '@/composables/api/base/restErrorWrapper'
 import type { BadgeType, BadgeTypeBackground, CustomTextFieldState } from '@/types/badgeType'
 
@@ -51,6 +51,25 @@ async function isUrlReachable(url: string): Promise<boolean> {
   }
 }
 
+export async function forceRefreshBadgeMediaCache(
+  badgeTypes: BadgeType[],
+  errorHandler: RestErrorHandler,
+): Promise<void> {
+  const holders = collectHolders(badgeTypes)
+  for (const holder of holders) {
+    migrateMissingUserUrl(holder)
+  }
+
+  for (const holder of holders) {
+    const userUrl = holder.getUserUrl()
+    if (!userUrl) continue
+    const result = await cacheBadgeMediaUrl(errorHandler, userUrl, true)
+    if (result.cached) {
+      holder.setUrl(result.url)
+    }
+  }
+}
+
 export async function revalidateBadgeMediaUrls(
   badgeTypes: BadgeType[],
   errorHandler: RestErrorHandler,
@@ -60,16 +79,29 @@ export async function revalidateBadgeMediaUrls(
     migrateMissingUserUrl(holder)
   }
 
-  await Promise.all(
-    holders.map(async (holder) => {
-      const userUrl = holder.getUserUrl()
-      if (!userUrl) return
-      const url = holder.getUrl()
-      if (url && (await isUrlReachable(url))) return
-      const result = await cacheBadgeMediaUrl(errorHandler, userUrl)
-      if (result.cached) {
-        holder.setUrl(result.url)
-      }
-    }),
+  const unreachableHolders: MediaUrlHolder[] = []
+  for (const holder of holders) {
+    const userUrl = holder.getUserUrl()
+    if (!userUrl) continue
+    const url = holder.getUrl()
+    if (url && (await isUrlReachable(url))) continue
+    unreachableHolders.push(holder)
+  }
+
+  const cachedUrls = await findCachedBadgeMediaUrls(
+    unreachableHolders.map((holder) => holder.getUserUrl()),
   )
+
+  for (const holder of unreachableHolders) {
+    const userUrl = holder.getUserUrl()
+    const cachedUrl = cachedUrls.get(userUrl)
+    if (cachedUrl !== undefined) {
+      holder.setUrl(cachedUrl)
+      continue
+    }
+    const result = await cacheBadgeMediaUrl(errorHandler, userUrl)
+    if (result.cached) {
+      holder.setUrl(result.url)
+    }
+  }
 }
