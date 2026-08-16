@@ -59,7 +59,7 @@ const efGoodiesRecord = {
   ...metadataRecordForGoodies2026,
 };
 
-export const conventionSettingsForEF: ConventionSettings = {
+export const conventionSettingsForEF: ConventionSettings<EFGoodieConfig> = {
   maxRegNumber: 99999 as RegNumber,
   minAge: 18 as AgeInYears,
   colorPalette: efPrimaryColors,

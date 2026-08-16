@@ -56,7 +56,7 @@ const testConGoodiesRecord = {
   ...metadataRecordForGoodies2026,
 };
 
-export const conventionSettingsForTC: ConventionSettings = {
+export const conventionSettingsForTC: ConventionSettings<TCGoodieConfig> = {
   maxRegNumber: 99999 as RegNumber,
   minAge: 18 as AgeInYears,
   colorPalette: testConPrimaryColors,

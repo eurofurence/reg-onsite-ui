@@ -93,10 +93,12 @@ export interface ConventionIterationSettings {
   };
 }
 
-export interface ConventionIteration {
+export interface ConventionIteration<
+  TGoodieConfig extends LabeledValue<string>
+> {
   label: string;
   settings: ConventionIterationSettings;
-  record: PartialMetadataRecord<GoodieConfig>;
+  record: PartialMetadataRecord<TGoodieConfig>;
 }
 
 export interface ConventionInventorySettings {
@@ -104,7 +106,9 @@ export interface ConventionInventorySettings {
   constore: AbstractGoodieValue[];
 }
 
-export interface ConventionSettings {
+export interface ConventionSettings<
+  TGoodieConfig extends LabeledValue<string>
+> {
   links: {
     logoPath: string;
     idpDashboardLink: URL;
@@ -117,11 +121,11 @@ export interface ConventionSettings {
   metadata: ConventionSharedMetadata;
   auth: Partial<Record<AuthGroupValue, IdpGroupId[]>>;
   // first entry is the current iteration
-  iterations: ConventionIteration[];
+  iterations: ConventionIteration<TGoodieConfig>[];
   // lookup of all goodies across all iterations, even retired ones
-  goodiesRecord: MetadataRecord<GoodieConfig>;
+  goodiesRecord: MetadataRecord<TGoodieConfig>;
   // goodies belonging to the current iteration only
-  currentGoodiesRecord: PartialMetadataRecord<GoodieConfig>;
+  currentGoodiesRecord: PartialMetadataRecord<TGoodieConfig>;
   inventory: ConventionInventorySettings;
 }
 
@@ -132,7 +136,7 @@ interface ConventionMetadata extends ConventionSharedMetadata {
 }
 
 export type ConventionSetup = ConventionIterationSettings &
-  Omit<ConventionSettings, "metadata"> & {
+  Omit<ConventionSettings<GoodieConfig>, "metadata"> & {
     metadata: ConventionMetadata;
     inventory: ConventionInventorySettings;
   };
