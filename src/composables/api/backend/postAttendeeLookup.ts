@@ -16,9 +16,17 @@ export interface LookupRow {
   item?: string;
 }
 
-export interface LookupResult {
-  id: RegNumber | null;
+export interface AttendeeMatch {
+  id: RegNumber;
   nickname: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  idpId: string | null;
+}
+
+export interface LookupResult {
+  matches: AttendeeMatch[];
   item: string | null;
   found: boolean;
   input: LookupRow;

@@ -10,4 +10,5 @@ export const defaultUserSettings: UserThemeSettings = {
   isDarkMode: false,
   fontSize: 14 as FontSize,
   headerSize: 1 as RelativeSize,
+  showDidYouKnowTips: true,
 };

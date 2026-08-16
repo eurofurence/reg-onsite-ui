@@ -1,5 +1,5 @@
 <template>
-  <OnsitePage title="Sponsor Desk">
+  <OnsitePage title="Sponsor Desk" :pageTips="pageTips">
     <template #help>
       This is the on site interface for the sponsor desk. Its inventory
       encompasses only the current sponsor items. Available hotkeys:
@@ -17,4 +17,13 @@
 <script setup lang="ts">
 import OnsitePage from "@/components/common/OnsitePage.vue";
 import SponsorDeskTemplate from "@/components/sponsordesk/SponsorDeskTemplate.vue";
+
+const pageTips: string[] = [
+  "Press Escape to reset the reg number input field.",
+  "Press Enter to search for the entered reg number.",
+  "Press A to select all available items.",
+  "Press S to save the current item selection.",
+  "You can review which items an attendee already received before selecting more.",
+  "Saving an assignment updates the attendee's item record immediately.",
+];
 </script>

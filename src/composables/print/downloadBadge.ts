@@ -1,6 +1,10 @@
-import { fontFamilyNameFor, renderBadgeSvg, renderBadgeSvgForPdf } from '@/composables/print/badgeHtml'
+import { fontFamilyNameFor, renderBadgeSvg, renderBadgeSvgForPdf, widthPxAtDpi } from '@/composables/print/badgeHtml'
 import type { TextFieldLayout } from '@/composables/print/badgeHtml'
+import { computeBackgroundPlacement, createBackgroundImageCache, fetchBackgroundImageCached } from '@/composables/print/backgroundImageCache'
+import type { BackgroundImageCache } from '@/composables/print/backgroundImageCache'
 import { getCardFootprint } from '@/composables/print/cardFootprint'
+import { createFontBufferCache, fetchFontBufferCached } from '@/composables/print/fontBufferCache'
+import type { FontBufferCache } from '@/composables/print/fontBufferCache'
 import { buildOutlinedTextField } from '@/composables/print/textOutline'
 import { printSettingsRef } from '@/composables/services/badgeConfigStore'
 import type { BadgeType } from '@/types/badgeType'
@@ -8,7 +12,7 @@ import { getOrientedPageDimensionsMm } from '@/types/printSettings'
 import { jsPDF } from 'jspdf'
 import 'svg2pdf.js'
 
-function downloadBlob(blob: Blob, filename: string) {
+export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -17,15 +21,20 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-async function fetchFontBuffer(fontUrl: string): Promise<ArrayBuffer | null> {
-  try {
-    const response = await fetch(fontUrl)
-    if (!response.ok) {
-      return null
-    }
-    return await response.arrayBuffer()
-  } catch {
-    return null
+// Bundles the per-export-job caches so a whole batch of badges (potentially
+// thousands) can share fetched fonts/background images and font
+// registrations across entries, instead of re-fetching per badge.
+export interface BadgeRenderJob {
+  fontBufferCache: FontBufferCache
+  backgroundImageCache: BackgroundImageCache
+  registeredFontFamilies: Set<string>
+}
+
+export function createBadgeRenderJob(): BadgeRenderJob {
+  return {
+    fontBufferCache: createFontBufferCache(),
+    backgroundImageCache: createBackgroundImageCache(),
+    registeredFontFamilies: new Set(),
   }
 }
 
@@ -54,11 +63,12 @@ async function registerCustomFonts(
   resolvedBadgeType: BadgeType,
   svgElement: Element,
   textFieldLayouts: TextFieldLayout[],
+  job: BadgeRenderJob,
 ) {
   const layoutsByFieldId = new Map(textFieldLayouts.map((layout) => [layout.fieldId, layout]))
   const fieldsWithFont = resolvedBadgeType.fields.custom.filter((field) => field.fontUrl)
   for (const field of fieldsWithFont) {
-    const buffer = await fetchFontBuffer(field.fontUrl)
+    const buffer = await fetchFontBufferCached(field.fontUrl, job.fontBufferCache)
     if (!buffer) continue
     if (isUnsupportedCffOpenType(buffer)) {
       const layout = layoutsByFieldId.get(field.id)
@@ -72,9 +82,11 @@ async function registerCustomFonts(
       continue
     }
     const fontFamilyName = fontFamilyNameFor(field.id, resolvedBadgeType.id)
+    if (job.registeredFontFamilies.has(fontFamilyName)) continue
     const vfsFilename = `${fontFamilyName}.otf`
     doc.addFileToVFS(vfsFilename, arrayBufferToBase64(buffer))
     doc.addFont(vfsFilename, fontFamilyName, 'normal')
+    job.registeredFontFamilies.add(fontFamilyName)
   }
 }
 
@@ -88,16 +100,68 @@ export async function downloadBadgeSvg(
   downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${filenameBase}.svg`)
 }
 
-async function addBadgePage(
+// Renders the background image directly via addImage (raw bytes + a URL-keyed alias)
+// instead of leaving it in the SVG for svg2pdf.js: svg2pdf.js always re-encodes
+// <image> hrefs to a base64 data URI internally before calling addImage, which hits
+// jsPDF's ~4MB base64 string bug and re-fetches/re-rasterizes on every page even when
+// many badges share one background.
+async function renderBackgroundImage(
+  doc: jsPDF,
+  resolvedBadgeType: BadgeType,
+  imgLeftMm: number,
+  imgTopMm: number,
+  job: BadgeRenderJob,
+) {
+  const backgroundUrl = resolvedBadgeType.background.url
+  if (!backgroundUrl) {
+    return
+  }
+  const cached = await fetchBackgroundImageCached(doc, backgroundUrl, job.backgroundImageCache)
+  if (!cached) {
+    return
+  }
+  const printSettings = printSettingsRef.value
+  const cardWidthPx = widthPxAtDpi(printSettings.cardWidthMm, printSettings.dpi)
+  const cardHeightPx = cardWidthPx * (printSettings.cardHeightMm / printSettings.cardWidthMm)
+  const mmPerPx = printSettings.cardWidthMm / cardWidthPx
+  const placement = computeBackgroundPlacement(
+    resolvedBadgeType.background.fit,
+    resolvedBadgeType.background.alignH,
+    resolvedBadgeType.background.alignV,
+    cardWidthPx,
+    cardHeightPx,
+    cached.naturalWidthPx,
+    cached.naturalHeightPx,
+  )
+
+  doc.saveGraphicsState()
+  if (placement.clip) {
+    doc.rect(imgLeftMm, imgTopMm, printSettings.cardWidthMm, printSettings.cardHeightMm, null).clip()
+  }
+  doc.addImage(
+    cached.bytes,
+    cached.format,
+    imgLeftMm + placement.drawX * mmPerPx,
+    imgTopMm + placement.drawY * mmPerPx,
+    placement.drawWidth * mmPerPx,
+    placement.drawHeight * mmPerPx,
+    backgroundUrl,
+  )
+  doc.restoreGraphicsState()
+}
+
+export async function addBadgePage(
   doc: jsPDF,
   resolvedBadgeType: BadgeType,
   svg: string,
   textFieldLayouts: TextFieldLayout[],
   rotationDeg: number,
+  job: BadgeRenderJob,
 ) {
   const printSettings = printSettingsRef.value
   const svgElement = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement
-  await registerCustomFonts(doc, resolvedBadgeType, svgElement, textFieldLayouts)
+  await registerCustomFonts(doc, resolvedBadgeType, svgElement, textFieldLayouts, job)
+  svgElement.querySelector('[data-role="background"]')?.remove()
 
   const { imgLeftMm, imgTopMm } = getCardFootprint(
     printSettings.cardXMm,
@@ -136,6 +200,7 @@ async function addBadgePage(
     )
     doc.setCurrentTransformationMatrix(doc.Matrix(1, 0, 0, 1, -centerX, -centerY))
   }
+  await renderBackgroundImage(doc, resolvedBadgeType, imgLeftMm, imgTopMm, job)
   await doc.svg(svgElement, { x: imgLeftMm, y: imgTopMm, width: printSettings.cardWidthMm, height: printSettings.cardHeightMm })
   if (rotationDeg !== 0) {
     doc.restoreGraphicsState()
@@ -157,12 +222,13 @@ export async function downloadBadgePdf(
     unit: 'mm',
     format: [pageDimensions.width, pageDimensions.height],
   })
+  const job = createBadgeRenderJob()
 
-  await addBadgePage(doc, resolvedBadgeType, svg, textFieldLayouts, printSettings.cardRotationDeg)
+  await addBadgePage(doc, resolvedBadgeType, svg, textFieldLayouts, printSettings.cardRotationDeg, job)
   if (printSettings.doubleSided) {
     const backRotationDeg = printSettings.cardRotationDeg + (printSettings.backSideRotated180 ? 180 : 0)
     doc.addPage([pageDimensions.width, pageDimensions.height], pageDimensions.width > pageDimensions.height ? 'landscape' : 'portrait')
-    await addBadgePage(doc, resolvedBadgeType, svg, textFieldLayouts, backRotationDeg)
+    await addBadgePage(doc, resolvedBadgeType, svg, textFieldLayouts, backRotationDeg, job)
   }
 
   doc.save(`${filenameBase}.pdf`)

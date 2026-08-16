@@ -22,7 +22,11 @@
 
   <div class="flex flex-col h-screen w-full">
     <div class="p-px w-full">
-      <HeaderLoginPanel :title="props.title" :theming="props.theming">
+      <HeaderLoginPanel
+        :title="props.title"
+        :theming="props.theming"
+        :pageTips="props.pageTips"
+      >
         <template #help v-if="$slots.help">
           <slot name="help"></slot>
         </template>
@@ -56,9 +60,11 @@ import { onMounted, useId, useTemplateRef, watch, type ShallowRef } from "vue";
 interface Props {
   title: string;
   theming?: boolean;
+  pageTips?: string[];
 }
 const props = withDefaults(defineProps<Props>(), {
   theming: true,
+  pageTips: () => [],
 });
 
 const componentId: string = generateId(useId());

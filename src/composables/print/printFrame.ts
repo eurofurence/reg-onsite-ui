@@ -7,6 +7,16 @@ function removeIframe(iframe: HTMLIFrameElement) {
   }
 }
 
+const MIN_CLEANUP_TIMEOUT_MS = 60_000
+const CLEANUP_TIMEOUT_MS_PER_PAGE = 200
+
+// A fixed timeout risks tearing down the iframe (and the print dialog reading from it)
+// while a large batch is still rendering its print preview; scale the grace period with
+// page count instead.
+function cleanupTimeoutMs(pageCount: number): number {
+  return Math.max(MIN_CLEANUP_TIMEOUT_MS, pageCount * CLEANUP_TIMEOUT_MS_PER_PAGE)
+}
+
 // SVGs loaded as an <img> resource render in a restricted "image mode" in
 // some browsers, where nested resources (e.g. a background <image> with a
 // data: href) inside the SVG can fail to render even though the SVG file
@@ -36,6 +46,13 @@ function waitForImages(frameDocument: Document): Promise<void> {
   })
 }
 
+export class PrintCancelledError extends Error {
+  constructor() {
+    super('Print cancelled')
+    this.name = 'PrintCancelledError'
+  }
+}
+
 export async function printBadgePages(
   pageSvgs: string[],
   pageSizeCss: string,
@@ -48,9 +65,13 @@ export async function printBadgePages(
   cardRotationDeg: CardRotationDeg,
   backSideRotated180 = false,
   cardBorderRadiusMm = 0,
+  signal?: AbortSignal,
 ): Promise<void> {
   if (pageSvgs.length === 0) {
     return
+  }
+  if (signal?.aborted) {
+    throw new PrintCancelledError()
   }
 
   const iframe = document.createElement('iframe')
@@ -105,18 +126,87 @@ export async function printBadgePages(
   }
 
   let cleanedUp = false
+  let resolveCleanup: (() => void) | null = null
+  const cleanupDone = new Promise<void>((resolve) => { resolveCleanup = resolve })
   const cleanup = () => {
     if (cleanedUp) return
     cleanedUp = true
     clearTimeout(fallbackTimeoutId)
     removeIframe(iframe)
+    resolveCleanup?.()
   }
   printWindow.addEventListener('afterprint', cleanup)
-  const fallbackTimeoutId = setTimeout(cleanup, 60_000)
+  const fallbackTimeoutId = setTimeout(cleanup, cleanupTimeoutMs(pageSvgs.length))
 
   frameDocument.fonts.forEach(face => { void face.load() })
   await Promise.all([waitForImages(frameDocument), frameDocument.fonts.ready])
 
+  // This is the last point cancellation can still prevent the OS print dialog from
+  // opening at all; once printWindow.print() is called, the browser owns the dialog
+  // and nothing in this function can stop it.
+  if (signal?.aborted) {
+    cleanup()
+    throw new PrintCancelledError()
+  }
+
   printWindow.focus()
   printWindow.print()
+  // Resolving only once the dialog has closed (afterprint) or the fallback timeout
+  // fires lets callers that print in sequential chunks wait for one dialog to close
+  // before building the next iframe, instead of opening several print dialogs at once.
+  await cleanupDone
+}
+
+// Must stay even: printBadgePages alternates each chunk's back-side rotation via
+// `index % 2 === 1` on the chunk-local page index, so a chunk boundary that splits a
+// front/back pair would apply the wrong rotation to the page after the split.
+const PRINT_CHUNK_SIZE = 200
+
+// Splits a large print job into fixed-size chunks and prints them one at a time,
+// each in its own iframe/print dialog, waiting for one dialog to close before the
+// next chunk's iframe is built. This keeps per-chunk DOM size and waitForImages
+// fan-out bounded regardless of total page count; the tradeoff is that batches
+// larger than PRINT_CHUNK_SIZE open multiple sequential print dialogs.
+export async function printBadgePagesChunked(
+  pageSvgs: string[],
+  pageSizeCss: string,
+  pageWidthMm: number,
+  pageHeightMm: number,
+  cardXMm: number,
+  cardYMm: number,
+  cardWidthMm: number,
+  cardHeightMm: number,
+  cardRotationDeg: CardRotationDeg,
+  backSideRotated180 = false,
+  cardBorderRadiusMm = 0,
+  signal?: AbortSignal,
+  onChunkProgress?: (chunkIndex: number, totalChunks: number) => void,
+): Promise<void> {
+  if (pageSvgs.length === 0) {
+    return
+  }
+  const chunks: string[][] = []
+  for (let start = 0; start < pageSvgs.length; start += PRINT_CHUNK_SIZE) {
+    chunks.push(pageSvgs.slice(start, start + PRINT_CHUNK_SIZE))
+  }
+  for (const [chunkIndex, chunk] of chunks.entries()) {
+    if (signal?.aborted) {
+      throw new PrintCancelledError()
+    }
+    onChunkProgress?.(chunkIndex + 1, chunks.length)
+    await printBadgePages(
+      chunk,
+      pageSizeCss,
+      pageWidthMm,
+      pageHeightMm,
+      cardXMm,
+      cardYMm,
+      cardWidthMm,
+      cardHeightMm,
+      cardRotationDeg,
+      backSideRotated180,
+      cardBorderRadiusMm,
+      signal,
+    )
+  }
 }

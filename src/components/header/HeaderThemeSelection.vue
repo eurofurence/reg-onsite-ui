@@ -10,6 +10,10 @@
         label="Dark Mode"
         v-model="themeSettings.isDarkMode"
       />
+      <LabeledToggleSwitch
+        label="Show 'Did You Know?' Tips"
+        v-model="themeSettings.showDidYouKnowTips"
+      />
       <LabeledRelativeSlider
         label="Header Size:"
         :withParens="false"

@@ -25,10 +25,21 @@ const errorHandler = getErrorHandlerFunction(toastService)
 onMounted(() => loadBadgeConfig(errorHandler))
 
 usePageSizeStyle(printSettingsRef)
+
+const pageTips: string[] = [
+  "Use the Print Settings tab to configure page size and layout before printing.",
+  "The Badge Designer tab lets you define how each badge type looks.",
+  "The Badge Mapping tab controls which badge design is used for which attendee type.",
+  "The Mass Print tab lets you print badges for many attendees at once.",
+  "The Print History tab shows a record of previously printed badges.",
+  "Badge designs are shared across all attendees mapped to the same badge type.",
+  "Mass Print applies the badge mapping configured for each attendee type.",
+  "You can retry failed prints directly from the Mass Print tab.",
+]
 </script>
 
 <template>
-  <OnsitePage title="Badge Management">
+  <OnsitePage title="Badge Management" :pageTips="pageTips">
     <Toast :group="toastService.toastGroup" position="bottom-right" />
     <Tabs value="print-settings" class="flex flex-col flex-grow">
       <TabList pt:content="flex justify-center">

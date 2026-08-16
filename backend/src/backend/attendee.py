@@ -120,33 +120,58 @@ async def attendee_lookup(
 
     results = []
     for row in request.rows:
-        matched = None
+        hits: list[dict] = []
 
-        if not matched and row.regId and row.regId.strip():
-            matched = by_reg.get(row.regId.strip())
+        if row.regId and row.regId.strip():
+            hit = by_reg.get(row.regId.strip())
+            if hit:
+                hits.append(hit)
 
-        if not matched and row.idpId and row.idpId.strip():
-            matched = by_idp.get(row.idpId.strip())
+        if row.idpId and row.idpId.strip():
+            hit = by_idp.get(row.idpId.strip())
+            if hit:
+                hits.append(hit)
 
-        if not matched and row.email and row.email.strip():
-            matched = by_email.get(row.email.strip().lower())
+        if row.email and row.email.strip():
+            hit = by_email.get(row.email.strip().lower())
+            if hit:
+                hits.append(hit)
 
-        if not matched and row.nickname and row.nickname.strip():
-            matched = by_nickname.get(row.nickname.strip().lower())
+        if row.nickname and row.nickname.strip():
+            hit = by_nickname.get(row.nickname.strip().lower())
+            if hit:
+                hits.append(hit)
 
-        if not matched and row.firstName and row.lastName:
-            matched = by_name.get((row.firstName.strip().lower(), row.lastName.strip().lower()))
+        if row.firstName and row.lastName:
+            hit = by_name.get((row.firstName.strip().lower(), row.lastName.strip().lower()))
+            if hit:
+                hits.append(hit)
 
-        if not matched and row.fullName and row.fullName.strip():
+        if row.fullName and row.fullName.strip():
             parts = row.fullName.strip().split(None, 1)
             if len(parts) == 2:
-                matched = by_name.get((parts[0].lower(), parts[1].lower()))
+                hit = by_name.get((parts[0].lower(), parts[1].lower()))
+                if hit:
+                    hits.append(hit)
+
+        candidates = {a["id"]: a for a in hits}
+
+        matches = [
+            {
+                "id": candidate["id"],
+                "nickname": candidate.get("nickname"),
+                "firstName": candidate.get("first_name"),
+                "lastName": candidate.get("last_name"),
+                "email": candidate.get("email"),
+                "idpId": candidate.get("identity_subject"),
+            }
+            for candidate in candidates.values()
+        ]
 
         results.append({
-            "id": matched["id"] if matched else None,
-            "nickname": matched.get("nickname") if matched else None,
+            "matches": matches,
             "item": row.item,
-            "found": matched is not None,
+            "found": len(matches) == 1,
             "input": {
                 "regId": row.regId,
                 "nickname": row.nickname,

@@ -7,4 +7,5 @@ export interface UserThemeSettings {
   isDarkMode: boolean;
   fontSize: FontSize;
   headerSize: RelativeSize;
+  showDidYouKnowTips: boolean;
 }

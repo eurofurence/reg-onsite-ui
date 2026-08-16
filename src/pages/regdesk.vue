@@ -1,5 +1,5 @@
 <template>
-  <OnsitePage title="Registration Desk">
+  <OnsitePage title="Registration Desk" :pageTips="pageTips">
     <template #help>
       <ul>
         <li>Use 'Escape' to reset filters and exit the checkin dialog.</li>
@@ -21,4 +21,10 @@
 <script setup lang="ts">
 import OnsitePage from "@/components/common/OnsitePage.vue";
 import RegdeskMainElement from "@/components/regdesk/RegDeskMainElement.vue";
+
+const pageTips: string[] = [
+  "Use Escape to reset filters and exit the checkin dialog.",
+  "You can search for attendees by name, registration number, or other identifying details.",
+  "Available search results update live as you refine your query.",
+];
 </script>

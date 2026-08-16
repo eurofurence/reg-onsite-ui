@@ -6,16 +6,21 @@ import SearchFieldStandard from '@/components/common/attendee_table/SearchFieldS
 import SearchFieldTag from '@/components/common/attendee_table/SearchFieldTag.vue'
 import ResetFilterButton from '@/components/regdesk/ResetFilterButton.vue'
 import Button from '@/volt/Button.vue'
+import DataTable from '@/volt/DataTable.vue'
 import Fieldset from '@/volt/Fieldset.vue'
 import InputText from '@/volt/InputText.vue'
 import Select from '@/volt/Select.vue'
 import Toolbar from '@/volt/Toolbar.vue'
-import { computed, ref, watch } from 'vue'
+import Column from 'primevue/column'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 import { resolveBadgeType } from '@/composables/badge/badgeTypeInheritance'
 import { resolveBadgeMappingForAttendee } from '@/composables/badge/resolveBadgeTypeForAttendee'
 import { useAttendeeDataOptions } from '@/composables/filter/useAttendeeDataOptions'
-import { renderBadgeSvg } from '@/composables/print/badgeHtml'
-import { printBadgePages } from '@/composables/print/printFrame'
+import { BatchCancelledError, downloadBadgesPdf, renderBadgeSvgs, saveBadgesZip } from '@/composables/print/downloadBadgeBatch'
+import type { BatchItemFailure, BadgeExportEntry } from '@/composables/print/downloadBadgeBatch'
+import { downloadBlob } from '@/composables/print/downloadBadge'
+import { PrintCancelledError, printBadgePagesChunked } from '@/composables/print/printFrame'
+import RetryFailedDialog from '@/components/badge/RetryFailedDialog.vue'
 import { attendeeService } from '@/composables/services/attendeeService'
 import { badgeMappingRef, badgeTypesRef, printSettingsRef } from '@/composables/services/badgeConfigStore'
 import { localPrintRowStore } from '@/composables/services/printRowStore'
@@ -41,9 +46,116 @@ const badgeMapping = badgeMappingRef
 const printRows = ref<PrintRow[]>(localPrintRowStore.load())
 const pasteTargetBadgeTypeId = ref<string | null>(badgeTypes.value[0]?.id ?? null)
 const printErrorMessage = ref<string | null>(null)
+const sortField = ref<string | null>(null)
+const sortOrder = ref<1 | -1 | null>(null)
 
+const sortValueGetters: Record<string, (row: PrintRow) => string> = {
+  idValue: (row) => row.idValue,
+  nicknameValue: (row) => row.nicknameValue,
+  countryValue: (row) => row.countryValue,
+  packageValue: (row) => row.packageValue,
+  flagValue: (row) => row.flagValue,
+  badgeTypeId: (row) => badgeTypeNameFor(row),
+}
+
+const sortedPrintRows = computed<PrintRow[]>(() => {
+  const field = sortField.value
+  const order = sortOrder.value
+  const getValue = field ? sortValueGetters[field] : undefined
+  if (!getValue || !order) {
+    return printRows.value
+  }
+  return [...printRows.value].sort((rowA, rowB) => getValue(rowA).localeCompare(getValue(rowB)) * order)
+})
+
+const LARGE_BATCH_WARNING_THRESHOLD = 200
+
+const isPrinting = ref(false)
+const exportingSvg = ref(false)
+const exportingPdf = ref(false)
+const exportStatusMessage = ref<string | null>(null)
+const isBatchRunning = computed(() => isPrinting.value || exportingSvg.value || exportingPdf.value)
+let activeBatchController: AbortController | null = null
+
+function cancelActiveBatch() {
+  activeBatchController?.abort()
+}
+
+function confirmLargeBatch(rowCount: number, actionLabel: string): boolean {
+  if (rowCount <= LARGE_BATCH_WARNING_THRESHOLD) {
+    return true
+  }
+  return confirm(`${actionLabel} ${rowCount} badges? This may take a while.`)
+}
+
+const retryFailedDialog = useTemplateRef('retryFailedDialog')
+
+async function confirmRetryDecision(failures: BatchItemFailure<BadgeExportEntry>[]) {
+  const decision = await retryFailedDialog.value!.confirmRetry(failures.map((failure) => failure.item))
+  if (decision === 'cancel') {
+    throw new BatchCancelledError()
+  }
+  return decision
+}
+
+// Calls runBatch with the entries still failing (initially all of them); if some fail,
+// asks the user via RetryFailedDialog whether to retry just those, skip them and keep
+// the rest, or cancel entirely. Correct when runBatch's output per entry is independent
+// and already final once produced (e.g. one file per entry, like the SVG zip archive —
+// each entry's file is written once and doesn't need to be revisited — and the
+// print-render step, where each entry's rendered SVG is cached by the caller).
+async function retrySubsetBatch(
+  entries: BadgeExportEntry[],
+  runBatch: (attemptEntries: BadgeExportEntry[]) => Promise<BatchItemFailure<BadgeExportEntry>[]>,
+): Promise<void> {
+  let attemptEntries = entries
+  while (attemptEntries.length > 0) {
+    const failures = await runBatch(attemptEntries)
+    if (failures.length === 0) {
+      return
+    }
+    const decision = await confirmRetryDecision(failures)
+    if (decision === 'skip') {
+      return
+    }
+    attemptEntries = failures.map((failure) => failure.item)
+  }
+}
+
+// Calls runBatch with the full not-yet-skipped entry list every time (never just the
+// failed subset); required when runBatch produces one shared, ordered output for all
+// entries together (a single PDF document), where retrying only the failed subset
+// would produce a second, separate, incomplete PDF instead of one complete file.
+// runBatch's isFinal flag is true only on the last call — once runBatch itself reports
+// no failures, or once the user chooses to skip the remaining ones — so the shared
+// output is only saved when this attempt's outcome is final, never while still
+// awaiting a retry choice.
+async function retryFullSetBatch(
+  entries: BadgeExportEntry[],
+  runBatch: (attemptEntries: BadgeExportEntry[], isFinal: boolean) => Promise<BatchItemFailure<BadgeExportEntry>[]>,
+): Promise<void> {
+  let attemptEntries = entries
+  for (;;) {
+    const failures = await runBatch(attemptEntries, false)
+    if (failures.length === 0) {
+      return
+    }
+    const decision = await confirmRetryDecision(failures)
+    if (decision === 'skip') {
+      const failedEntries = new Set(failures.map((failure) => failure.item))
+      const remainingEntries = attemptEntries.filter((entry) => !failedEntries.has(entry))
+      if (remainingEntries.length > 0) {
+        await runBatch(remainingEntries, true)
+      }
+      return
+    }
+  }
+}
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null
 watch(printRows, (value) => {
-  localPrintRowStore.save(value)
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => localPrintRowStore.save(value), 500)
 }, { deep: true })
 
 const filterColumnDefinitions = setupColumnDefinitionList.filter((column) => column.filterConfig !== undefined)
@@ -107,6 +219,10 @@ async function fillFromFilter() {
 
 function badgeTypeFor(row: PrintRow): BadgeType | undefined {
   return badgeTypes.value.find((badgeType) => badgeType.id === row.badgeTypeId)
+}
+
+function badgeTypeNameFor(row: PrintRow): string {
+  return badgeTypeFor(row)?.name ?? ''
 }
 
 const unresolvedRowCount = computed(
@@ -247,27 +363,59 @@ function downloadRows() {
   URL.revokeObjectURL(url)
 }
 
-async function printBadges() {
-  printErrorMessage.value = null
-  const printSettings = printSettingsRef.value
-  const rowsWithBadgeType = printRows.value
+function buildExportEntries(): BadgeExportEntry[] {
+  const usedFilenameBases = new Set<string>()
+  return sortedPrintRows.value
     .map((row) => ({ row, badgeType: badgeTypeFor(row) }))
     .filter((entry): entry is { row: PrintRow; badgeType: BadgeType } => entry.badgeType !== undefined)
-  const svgs = await Promise.all(
-    rowsWithBadgeType.map(({ row, badgeType }) =>
-      renderBadgeSvg(
-        resolveBadgeType(badgeTypes.value, badgeType.id),
-        fieldValuesFor(row, badgeType),
-        printSettings.cardWidthMm,
-        printSettings.cardHeightMm,
-        printSettings.dpi,
-      ),
-    ),
-  )
-  const pages = printSettings.doubleSided ? svgs.flatMap((svg) => [svg, svg]) : svgs
-  const pageDimensions = getOrientedPageDimensionsMm(printSettings)
+    .map(({ row, badgeType }) => {
+      const nameHint = row.idValue || row.nicknameValue || row.id
+      let filenameBase = `${badgeType.name}-${nameHint}`
+      let suffix = 2
+      while (usedFilenameBases.has(filenameBase)) {
+        filenameBase = `${badgeType.name}-${nameHint}-${suffix}`
+        suffix += 1
+      }
+      usedFilenameBases.add(filenameBase)
+      return {
+        resolvedBadgeType: resolveBadgeType(badgeTypes.value, badgeType.id),
+        fieldValues: fieldValuesFor(row, badgeType),
+        filenameBase,
+      }
+    })
+}
+
+async function printBadges() {
+  const entries = buildExportEntries()
+  if (entries.length === 0) {
+    return
+  }
+  if (!confirmLargeBatch(entries.length, 'Print')) {
+    return
+  }
+  exportStatusMessage.value = null
+  printErrorMessage.value = null
+  isPrinting.value = true
+  const controller = new AbortController()
+  activeBatchController = controller
   try {
-    await printBadgePages(
+    const printSettings = printSettingsRef.value
+    const svgsByEntry = new Map<BadgeExportEntry, string>()
+    await retrySubsetBatch(entries, async (attemptEntries) => {
+      const { svgsByEntry: rendered, failures } = await renderBadgeSvgs(attemptEntries, (renderedCount, totalCount) => {
+        exportStatusMessage.value = `Rendering badges: ${renderedCount} / ${totalCount}`
+      }, controller.signal)
+      rendered.forEach((svg, entry) => svgsByEntry.set(entry, svg))
+      return failures
+    })
+    if (svgsByEntry.size === 0) {
+      return
+    }
+    exportStatusMessage.value = 'Preparing print dialog…'
+    const orderedSvgs = entries.map((entry) => svgsByEntry.get(entry)).filter((svg): svg is string => svg !== undefined)
+    const pages = printSettings.doubleSided ? orderedSvgs.flatMap((svg) => [svg, svg]) : orderedSvgs
+    const pageDimensions = getOrientedPageDimensionsMm(printSettings)
+    await printBadgePagesChunked(
       pages,
       buildPageSizeCss(printSettings),
       pageDimensions.width,
@@ -279,15 +427,100 @@ async function printBadges() {
       printSettings.cardRotationDeg,
       printSettings.backSideRotated180,
       printSettings.cardBorderRadiusMm,
+      controller.signal,
+      (chunkIndex, totalChunks) => {
+        exportStatusMessage.value = totalChunks > 1 ? `Printing batch ${chunkIndex} / ${totalChunks}…` : null
+      },
     )
-  } catch {
-    printErrorMessage.value = 'Failed to print badges. Please try again.'
+  } catch (error) {
+    if (!(error instanceof BatchCancelledError) && !(error instanceof PrintCancelledError)) {
+      printErrorMessage.value = 'Failed to print badges. Please try again.'
+    }
+  } finally {
+    isPrinting.value = false
+    exportStatusMessage.value = null
+    activeBatchController = null
+  }
+}
+
+async function exportSvgZip() {
+  const entries = buildExportEntries()
+  if (entries.length === 0) {
+    return
+  }
+  if (!confirmLargeBatch(entries.length, 'Export')) {
+    return
+  }
+  exportStatusMessage.value = null
+  printErrorMessage.value = null
+  exportingSvg.value = true
+  const controller = new AbortController()
+  activeBatchController = controller
+  try {
+    const svgsByEntry = new Map<BadgeExportEntry, string>()
+    await retrySubsetBatch(entries, async (attemptEntries) => {
+      const { svgsByEntry: rendered, failures } = await renderBadgeSvgs(attemptEntries, (renderedCount, totalCount) => {
+        exportStatusMessage.value = `Rendering SVGs: ${renderedCount} / ${totalCount}`
+      }, controller.signal)
+      rendered.forEach((svg, entry) => svgsByEntry.set(entry, svg))
+      return failures
+    })
+    if (svgsByEntry.size === 0) {
+      return
+    }
+    const blob = await saveBadgesZip(entries, svgsByEntry)
+    downloadBlob(blob, 'badges.zip')
+  } catch (error) {
+    if (!(error instanceof BatchCancelledError)) {
+      printErrorMessage.value = 'Failed to export badge SVGs. Please try again.'
+    }
+  } finally {
+    exportingSvg.value = false
+    exportStatusMessage.value = null
+    activeBatchController = null
+  }
+}
+
+async function exportPdf() {
+  const entries = buildExportEntries()
+  if (entries.length === 0) {
+    return
+  }
+  if (!confirmLargeBatch(entries.length, 'Export')) {
+    return
+  }
+  exportStatusMessage.value = null
+  printErrorMessage.value = null
+  exportingPdf.value = true
+  const controller = new AbortController()
+  activeBatchController = controller
+  try {
+    // downloadBadgesPdf writes every entry into one shared PDF document, so a retry
+    // must re-run the full (non-skipped) entry list, not just the failed subset —
+    // otherwise a retry would produce a second, separate, incomplete PDF instead of
+    // one complete, correctly-ordered file. It only saves once this attempt is final
+    // (isFinal, or it reported no failures) so a failed attempt awaiting a retry
+    // decision never downloads a partial PDF.
+    await retryFullSetBatch(entries, (attemptEntries, isFinal) =>
+      downloadBadgesPdf(attemptEntries, 'badges', (renderedCount, totalCount) => {
+        exportStatusMessage.value = `Building PDF: ${renderedCount} / ${totalCount}`
+      }, controller.signal, isFinal),
+    )
+  } catch (error) {
+    if (!(error instanceof BatchCancelledError)) {
+      printErrorMessage.value = 'Failed to export badge PDF. Please try again.'
+    }
+  } finally {
+    exportingPdf.value = false
+    exportStatusMessage.value = null
+    activeBatchController = null
   }
 }
 </script>
 
 <template>
   <div class="flex flex-col gap-6 p-8">
+    <RetryFailedDialog ref="retryFailedDialog" />
     <Fieldset legend="Fill from Filter" toggleable collapsed>
       <div class="flex flex-col gap-3">
         <div class="flex flex-wrap gap-3">
@@ -336,6 +569,7 @@ async function printBadges() {
       {{ unresolvedRowCount }} row(s) have no Badge Type selected and will be skipped when printing.
     </p>
     <p v-if="printErrorMessage" class="text-sm text-red-600">{{ printErrorMessage }}</p>
+    <p v-if="exportStatusMessage" class="text-sm text-surface-500">{{ exportStatusMessage }}</p>
 
     <Toolbar>
       <template #start>
@@ -355,72 +589,111 @@ async function printBadges() {
         </div>
       </template>
       <template #center>
-        <Button icon="pi pi-print" label="Print" v-tooltip.bottom="'Print'" @click="printBadges" />
+        <div class="flex items-center gap-3">
+          <Button icon="pi pi-print" label="Print" :disabled="isBatchRunning" :loading="isPrinting" v-tooltip.bottom="'Print'" @click="printBadges" />
+          <Button
+            icon="pi pi-images"
+            label="Export SVGs"
+            severity="secondary"
+            :disabled="isBatchRunning"
+            :loading="exportingSvg"
+            v-tooltip.bottom="'Export badges as a .zip of SVG files'"
+            @click="exportSvgZip"
+          />
+          <Button
+            icon="pi pi-file-pdf"
+            label="Export PDF"
+            severity="secondary"
+            :disabled="isBatchRunning"
+            :loading="exportingPdf"
+            v-tooltip.bottom="'Export all badges as a single PDF'"
+            @click="exportPdf"
+          />
+          <Button
+            v-if="isBatchRunning"
+            icon="pi pi-times"
+            label="Cancel"
+            severity="danger"
+            outlined
+            v-tooltip.bottom="'Cancel the running operation'"
+            @click="cancelActiveBatch"
+          />
+        </div>
       </template>
       <template #end>
         <Button icon="pi pi-trash" severity="danger" aria-label="Clear Rows" v-tooltip.bottom="'Clear Rows'" @click="clearRows" />
       </template>
     </Toolbar>
 
-    <table class="text-sm text-slate-700">
-      <thead>
-        <tr class="text-left text-slate-500">
-          <th class="pr-4 font-normal">ID</th>
-          <th class="pr-4 font-normal">Nickname</th>
-          <th class="pr-4 font-normal">Country</th>
-          <th class="pr-4 font-normal">Package</th>
-          <th class="pr-4 font-normal">Flag</th>
-          <th class="pr-4 font-normal">Badge Type</th>
-          <th v-for="field in visibleCustomFields" :key="field.id" class="pr-4 font-normal">{{ field.label }}</th>
-          <th class="pr-4 font-normal"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in printRows" :key="row.id">
-          <td class="pr-4 py-1">
-            <InputText v-model="row.idValue" class="p-1" />
-          </td>
-          <td class="pr-4">
-            <InputText v-model="row.nicknameValue" class="p-1" />
-          </td>
-          <td class="pr-4">
-            <InputText v-model="row.countryValue" class="p-1" />
-          </td>
-          <td class="pr-4">
-            <Select
-              :model-value="row.packageValue"
-              :options="badgeMapping.packages"
-              placeholder="None"
-              class="w-40"
-              @update:model-value="(value: string | null) => { row.packageValue = value ?? ''; applyMapping(row) }"
-            />
-          </td>
-          <td class="pr-4">
-            <Select
-              :model-value="row.flagValue"
-              :options="badgeMapping.flags"
-              placeholder="None"
-              class="w-40"
-              @update:model-value="(value: string | null) => { row.flagValue = value ?? ''; applyMapping(row) }"
-            />
-          </td>
-          <td class="pr-4">
-            <Select
-              v-model="row.badgeTypeId"
-              :options="badgeTypes"
-              option-label="name"
-              option-value="id"
-              class="w-48"
-            />
-          </td>
-          <td v-for="field in visibleCustomFields" :key="field.id" class="pr-4">
-            <InputText :model-value="row.customValues[field.id] ?? ''" class="p-1" @update:model-value="(value: string) => { row.customValues[field.id] = value }" />
-          </td>
-          <td class="pr-4">
-            <Button severity="danger" aria-label="Delete" v-tooltip.bottom="'Delete Row'" icon="pi pi-trash" @click="deleteRow(row.id)" />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <DataTable
+      :value="sortedPrintRows"
+      dataKey="id"
+      scrollable
+      scrollHeight="600px"
+      :virtualScrollerOptions="{ itemSize: 46 }"
+      class="text-sm text-slate-700"
+      removableSort
+      v-model:sortField="sortField"
+      v-model:sortOrder="sortOrder"
+    >
+      <Column header="ID" field="idValue" sortable>
+        <template #body="{ data }">
+          <InputText v-model="data.idValue" class="p-1" />
+        </template>
+      </Column>
+      <Column header="Nickname" field="nicknameValue" sortable>
+        <template #body="{ data }">
+          <InputText v-model="data.nicknameValue" class="p-1" />
+        </template>
+      </Column>
+      <Column header="Country" field="countryValue" sortable>
+        <template #body="{ data }">
+          <InputText v-model="data.countryValue" class="p-1" />
+        </template>
+      </Column>
+      <Column header="Package" field="packageValue" sortable>
+        <template #body="{ data }">
+          <Select
+            :model-value="data.packageValue"
+            :options="badgeMapping.packages"
+            placeholder="None"
+            class="w-40"
+            @update:model-value="(value: string | null) => { data.packageValue = value ?? ''; applyMapping(data) }"
+          />
+        </template>
+      </Column>
+      <Column header="Flag" field="flagValue" sortable>
+        <template #body="{ data }">
+          <Select
+            :model-value="data.flagValue"
+            :options="badgeMapping.flags"
+            placeholder="None"
+            class="w-40"
+            @update:model-value="(value: string | null) => { data.flagValue = value ?? ''; applyMapping(data) }"
+          />
+        </template>
+      </Column>
+      <Column header="Badge Type" field="badgeTypeId" sortable>
+        <template #body="{ data }">
+          <Select
+            v-model="data.badgeTypeId"
+            :options="badgeTypes"
+            option-label="name"
+            option-value="id"
+            class="w-48"
+          />
+        </template>
+      </Column>
+      <Column v-for="field in visibleCustomFields" :key="field.id" :header="field.label">
+        <template #body="{ data }">
+          <InputText :model-value="data.customValues[field.id] ?? ''" class="p-1" @update:model-value="(value: string) => { data.customValues[field.id] = value }" />
+        </template>
+      </Column>
+      <Column>
+        <template #body="{ data }">
+          <Button severity="danger" aria-label="Delete" v-tooltip.bottom="'Delete Row'" icon="pi pi-trash" @click="deleteRow(data.id)" />
+        </template>
+      </Column>
+    </DataTable>
   </div>
 </template>

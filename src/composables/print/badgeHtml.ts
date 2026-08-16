@@ -309,14 +309,14 @@ function backgroundImageSvg(
 ): string {
   const attrs = backgroundImageAttrs(fit, alignH, alignV, cardWidthPx, cardHeightPx)
   const transformAttr = attrs.transform ? ` transform="${attrs.transform}"` : ''
-  const image = `<image href="${href}" x="${attrs.x}" y="${attrs.y}" width="${attrs.width}" height="${attrs.height}" preserveAspectRatio="${attrs.preserveAspectRatio}"${transformAttr} />`
+  const image = `<image data-role="background" href="${href}" x="${attrs.x}" y="${attrs.y}" width="${attrs.width}" height="${attrs.height}" preserveAspectRatio="${attrs.preserveAspectRatio}"${transformAttr} />`
   if (!attrs.clip) {
     return image
   }
   const clipId = `bg-clip-${Math.random().toString(36).slice(2)}`
   return `
     <clipPath id="${clipId}"><rect x="0" y="0" width="${cardWidthPx}" height="${cardHeightPx}" /></clipPath>
-    <g clip-path="url(#${clipId})">
+    <g data-role="background" clip-path="url(#${clipId})">
       ${image}
     </g>`
 }

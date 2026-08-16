@@ -12,6 +12,9 @@
         <div>Connecting...</div>
       </div>
     </template>
+    <template #center v-else>
+      <HeaderDidYouKnowTip :pageTips="props.pageTips" />
+    </template>
     <template #end v-if="!isConnecting">
       <div class="flex header-text">
         <!-- style is required to override default size -->
@@ -53,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import HeaderDidYouKnowTip from "@/components/header/HeaderDidYouKnowTip.vue";
 import HeaderHelpButton from "@/components/header/HeaderHelpButton.vue";
 import HeaderLinkButton from "@/components/header/HeaderLinkButton.vue";
 import HeaderLoginButton from "@/components/header/HeaderLoginButton.vue";
@@ -146,8 +150,11 @@ async function checkUserAccessSilent(): Promise<void> {
 interface Props {
   theming: boolean;
   title: string;
+  pageTips?: string[];
 }
-const props: Props = defineProps<Props>();
+const props: Props = withDefaults(defineProps<Props>(), {
+  pageTips: () => [],
+});
 const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 
