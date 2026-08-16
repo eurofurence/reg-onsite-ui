@@ -24,57 +24,6 @@ export function fontFamilyNameFor(fieldId: string, badgeTypeId: string): string 
   return `badge-font-${fieldId}-${badgeTypeId}`
 }
 
-// blob: URLs (from file uploads) only resolve within the document that
-// created them — embedding one directly in the SVG breaks once that SVG is
-// rendered in a different document (print iframe, PDF converter). Inlining
-// as a data URI makes the SVG fully self-contained everywhere it's used.
-//
-// Bounded LRU: badge backgrounds/fonts are re-resolved often during a long
-// onsite session, and each entry can be sizable (embedded font/image data),
-// so entries are evicted oldest-first past DATA_URL_CACHE_MAX_ENTRIES instead
-// of growing unbounded for the lifetime of the page.
-const DATA_URL_CACHE_MAX_ENTRIES = 50
-const dataUrlCache = new Map<string, Promise<string>>()
-
-export async function resolveToDataUrl(rawUrl: string): Promise<string> {
-  const url = rawUrl.trim()
-  if (!url || url.startsWith('data:')) {
-    return url
-  }
-  let cached = dataUrlCache.get(url)
-  if (cached) {
-    // Refresh recency: re-insert so this entry counts as most-recently-used.
-    dataUrlCache.delete(url)
-    dataUrlCache.set(url, cached)
-  } else {
-    cached = (async () => {
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${url}: ${response.status}`)
-      }
-      const blob = await response.blob()
-      return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = () => reject(reader.error)
-        reader.readAsDataURL(blob)
-      })
-    })()
-    dataUrlCache.set(url, cached)
-    while (dataUrlCache.size > DATA_URL_CACHE_MAX_ENTRIES) {
-      const oldestKey = dataUrlCache.keys().next().value
-      if (oldestKey === undefined) break
-      dataUrlCache.delete(oldestKey)
-    }
-  }
-  try {
-    return await cached
-  } catch {
-    dataUrlCache.delete(url)
-    return url
-  }
-}
-
 let measureContext: CanvasRenderingContext2D | null = null
 
 export function fitFontSize(text: string, pixelWidth: number, pixelHeight: number, fontFamily: string, dpi = DEFAULT_DPI): number {
@@ -92,18 +41,13 @@ export function fitFontSize(text: string, pixelWidth: number, pixelHeight: numbe
   const horizontalPadding = 4 / DEFAULT_DPI * dpi
   const widthFitSizePx =
     (pixelWidth - horizontalPadding) / referenceWidth * referenceFontSizePx
-  // Cap at 80% of box height to leave vertical breathing room around the
-  // glyphs (ascenders/descenders render outside the nominal font-size box).
+  // Cap at 80% of box height for breathing room around ascenders/descenders.
   const heightCapPx = pixelHeight * 0.8
-  // No floor here: forcing text up to minFontSizePx when the box (width or
-  // height) genuinely can't fit it at that size guarantees overflow instead
-  // of a merely-small, but actually fitting, size. minFontSizePx only guards
-  // the degenerate empty-box/empty-text case handled above.
+  // No floor here: shrinking to fit is preferable to overflow when the box can't fit minFontSizePx.
   return Math.max(1, Math.min(widthFitSizePx, heightCapPx, maxFontSizePx))
 }
 
-// Tracks which fontUrl is currently loaded per family, so changing a field's
-// font URL is detected and reloaded rather than skipped as already-registered.
+// Tracks the loaded fontUrl per family so a changed font URL is reloaded instead of skipped.
 const loadedFontUrlByFamily = new Map<string, string>()
 
 export async function loadFontForMeasurement(familyName: string, fontUrl: string): Promise<void> {
@@ -233,9 +177,7 @@ export interface TextLayout {
   lines: TextLine[]
 }
 
-// Baseline positioning uses actual measured glyph ascent/descent (falling
-// back to a rough 0.35em split if canvas measurement is unavailable) so
-// text is vertically centered by its real rendered geometry, not a guess.
+// Vertically centers by measured glyph ascent/descent, falling back to a 0.35em split if canvas measurement is unavailable.
 export function computeTextLayout(
   box: FieldBox,
   fontSizePx: number,
@@ -538,9 +480,8 @@ async function renderBadgeSvgWithLayouts(
     .join('\n')
 
   const { url: backgroundUrl, fit: backgroundFit, alignH, alignV } = badgeType.background
-  const resolvedBackgroundUrl = backgroundUrl ? await resolveToDataUrl(backgroundUrl) : ''
-  const backgroundImageSvgMarkup = resolvedBackgroundUrl
-    ? backgroundImageSvg(resolvedBackgroundUrl, backgroundFit, alignH, alignV, cardWidthPxAtPrintDpi, cardHeightPxAtPrintDpi)
+  const backgroundImageSvgMarkup = backgroundUrl
+    ? backgroundImageSvg(backgroundUrl, backgroundFit, alignH, alignV, cardWidthPxAtPrintDpi, cardHeightPxAtPrintDpi)
     : ''
 
   const prepared = badgeType.fields.custom.map((field) => ({
@@ -549,11 +490,8 @@ async function renderBadgeSvgWithLayouts(
     ...renderTextField(field.id, field, fieldValues[field.id] ?? '', badgeType.id, cardWidthPxAtPrintDpi, cardHeightPxAtPrintDpi, dpi),
   }))
 
-  const resolvedFontUrls = await Promise.all(
-    prepared.map((entry) => entry.fontUrl ? resolveToDataUrl(entry.fontUrl) : Promise.resolve('')),
-  )
   await Promise.all(
-    prepared.map((entry, index) => resolvedFontUrls[index] ? loadFontForMeasurement(entry.fontFamilyName, resolvedFontUrls[index]) : Promise.resolve()),
+    prepared.map((entry) => entry.fontUrl ? loadFontForMeasurement(entry.fontFamilyName, entry.fontUrl) : Promise.resolve()),
   )
 
   const renderedTextFields: RenderedTextField[] = prepared
@@ -565,7 +503,7 @@ async function renderBadgeSvgWithLayouts(
     .map((entry) => entry.layout())
 
   const fontFaces = prepared
-    .map((entry, index) => resolvedFontUrls[index] ? `@font-face { font-family: '${entry.fontFamilyName}'; src: url('${resolvedFontUrls[index]}') format('opentype'); }` : '')
+    .map((entry) => entry.fontUrl ? `@font-face { font-family: '${entry.fontFamilyName}'; src: url('${entry.fontUrl}') format('opentype'); }` : '')
     .filter(Boolean)
 
   const fontFaceStyleSvg = fontFaces.length > 0 ? `<style>${fontFaces.join('\n')}</style>` : ''

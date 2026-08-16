@@ -12,14 +12,13 @@ import {
   lineHeightPxFor,
   loadFontForMeasurement,
   resolveDisplayText,
-  resolveToDataUrl,
   textAnchorFor,
   widthPxAtDpi,
 } from '@/composables/print/badgeHtml'
 import { printSettingsRef } from '@/composables/services/badgeConfigStore'
 import type { BadgeType, BadgeTypeFields, CustomBarcodeFieldState, CustomTextFieldState, FieldPosition } from '@/types/badgeType'
 import Button from '@/volt/Button.vue'
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 interface Props {
   resolvedBadgeType: BadgeType
@@ -39,14 +38,9 @@ const dpi = computed(() => printSettingsRef.value.dpi)
 const cardWidthPxAtPrintDpi = computed(() => widthPxAtDpi(printSettingsRef.value.cardWidthMm, dpi.value))
 const cardHeightPxAtPrintDpi = computed(() => cardWidthPxAtPrintDpi.value * (printSettingsRef.value.cardHeightMm / printSettingsRef.value.cardWidthMm))
 
-// ---- background: resolved independently of field edits, so dragging a
-// field never touches the background <image> node ----
+// ---- background: resolved independently of field edits, so dragging a field never touches the background <image> node ----
 
-const resolvedBackgroundUrl = ref('')
-watchEffect(async () => {
-  const url = props.resolvedBadgeType.background.url
-  resolvedBackgroundUrl.value = url ? await resolveToDataUrl(url) : ''
-})
+const resolvedBackgroundUrl = computed(() => props.resolvedBadgeType.background.url)
 
 const backgroundAttrs = computed(() => backgroundImageAttrs(
   props.resolvedBadgeType.background.fit,
@@ -56,8 +50,7 @@ const backgroundAttrs = computed(() => backgroundImageAttrs(
   cardHeightPxAtPrintDpi.value,
 ))
 
-// ---- text fields: each computed independently, keyed by field id, so
-// dragging one field only patches that field's own SVG attributes ----
+// ---- text fields: each computed independently, keyed by field id, so dragging one field only patches that field's own SVG attributes ----
 
 interface TextFieldRender {
   fontFamily: string
@@ -73,10 +66,8 @@ interface TextFieldRender {
   borderColor?: string
 }
 
-// Tracks, per field id, the fontUrl whose load has actually completed —
-// distinct from resolvedFontUrls (which holds the resolved data URL) so
-// textFieldRender can tell "font requested" from "font ready" and avoid
-// measuring against a family name that isn't registered yet.
+// Tracks, per field id, the fontUrl whose load has actually completed, so
+// textFieldRender can tell "font requested" from "font ready".
 const loadedFontUrlByFamily = ref<Record<string, string>>({})
 
 function textFieldRender(field: CustomTextFieldState): TextFieldRender {
@@ -84,12 +75,7 @@ function textFieldRender(field: CustomTextFieldState): TextFieldRender {
   const displayText = resolveDisplayText(field, rawValue)
   const boxPx = fieldBoxPx(field.pos, field.size, cardWidthPxAtPrintDpi.value, cardHeightPxAtPrintDpi.value)
   const fontFamilyName = fontFamilyNameFor(field.id, props.resolvedBadgeType.id)
-  // Measure/render against the fallback font until the custom font has
-  // actually finished loading for this field's *current* fontUrl — using
-  // fontFamilyName as soon as field.fontUrl is set (before it's loaded)
-  // measures against whatever was previously registered under that family
-  // name (or the fallback), then jumps to the real font's metrics once
-  // loadFontForMeasurement resolves, shifting the computed font size.
+  // Measure/render against the fallback font until the custom font for this field's current fontUrl has actually finished loading.
   const fontLoaded = loadedFontUrlByFamily.value[field.id] === field.fontUrl
   const fontFamily = fontFamilyFor(fontLoaded ? field : { fontUrl: '' }, fontFamilyName)
   const { fontSizePx } = computeFontSizePx(field, displayText, fontFamily, boxPx, dpi.value)
@@ -118,19 +104,10 @@ const textFieldRenders = computed<Record<string, TextFieldRender>>(() => {
   return renders
 })
 
-// Loads each field's custom font, keyed on that field's own fontUrl string —
-// document.fonts.check short-circuits already-loaded fonts, so this is cheap
-// to re-run and never touches unrelated fields' rendering. Also tracks the
-// resolved data URL per field so it can be embedded as an in-SVG @font-face:
-// document.fonts.add() alone doesn't reliably trigger a repaint of already
-// laid-out SVG <text>, whereas an @font-face rule inside the SVG's own <defs>
-// is picked up by the browser like any other stylesheet-driven font swap.
-//
-// Uses an explicit watch source (not watchEffect) so every field's fontUrl is
-// read synchronously before any await — a watchEffect only tracks reads made
-// before its first await, so fields after the first would never re-trigger
-// the effect on their own fontUrl change.
-const resolvedFontUrls = ref<Record<string, string>>({})
+// Loads each field's custom font and tracks which fields have one loaded, so
+// it can be embedded as an in-SVG @font-face (document.fonts.add() alone
+// doesn't reliably repaint already laid-out SVG <text>).
+const loadedFontUrls = ref<Record<string, string>>({})
 watch(
   () => props.resolvedBadgeType.fields.custom.map((field) => [field.id, field.fontUrl] as const),
   (fontUrlsById) => {
@@ -138,9 +115,8 @@ watch(
       if (!fontUrl) continue
       const fontFamilyName = fontFamilyNameFor(fieldId, props.resolvedBadgeType.id)
       void (async () => {
-        const resolvedUrl = await resolveToDataUrl(fontUrl)
-        await loadFontForMeasurement(fontFamilyName, resolvedUrl)
-        resolvedFontUrls.value = { ...resolvedFontUrls.value, [fieldId]: resolvedUrl }
+        await loadFontForMeasurement(fontFamilyName, fontUrl)
+        loadedFontUrls.value = { ...loadedFontUrls.value, [fieldId]: fontUrl }
         loadedFontUrlByFamily.value = { ...loadedFontUrlByFamily.value, [fieldId]: fontUrl }
       })()
     }
@@ -150,17 +126,15 @@ watch(
 
 const fontFaceCss = computed(() => {
   const rules = props.resolvedBadgeType.fields.custom
-    .filter((field) => field.fontUrl && resolvedFontUrls.value[field.id])
+    .filter((field) => field.fontUrl && loadedFontUrls.value[field.id])
     .map((field) => {
       const fontFamilyName = fontFamilyNameFor(field.id, props.resolvedBadgeType.id)
-      return `@font-face { font-family: '${fontFamilyName}'; src: url('${resolvedFontUrls.value[field.id]}') format('opentype'); }`
+      return `@font-face { font-family: '${fontFamilyName}'; src: url('${loadedFontUrls.value[field.id]}') format('opentype'); }`
     })
   return rules.join('\n')
 })
 
-// Vue templates disallow literal <style> tags in component markup ("Tags
-// with side effect are ignored"), so the tag itself is built as a v-html
-// string on the (side-effect-free) <defs> element instead.
+// Vue disallows literal <style> tags in templates, so build it as v-html on <defs> instead.
 const fontFaceStyleMarkup = computed(() => `<style>${fontFaceCss.value}</style>`)
 
 // ---- barcodes: each computed independently, keyed by field id ----
@@ -187,11 +161,7 @@ const barcodeRenders = computed<Record<string, BarcodeFieldRender>>(() => {
 })
 
 // ---- canvas size ----
-//
-// CSS defines 96px as exactly 1 physical inch, independent of the print DPI
-// setting (which only affects the SVG's internal raster resolution) and of
-// the monitor's actual pixel density. So at previewZoom === 1 ("100%") the
-// canvas renders at the card's true physical size on screen.
+// CSS 96px = 1 physical inch (independent of print DPI/monitor density), so previewZoom === 1 renders at true physical size.
 const CSS_PX_PER_INCH = 96
 const MM_PER_INCH = 25.4
 
@@ -202,10 +172,7 @@ const canvas = ref<HTMLElement | null>(null)
 const cardWidthCssPx = computed(() => printSettingsRef.value.cardWidthMm / MM_PER_INCH * CSS_PX_PER_INCH * previewZoom.value)
 
 // ---- barcode square detection (for resize clamping only) ----
-//
-// isBarcodeStyleSquare renders a full SVG via bwipjs — memoize by
-// (style, sampleText) so dragging/resizing (which fires this on every
-// pointermove without either input changing) doesn't re-render on each move.
+// isBarcodeStyleSquare renders a full SVG via bwipjs — memoize by (style, sampleText) to avoid re-rendering on every pointermove.
 const barcodeSquareCache = new Map<string, boolean>()
 
 function isBarcodeSquare(fieldId: string, style: string): boolean {
