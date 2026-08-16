@@ -17,7 +17,7 @@ class CacheUrlRequest(BaseModel):
 
 
 class CacheResponse(BaseModel):
-    url: str
+    key: str
 
 
 async def _fetch_bounded(url: str) -> tuple[bytes, str]:
@@ -46,7 +46,7 @@ async def cache_url(
         raise HTTPException(status_code=400, detail="url must not be empty")
     content, content_type = await _fetch_bounded(url)
     key = media_cache.store_bytes(content, content_type)
-    return CacheResponse(url=f"/api/v1/media/cache/{key}")
+    return CacheResponse(key=key)
 
 
 @router.post("/media/cache-upload")
@@ -59,7 +59,7 @@ async def cache_upload(
         raise HTTPException(status_code=413, detail="file too large")
     content_type = file.content_type or "application/octet-stream"
     key = media_cache.store_bytes(content, content_type)
-    return CacheResponse(url=f"/api/v1/media/cache/{key}")
+    return CacheResponse(key=key)
 
 
 @router.get("/media/cache/{key}")

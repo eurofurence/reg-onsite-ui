@@ -9,7 +9,7 @@ import type { ApiError } from "@/types/external/error";
 import type { FetchResultPromise } from "@/types/internal/rest";
 
 interface CacheMediaResponse {
-  url: string;
+  key: string;
 }
 
 async function fetchCacheMediaUpload(
@@ -34,5 +34,8 @@ export async function postCacheMediaUpload(
     () => fetchCacheMediaUpload(file),
     errorHandler
   );
-  return result?.url;
+  if (result === undefined) {
+    return undefined;
+  }
+  return getUrl(`onsite/api/v1/media/cache/${result.key}`).toString();
 }

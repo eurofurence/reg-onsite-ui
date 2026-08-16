@@ -1,12 +1,12 @@
 <template>
   <Button
-    class="h-12 aspect-square"
+    icon="pi pi-filter-slash"
+    label="Reset"
+    severity="secondary"
     v-tooltip.right="'Reset search (implicit filters will be unchanged)'"
     @click="onResetFilters()"
     :disabled="isDisabled()"
-  >
-    <i class="pi pi-filter-slash" />
-  </Button>
+  />
 </template>
 
 <script setup lang="ts">

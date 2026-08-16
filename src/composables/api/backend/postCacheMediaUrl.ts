@@ -1,4 +1,5 @@
 import { fetchResultWrapper } from "@/composables/api/base/fetchResultWrapper";
+import { getUrl } from "@/composables/api/base/getUrl";
 import { postApi } from "@/composables/api/base/postApi";
 import {
   type RestErrorHandler,
@@ -8,7 +9,7 @@ import type { ApiError } from "@/types/external/error";
 import type { FetchResultPromise } from "@/types/internal/rest";
 
 interface CacheMediaResponse {
-  url: string;
+  key: string;
 }
 
 async function fetchCacheMediaUrl(
@@ -29,5 +30,8 @@ export async function postCacheMediaUrl(
     () => fetchCacheMediaUrl(sourceUrl),
     errorHandler
   );
-  return result?.url;
+  if (result === undefined) {
+    return undefined;
+  }
+  return getUrl(`onsite/api/v1/media/cache/${result.key}`).toString();
 }

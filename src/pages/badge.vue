@@ -4,6 +4,7 @@ import OnsitePage from '@/components/common/OnsitePage.vue'
 import BadgeMapping from '@/components/badge/BadgeMapping.vue'
 import BadgeTypeManager from '@/components/badge/BadgeTypeManager.vue'
 import MassPrint from '@/components/badge/MassPrint.vue'
+import PrintHistory from '@/components/badge/PrintHistory.vue'
 import PrintSettingsView from '@/components/badge/PrintSettings.vue'
 import { usePageSizeStyle } from '@/composables/usePageSizeStyle'
 import { getErrorHandlerFunction } from '@/composables/api/base/getErrorHandlerFunction'
@@ -35,6 +36,7 @@ usePageSizeStyle(printSettingsRef)
         <Tab value="designer">Badge Designer</Tab>
         <Tab value="badge-mapping">Badge Mapping</Tab>
         <Tab value="mass-print">Mass Print</Tab>
+        <Tab value="print-history">Print History</Tab>
       </TabList>
       <TabPanels>
         <TabPanel value="print-settings">
@@ -48,6 +50,9 @@ usePageSizeStyle(printSettingsRef)
         </TabPanel>
         <TabPanel value="mass-print">
           <MassPrint :errorHandler="errorHandler" />
+        </TabPanel>
+        <TabPanel value="print-history">
+          <PrintHistory :errorHandler="errorHandler" />
         </TabPanel>
       </TabPanels>
     </Tabs>
