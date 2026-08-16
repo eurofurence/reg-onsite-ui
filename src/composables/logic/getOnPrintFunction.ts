@@ -1,13 +1,7 @@
-import { resolveBadgeTypeForAttendee } from "@/composables/badge/resolveBadgeTypeForAttendee";
-import { resolveBadgeType } from "@/composables/badge/badgeTypeInheritance";
-import { buildFieldValuesForAttendee } from "@/composables/badge/buildFieldValues";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
-import { recordBadgePrintHistory } from "@/composables/logic/recordBadgePrintHistory";
-import { printSingleBadge } from "@/composables/print/printSingleBadge";
-import { badgeMappingRef, badgeTypesRef, ensureBadgeConfigLoaded } from "@/composables/services/badgeConfigStore";
+import { ensureBadgeConfigLoaded } from "@/composables/services/badgeConfigStore";
 import type { OnsiteToastService } from "@/composables/services/toastService";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
-import type { BadgeType } from "@/types/badgeType";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import { ToastSeverity } from "@/types/internal/primevue";
 import type { Ref } from "vue";
@@ -34,45 +28,6 @@ export function getOnPrintFunction(
     }
 
     await ensureBadgeConfigLoaded(getErrorHandlerFunction(toastService));
-
-    const badgeType: BadgeType | null = resolveBadgeTypeForAttendee(
-      attendee,
-      badgeMappingRef.value,
-      badgeTypesRef.value
-    );
-
-    if (badgeType !== null) {
-      const resolvedBadgeType = resolveBadgeType(
-        badgeTypesRef.value,
-        badgeType.id
-      );
-      const fieldValues = buildFieldValuesForAttendee(
-        resolvedBadgeType,
-        attendee
-      );
-      try {
-        await printSingleBadge(badgeType, fieldValues);
-      } catch {
-        toastService.add({
-          severity: ToastSeverity.error,
-          summary: `Failed to print badge for attendee ${regNumber}`,
-          life: 5000,
-        });
-        return;
-      }
-      await recordBadgePrintHistory(
-        toastService,
-        regNumber,
-        badgeType,
-        fieldValues
-      );
-      toastService.add({
-        severity: ToastSeverity.info,
-        summary: `Printed badge for attendee ${regNumber}`,
-        life: 2000,
-      });
-      return;
-    }
 
     printRequestRef.value = { attendee };
   };
