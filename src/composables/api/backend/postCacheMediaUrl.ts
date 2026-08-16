@@ -13,21 +13,24 @@ interface CacheMediaResponse {
 }
 
 async function fetchCacheMediaUrl(
-  sourceUrl: string
+  sourceUrl: string,
+  force: boolean
 ): FetchResultPromise<CacheMediaResponse, ApiError> {
   const response = await postApi("onsite/api/v1/media/cache-url", {
     url: sourceUrl,
+    force,
   });
   return fetchResultWrapper<CacheMediaResponse>(response);
 }
 
 export async function postCacheMediaUrl(
   errorHandler: RestErrorHandler,
-  sourceUrl: string
+  sourceUrl: string,
+  force = false
 ): Promise<string | undefined> {
   const result = await restErrorWrapper<CacheMediaResponse>(
     "Backend Service",
-    () => fetchCacheMediaUrl(sourceUrl),
+    () => fetchCacheMediaUrl(sourceUrl, force),
     errorHandler
   );
   if (result === undefined) {
