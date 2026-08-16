@@ -1,10 +1,32 @@
 <script setup lang="ts">
+import RetryFailedDialog from '@/components/badge/RetryFailedDialog.vue'
 import SearchFieldAttendance from '@/components/common/attendee_table/SearchFieldAttendance.vue'
 import SearchFieldBirthday from '@/components/common/attendee_table/SearchFieldBirthday.vue'
 import SearchFieldCountry from '@/components/common/attendee_table/SearchFieldCountry.vue'
 import SearchFieldStandard from '@/components/common/attendee_table/SearchFieldStandard.vue'
 import SearchFieldTag from '@/components/common/attendee_table/SearchFieldTag.vue'
 import ResetFilterButton from '@/components/regdesk/ResetFilterButton.vue'
+import type { RestErrorHandler } from '@/composables/api/base/restErrorWrapper'
+import { resolveBadgeType } from '@/composables/badge/badgeTypeInheritance'
+import { resolveBadgeMappingForAttendee } from '@/composables/badge/resolveBadgeTypeForAttendee'
+import { useAttendeeDataOptions } from '@/composables/filter/useAttendeeDataOptions'
+import { downloadBlob } from '@/composables/print/downloadBadge'
+import type { BadgeExportEntry, BatchItemFailure } from '@/composables/print/downloadBadgeBatch'
+import { BatchCancelledError, downloadBadgesPdf, renderBadgeSvgs, saveBadgesZip } from '@/composables/print/downloadBadgeBatch'
+import { PrintCancelledError, printBadgePagesChunked } from '@/composables/print/printFrame'
+import { attendeeService } from '@/composables/services/attendeeService'
+import { badgeMappingRef, badgeTypesRef, printSettingsRef } from '@/composables/services/badgeConfigStore'
+import { localPrintRowStore } from '@/composables/services/printRowStore'
+import { getFilteredAttendees } from '@/composables/sort_and_filter/getFilteredAttendees'
+import { setupColumnDefinitionList } from '@/config/system/regdesk'
+import { NO_FLAG, mappingKey } from '@/types/badgeMapping'
+import type { BadgeType, CustomFieldSource, CustomTextFieldState } from '@/types/badgeType'
+import type { TransformedAttendeeInfo } from '@/types/internal/attendee'
+import { ColumnType } from '@/types/internal/component/table'
+import type { AllFilterFieldValues } from '@/types/internal/filter'
+import type { PrintRow } from '@/types/printRow'
+import { createEmptyPrintRow } from '@/types/printRow'
+import { buildPageSizeCss, getOrientedPageDimensionsMm } from '@/types/printSettings'
 import Button from '@/volt/Button.vue'
 import DataTable from '@/volt/DataTable.vue'
 import Fieldset from '@/volt/Fieldset.vue'
@@ -13,28 +35,6 @@ import Select from '@/volt/Select.vue'
 import Toolbar from '@/volt/Toolbar.vue'
 import Column from 'primevue/column'
 import { computed, ref, useTemplateRef, watch } from 'vue'
-import { resolveBadgeType } from '@/composables/badge/badgeTypeInheritance'
-import { resolveBadgeMappingForAttendee } from '@/composables/badge/resolveBadgeTypeForAttendee'
-import { useAttendeeDataOptions } from '@/composables/filter/useAttendeeDataOptions'
-import { BatchCancelledError, downloadBadgesPdf, renderBadgeSvgs, saveBadgesZip } from '@/composables/print/downloadBadgeBatch'
-import type { BatchItemFailure, BadgeExportEntry } from '@/composables/print/downloadBadgeBatch'
-import { downloadBlob } from '@/composables/print/downloadBadge'
-import { PrintCancelledError, printBadgePagesChunked } from '@/composables/print/printFrame'
-import RetryFailedDialog from '@/components/badge/RetryFailedDialog.vue'
-import { attendeeService } from '@/composables/services/attendeeService'
-import { badgeMappingRef, badgeTypesRef, printSettingsRef } from '@/composables/services/badgeConfigStore'
-import { localPrintRowStore } from '@/composables/services/printRowStore'
-import { getFilteredAttendees } from '@/composables/sort_and_filter/getFilteredAttendees'
-import { setupColumnDefinitionList } from '@/config/system/regdesk'
-import { NO_FLAG, mappingKey } from '@/types/badgeMapping'
-import { ColumnType } from '@/types/internal/component/table'
-import type { AllFilterFieldValues } from '@/types/internal/filter'
-import type { TransformedAttendeeInfo } from '@/types/internal/attendee'
-import { createEmptyPrintRow } from '@/types/printRow'
-import { buildPageSizeCss, getOrientedPageDimensionsMm } from '@/types/printSettings'
-import type { PrintRow } from '@/types/printRow'
-import type { BadgeType, CustomFieldSource, CustomTextFieldState } from '@/types/badgeType'
-import type { RestErrorHandler } from '@/composables/api/base/restErrorWrapper'
 
 interface Props {
   errorHandler: RestErrorHandler
@@ -46,8 +46,8 @@ const badgeMapping = badgeMappingRef
 const printRows = ref<PrintRow[]>(localPrintRowStore.load())
 const pasteTargetBadgeTypeId = ref<string | null>(badgeTypes.value[0]?.id ?? null)
 const printErrorMessage = ref<string | null>(null)
-const sortField = ref<string | null>(null)
-const sortOrder = ref<1 | -1 | null>(null)
+const sortField = ref<string | undefined>(undefined)
+const sortOrder = ref<1 | -1 | undefined>(undefined)
 
 const sortValueGetters: Record<string, (row: PrintRow) => string> = {
   idValue: (row) => row.idValue,
