@@ -47,7 +47,7 @@ usePageSizeStyle(printSettingsRef)
           <BadgeMapping :errorHandler="errorHandler" />
         </TabPanel>
         <TabPanel value="mass-print">
-          <MassPrint />
+          <MassPrint :errorHandler="errorHandler" />
         </TabPanel>
       </TabPanels>
     </Tabs>

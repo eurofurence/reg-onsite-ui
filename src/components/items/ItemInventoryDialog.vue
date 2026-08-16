@@ -1,8 +1,11 @@
 <template>
   <Dialog v-model:visible="visible" modal dismissableMask :header="title" class="w-[55rem]">
-    <p class="mt-0 mb-3 text-sm text-surface-400">
-      Needed Reserve: {{ props.neededReserveCount }} &middot; Free to Sell: {{ props.freeToSellCount }}
-    </p>
+    <div class="flex items-center justify-between mt-0 mb-3">
+      <p class="text-sm text-surface-400 m-0">
+        Needed Reserve: {{ props.neededReserveCount }} &middot; Free to Sell: {{ props.freeToSellCount }}
+      </p>
+      <Button icon="pi pi-external-link" label="Export CSV" severity="secondary" size="small" @click="exportAsCSV" />
+    </div>
     <DataTable
       :value="rows"
       dataKey="regNum"
@@ -20,6 +23,7 @@
           </span>
         </template>
       </Column>
+      <Column field="telegram" header="Telegram" sortable v-if="hasTelegram" />
       <Column field="goodieLevel" header="Goodie Level" sortable />
       <Column field="role" header="Role" sortable />
       <Column field="issuedCount" header="Issued" sortable />
@@ -34,12 +38,14 @@
 <script setup lang="ts">
 import { getConcreteItemsEntitlement } from "@/composables/items/getConcreteItemsEntitlement";
 import { getMissingConcreteItems } from "@/composables/items/getMissingConcreteItems";
+import { downloadCSV } from "@/composables/logic/downloadCSV";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import { getEmptySponsorDeskAddInfo } from "@/composables/services/attendee/getEmptySponsorDeskAddInfo";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import { Column } from "primevue";
+import Button from "@/volt/Button.vue";
 import DataTable from "@/volt/DataTable.vue";
 import Dialog from "@/volt/Dialog.vue";
 import { computed } from "vue";
@@ -58,6 +64,7 @@ const visible = defineModel<boolean>("visible", { required: true });
 interface DialogRow {
   regNum: RegNumber;
   nickname: string;
+  telegram: string;
   goodieLevel: string;
   role: string;
   issuedCount: number;
@@ -88,6 +95,7 @@ const rows = computed<DialogRow[]>(() => {
     result.push({
       regNum: attendee.id,
       nickname: attendee.nickname ?? String(attendee.id),
+      telegram: attendee.telegram ?? "",
       goodieLevel: (attendee.transGoodieChoice != null ? goodieLevelLabels.get(attendee.transGoodieChoice) : undefined) ?? attendee.transGoodieChoice ?? "",
       role: (attendee.transConRole != null ? roleLabels.get(attendee.transConRole) : undefined) ?? attendee.transConRole ?? "",
       issuedCount,
@@ -99,4 +107,24 @@ const rows = computed<DialogRow[]>(() => {
   }
   return result;
 });
+
+const hasTelegram = computed(() => rows.value.some((row) => row.telegram !== ""));
+
+function exportAsCSV(): void {
+  const headers = ["Reg", "Nickname", "Telegram", "Goodie Level", "Role", "Issued", "Reserved", "Owed", "Entitled", "Needed Reserve"];
+  const csvRows = rows.value.map((row) => [
+    String(row.regNum),
+    row.nickname,
+    row.telegram,
+    row.goodieLevel,
+    row.role,
+    String(row.issuedCount),
+    String(row.reservedCount),
+    String(row.missingCount),
+    String(row.entitledCount),
+    String(row.neededReserveCount),
+  ]);
+  const csv = [headers, ...csvRows].map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(";")).join("\n");
+  downloadCSV(csv, `${props.title}-attendees.csv`);
+}
 </script>

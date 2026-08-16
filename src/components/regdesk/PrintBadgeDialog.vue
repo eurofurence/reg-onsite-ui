@@ -8,6 +8,7 @@
   >
     <div class="flex flex-col gap-4 items-center">
       <Select
+        v-if="autoResolvedBadgeType === null"
         v-model="selectedBadgeTypeId"
         :options="badgeTypes"
         optionLabel="name"
@@ -20,19 +21,19 @@
       <div class="flex gap-2">
         <Button
           label="Print"
-          :disabled="selectedBadgeTypeId === null"
+          :disabled="selectedBadgeType === undefined"
           @click="onPrintClick"
         />
         <Button
           label="Download SVG"
           severity="secondary"
-          :disabled="selectedBadgeTypeId === null"
+          :disabled="selectedBadgeType === undefined"
           @click="onDownloadSvgClick"
         />
         <Button
           label="Download PDF"
           severity="secondary"
-          :disabled="selectedBadgeTypeId === null"
+          :disabled="selectedBadgeType === undefined"
           @click="onDownloadPdfClick"
         />
       </div>
@@ -42,12 +43,13 @@
 
 <script setup lang="ts">
 import { resolveBadgeType } from "@/composables/badge/badgeTypeInheritance";
+import { resolveBadgeTypeForAttendee } from "@/composables/badge/resolveBadgeTypeForAttendee";
 import { buildFieldValuesForAttendee } from "@/composables/badge/buildFieldValues";
 import { recordBadgePrintHistory } from "@/composables/logic/recordBadgePrintHistory";
 import { renderBadgeSvg } from "@/composables/print/badgeHtml";
 import { downloadBadgePdf, downloadBadgeSvg } from "@/composables/print/downloadBadge";
 import { printSingleBadge } from "@/composables/print/printSingleBadge";
-import { badgeTypesRef, printSettingsRef } from "@/composables/services/badgeConfigStore";
+import { badgeMappingRef, badgeTypesRef, printSettingsRef } from "@/composables/services/badgeConfigStore";
 import type { OnsiteToastService } from "@/composables/services/toastService";
 import type { BadgeType } from "@/types/badgeType";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
@@ -76,8 +78,14 @@ const selectedBadgeTypeId: Ref<string | null> = ref(null);
 const previewHtml: Ref<string> = ref("");
 const printErrorMessage: Ref<string | null> = ref(null);
 
-const selectedBadgeType: ComputedRef<BadgeType | undefined> = computed(() =>
-  badgeTypes.value.find((badgeType) => badgeType.id === selectedBadgeTypeId.value)
+const autoResolvedBadgeType: ComputedRef<BadgeType | null> = computed(() =>
+  resolveBadgeTypeForAttendee(props.attendee, badgeMappingRef.value, badgeTypes.value)
+);
+
+const selectedBadgeType: ComputedRef<BadgeType | undefined> = computed(
+  () =>
+    autoResolvedBadgeType.value ??
+    badgeTypes.value.find((badgeType) => badgeType.id === selectedBadgeTypeId.value)
 );
 
 watch(

@@ -1,19 +1,40 @@
 <script setup lang="ts">
+import SearchFieldAttendance from '@/components/common/attendee_table/SearchFieldAttendance.vue'
+import SearchFieldBirthday from '@/components/common/attendee_table/SearchFieldBirthday.vue'
+import SearchFieldCountry from '@/components/common/attendee_table/SearchFieldCountry.vue'
+import SearchFieldStandard from '@/components/common/attendee_table/SearchFieldStandard.vue'
+import SearchFieldTag from '@/components/common/attendee_table/SearchFieldTag.vue'
+import ResetFilterButton from '@/components/regdesk/ResetFilterButton.vue'
 import Button from '@/volt/Button.vue'
+import Fieldset from '@/volt/Fieldset.vue'
 import InputText from '@/volt/InputText.vue'
 import Select from '@/volt/Select.vue'
 import Toolbar from '@/volt/Toolbar.vue'
 import { computed, ref, watch } from 'vue'
 import { resolveBadgeType } from '@/composables/badge/badgeTypeInheritance'
+import { resolveBadgeTypeForAttendee } from '@/composables/badge/resolveBadgeTypeForAttendee'
+import { useAttendeeDataOptions } from '@/composables/filter/useAttendeeDataOptions'
 import { renderBadgeSvg } from '@/composables/print/badgeHtml'
 import { printBadgePages } from '@/composables/print/printFrame'
+import { attendeeService } from '@/composables/services/attendeeService'
 import { badgeMappingRef, badgeTypesRef, printSettingsRef } from '@/composables/services/badgeConfigStore'
 import { localPrintRowStore } from '@/composables/services/printRowStore'
+import { getFilteredAttendees } from '@/composables/sort_and_filter/getFilteredAttendees'
+import { setupColumnDefinitionList } from '@/config/system/regdesk'
 import { NO_FLAG, mappingKey } from '@/types/badgeMapping'
+import { ColumnType } from '@/types/internal/component/table'
+import type { AllFilterFieldValues } from '@/types/internal/filter'
+import type { TransformedAttendeeInfo } from '@/types/internal/attendee'
 import { createEmptyPrintRow } from '@/types/printRow'
 import { buildPageSizeCss, getOrientedPageDimensionsMm } from '@/types/printSettings'
 import type { PrintRow } from '@/types/printRow'
 import type { BadgeType, CustomFieldSource, CustomTextFieldState } from '@/types/badgeType'
+import type { RestErrorHandler } from '@/composables/api/base/restErrorWrapper'
+
+interface Props {
+  errorHandler: RestErrorHandler
+}
+const props = defineProps<Props>()
 
 const badgeTypes = badgeTypesRef
 const badgeMapping = badgeMappingRef
@@ -24,6 +45,36 @@ const printErrorMessage = ref<string | null>(null)
 watch(printRows, (value) => {
   localPrintRowStore.save(value)
 }, { deep: true })
+
+const filterColumnDefinitions = setupColumnDefinitionList.filter((column) => column.filterConfig !== undefined)
+const dataOptionsRef = useAttendeeDataOptions()
+const filling = ref(false)
+const fillStatusMessage = ref<string | null>(null)
+
+function buildPrintRowForAttendee(attendee: TransformedAttendeeInfo): PrintRow {
+  const resolvedBadgeType = resolveBadgeTypeForAttendee(attendee, badgeMapping.value, badgeTypes.value)
+  const badgeTypeId = resolvedBadgeType?.id ?? pasteTargetBadgeTypeId.value ?? ''
+  return {
+    ...createEmptyPrintRow(badgeTypeId),
+    idValue: attendee.id === null ? '' : String(attendee.id),
+    nicknameValue: attendee.nickname ?? '',
+    countryValue: attendee.country ?? '',
+  }
+}
+
+async function fillFromFilter() {
+  filling.value = true
+  fillStatusMessage.value = null
+  const allAttendees = (await attendeeService.getAllAttendees(props.errorHandler)) ?? []
+  const matched = getFilteredAttendees(
+    allAttendees,
+    dataOptionsRef.value.filterConfig.filterValues,
+    dataOptionsRef.value.filterConfig.globalFilterFields,
+  )
+  printRows.value.push(...matched.map(buildPrintRowForAttendee))
+  fillStatusMessage.value = `Added ${matched.length} attendee(s).`
+  filling.value = false
+}
 
 function badgeTypeFor(row: PrintRow): BadgeType | undefined {
   return badgeTypes.value.find((badgeType) => badgeType.id === row.badgeTypeId)
@@ -208,6 +259,50 @@ async function printBadges() {
 
 <template>
   <div class="flex flex-col gap-6 p-8">
+    <Fieldset legend="Fill from Filter" toggleable collapsed>
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-wrap gap-3">
+          <div v-for="columnDefinition in filterColumnDefinitions" :key="columnDefinition.value" class="flex flex-col gap-1">
+            <label class="text-sm text-surface-500">{{ columnDefinition.label }}</label>
+            <SearchFieldBirthday
+              v-if="columnDefinition.columnType === ColumnType.birthday"
+              v-model="dataOptionsRef.filterConfig.filterValues[columnDefinition.value as AllFilterFieldValues].value"
+            />
+            <SearchFieldCountry
+              v-else-if="columnDefinition.columnType === ColumnType.country"
+              v-model="dataOptionsRef.filterConfig.filterValues[columnDefinition.value as AllFilterFieldValues].value"
+            />
+            <SearchFieldTag
+              v-else-if="columnDefinition.columnType === ColumnType.tag"
+              v-model="dataOptionsRef.filterConfig.filterValues[columnDefinition.value as AllFilterFieldValues].value"
+              :columnDefinition="columnDefinition"
+              :configItems="columnDefinition.configItems"
+            />
+            <SearchFieldAttendance
+              v-else-if="columnDefinition.columnType === ColumnType.attendance"
+              v-model="dataOptionsRef.filterConfig.filterValues[columnDefinition.value as AllFilterFieldValues].value"
+              :columnDefinition="columnDefinition"
+              :configItems="columnDefinition.configItems"
+            />
+            <SearchFieldStandard
+              v-else-if="columnDefinition.columnType === ColumnType.standard"
+              v-model="dataOptionsRef.filterConfig.filterValues[columnDefinition.value as AllFilterFieldValues].value"
+              v-model:matchMode="dataOptionsRef.filterConfig.filterValues[columnDefinition.value as AllFilterFieldValues].matchMode as string"
+              :columnDefinition="columnDefinition"
+              :autoCompleteField="null"
+              :autoCompleteData="[]"
+              placeholder="Search"
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <Button label="Fill Table" icon="pi pi-filter" :loading="filling" @click="fillFromFilter" />
+          <ResetFilterButton v-model="dataOptionsRef" />
+          <span v-if="fillStatusMessage" class="text-sm text-surface-500">{{ fillStatusMessage }}</span>
+        </div>
+      </div>
+    </Fieldset>
+
     <p v-if="unresolvedRowCount > 0" class="text-sm text-red-600">
       {{ unresolvedRowCount }} row(s) have no Badge Type selected and will be skipped when printing.
     </p>

@@ -30,12 +30,15 @@
           <Column field="count" header="Count" style="width: 4rem" />
           <Column header="Item Value">
             <template #body="{ data }">
-              <InputText
+              <AutoComplete
                 :modelValue="mapping[data.productKey] ?? ''"
                 @update:modelValue="(value: string | undefined) => updateMapping(data.productKey, value ?? '')"
+                :suggestions="itemSuggestions"
+                @complete="onItemComplete"
                 placeholder="tshirt_2026_m"
                 size="small"
-                class="w-full font-mono text-xs"
+                inputClass="w-full font-mono text-xs"
+                class="w-full"
               />
             </template>
           </Column>
@@ -75,15 +78,19 @@ import { putSponsorDeskConfig } from "@/composables/api/attsrv/additional-info/p
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { getSumUpProductCountsStatus, startSumUpProductCountsFetch, type SumUpProductCountsJobStatus } from "@/composables/api/backend/getSumUpProductCounts";
 import { setSumUpSetup } from "@/composables/api/backend/setSumUpSetup";
+import { getAllConcreteItems } from "@/composables/items/getAllConcreteItems";
 import { getItemDisplayLabel } from "@/composables/items/getItemDisplayLabel";
+import { getMetadataEntryListFromRecord } from "@/composables/collection_tools/metadata/getMetadataEntryListFromRecord";
 import type { OnsiteToastService } from "@/composables/services/toastService";
-import type { ConcreteGoodieValue } from "@/config/convention";
+import { conventionIterations, type ConcreteGoodieValue, type GoodieConfig } from "@/config/convention";
 import { ToastSeverity } from "@/types/internal/primevue";
+import AutoComplete from "@/volt/AutoComplete.vue";
 import Button from "@/volt/Button.vue";
 import DataTable from "@/volt/DataTable.vue";
 import Fieldset from "@/volt/Fieldset.vue";
 import InputText from "@/volt/InputText.vue";
 import { Column } from "primevue";
+import type { AutoCompleteCompleteEvent } from "primevue/autocomplete";
 import { useLocalStorage } from "@vueuse/core";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
@@ -166,6 +173,20 @@ onMounted(async () => {
   cachedConfig = config ?? {};
   mapping.value = cachedConfig.sumupMapping ?? {};
 });
+
+// All known item values across iterations, for autocomplete
+const allItemValues: ConcreteGoodieValue[] = conventionIterations.flatMap((iteration) =>
+  getAllConcreteItems(getMetadataEntryListFromRecord(iteration.record) as GoodieConfig[])
+);
+
+const itemSuggestions = ref<ConcreteGoodieValue[]>([]);
+
+function onItemComplete(event: AutoCompleteCompleteEvent): void {
+  const query = event.query.toLowerCase();
+  itemSuggestions.value = query
+    ? allItemValues.filter((value) => value.toLowerCase().includes(query))
+    : allItemValues;
+}
 
 function updateMapping(productKey: string, value: string): void {
   mapping.value = { ...mapping.value, [productKey]: value };
