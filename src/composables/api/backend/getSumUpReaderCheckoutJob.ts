@@ -10,7 +10,7 @@ export interface SumUpReaderCheckoutJobStatus {
   status: "polling" | "done" | "error";
   attendee_id: number;
   checkout_id: string;
-  cash_transaction: ApiTransaction | null;
+  internal_transaction: ApiTransaction | null;
   error: string | null;
 }
 

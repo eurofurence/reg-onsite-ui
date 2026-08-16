@@ -208,7 +208,7 @@ class ReaderCheckoutRequest(BaseModel):
 
 # Reader-terminal checkout jobs, keyed by our own job id. Each job polls a
 # single SumUp checkout to completion and, once paid, records the payment
-# as cash in the payment service — unlike the single global product-count
+# as internal in the payment service — unlike the single global product-count
 # _job above, checkouts happen concurrently per attendee.
 _reader_jobs: dict[str, dict] = {}
 
@@ -232,13 +232,13 @@ async def _poll_reader_checkout(job: dict, headers: dict) -> None:
 
                 if status == "PAID":
                     upstream = await initiate_payment(
-                        client, job["attendee_id"], "cash", headers,
+                        client, job["attendee_id"], "internal", headers,
                     )
                     if upstream.status_code != 200:
                         job["status"] = "error"
-                        job["error"] = "failed to record cash payment"
+                        job["error"] = "failed to record internal payment"
                         return
-                    job["cash_transaction"] = upstream.json()
+                    job["internal_transaction"] = upstream.json()
                     job["status"] = "done"
                     return
 
@@ -269,7 +269,7 @@ async def start_reader_checkout(
     headers = proxy_headers(JWT, AUTH)
     async with httpx.AsyncClient(timeout=30) as client:
         attendee = await get_payment_summary(client, request.attendee_id, headers)
-        amount_cents = attendee["payment_balance"]
+        amount_cents = attendee["current_dues"]
         if amount_cents <= 0:
             raise HTTPException(status_code=400, detail="attendee has no outstanding balance")
 
@@ -301,7 +301,7 @@ async def start_reader_checkout(
         "status": "polling",
         "attendee_id": request.attendee_id,
         "checkout_id": checkout_id,
-        "cash_transaction": None,
+        "internal_transaction": None,
         "error": None,
     }
     _reader_jobs[job_id] = job
