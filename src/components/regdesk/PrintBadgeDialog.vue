@@ -43,10 +43,12 @@
 <script setup lang="ts">
 import { resolveBadgeType } from "@/composables/badge/badgeTypeInheritance";
 import { buildFieldValuesForAttendee } from "@/composables/badge/buildFieldValues";
+import { recordBadgePrintHistory } from "@/composables/logic/recordBadgePrintHistory";
 import { renderBadgeSvg } from "@/composables/print/badgeHtml";
 import { downloadBadgePdf, downloadBadgeSvg } from "@/composables/print/downloadBadge";
 import { printSingleBadge } from "@/composables/print/printSingleBadge";
 import { badgeTypesRef, printSettingsRef } from "@/composables/services/badgeConfigStore";
+import type { OnsiteToastService } from "@/composables/services/toastService";
 import type { BadgeType } from "@/types/badgeType";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import Button from "@/volt/Button.vue";
@@ -62,6 +64,7 @@ import {
 
 interface Props {
   attendee: TransformedAttendeeInfo;
+  toastService: OnsiteToastService;
 }
 const props = defineProps<Props>();
 const visible: Ref<boolean> = defineModel<boolean>("visible", {
@@ -109,6 +112,14 @@ async function onPrintClick(): Promise<void> {
   } catch {
     printErrorMessage.value = "Failed to print badge. Please try again.";
     return;
+  }
+  if (props.attendee.id !== null) {
+    await recordBadgePrintHistory(
+      props.toastService,
+      props.attendee.id,
+      selectedBadgeType.value,
+      fieldValues
+    );
   }
   visible.value = false;
 }

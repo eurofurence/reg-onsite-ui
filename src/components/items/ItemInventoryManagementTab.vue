@@ -38,24 +38,58 @@
             />
           </template>
         </Column>
+        <Column header="Payment">
+          <template #body="{ data }">
+            <div v-if="data.editable" class="flex items-center gap-2">
+              <ToggleSwitch
+                :modelValue="itemPayments[data.value]?.enabled ?? false"
+                @update:modelValue="(value: boolean) => updatePaymentEnabled(data.value, value)"
+              />
+              <template v-if="itemPayments[data.value]?.enabled">
+                <InputNumber
+                  :modelValue="itemPayments[data.value]?.grossPriceCents ?? 0"
+                  @update:modelValue="(value: number | null) => updatePaymentField(data.value, 'grossPriceCents', value ?? 0)"
+                  :min="0"
+                  suffix=" ct"
+                  inputClass="w-24 text-right"
+                  v-tooltip="'Gross price (already includes VAT)'"
+                />
+                <InputNumber
+                  :modelValue="(itemPayments[data.value]?.vatRate ?? 0)"
+                  @update:modelValue="(value: number | null) => updatePaymentField(data.value, 'vatRate', value ?? 0)"
+                  :min="0"
+                  :max="100"
+                  suffix="%"
+                  inputClass="w-16 text-right"
+                  v-tooltip="'VAT rate'"
+                />
+              </template>
+            </div>
+          </template>
+        </Column>
       </DataTable>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { getSponsorDeskConfig, type SponsorDeskConfigRecord } from "@/composables/api/attsrv/additional-info/getSponsorDeskConfig";
+import {
+  getSponsorDeskConfig,
+  type ItemPaymentSettings,
+  type SponsorDeskConfigRecord,
+} from "@/composables/api/attsrv/additional-info/getSponsorDeskConfig";
 import { putSponsorDeskConfig } from "@/composables/api/attsrv/additional-info/putSponsorDeskConfig";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { getConcreteItemsForGoodie } from "@/composables/items/getConcreteItemsForGoodie";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
-import { TShirtSize } from "@/config/metadata/tshirt/metadataForTShirtSizes";
 import type { OnsiteToastService } from "@/composables/services/toastService";
 import type { GoodieConfig } from "@/config/convention";
+import { TShirtSize } from "@/config/metadata/tshirt/metadataForTShirtSizes";
 import { ToastSeverity } from "@/types/internal/primevue";
 import DataTable from "@/volt/DataTable.vue";
 import InputNumber from "@/volt/InputNumber.vue";
 import Toast from "@/volt/Toast.vue";
+import ToggleSwitch from "@/volt/ToggleSwitch.vue";
 import { Column } from "primevue";
 import { computed, onMounted, ref } from "vue";
 
@@ -65,6 +99,7 @@ const errorHandler = getErrorHandlerFunction(props.toastService);
 
 const loading = ref(true);
 const inventoryCounts = ref<Record<string, number>>({});
+const itemPayments = ref<Record<string, ItemPaymentSettings>>({});
 
 const OTHER_YEAR = "Other";
 const CURRENT_YEAR = String(getConventionSetup().conDates.start.getFullYear());
@@ -169,16 +204,15 @@ onMounted(async () => {
   const config = await getSponsorDeskConfig(errorHandler);
   cachedConfig = config ?? {};
   inventoryCounts.value = cachedConfig.inventoryCounts ?? {};
+  itemPayments.value = cachedConfig.itemPayments ?? {};
   loading.value = false;
 });
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
-function updateCount(item: string, count: number): void {
-  inventoryCounts.value = { ...inventoryCounts.value, [item]: count };
+function scheduleSave(newConfig: SponsorDeskConfigRecord): void {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
-    const newConfig = { ...cachedConfig, inventoryCounts: inventoryCounts.value };
     const result = await putSponsorDeskConfig(errorHandler, newConfig);
     if (result !== undefined) {
       cachedConfig = newConfig;
@@ -186,5 +220,34 @@ function updateCount(item: string, count: number): void {
       props.toastService.add({ severity: ToastSeverity.error, summary: "Save failed", life: 5000 });
     }
   }, 1000);
+}
+
+function updateCount(item: string, count: number): void {
+  inventoryCounts.value = { ...inventoryCounts.value, [item]: count };
+  scheduleSave({ ...cachedConfig, inventoryCounts: inventoryCounts.value });
+}
+
+const DEFAULT_VAT_RATE = 0.19;
+
+const DEFAULT_PAYMENT_SETTINGS: ItemPaymentSettings = {
+  enabled: false,
+  grossPriceCents: 0,
+  vatRate: DEFAULT_VAT_RATE,
+};
+
+function updatePaymentEnabled(item: string, enabled: boolean): void {
+  const current = itemPayments.value[item] ?? DEFAULT_PAYMENT_SETTINGS;
+  itemPayments.value = { ...itemPayments.value, [item]: { ...current, enabled } };
+  scheduleSave({ ...cachedConfig, itemPayments: itemPayments.value });
+}
+
+function updatePaymentField(
+  item: string,
+  field: "grossPriceCents" | "vatRate",
+  value: number,
+): void {
+  const current = itemPayments.value[item] ?? DEFAULT_PAYMENT_SETTINGS;
+  itemPayments.value = { ...itemPayments.value, [item]: { ...current, [field]: value } };
+  scheduleSave({ ...cachedConfig, itemPayments: itemPayments.value });
 }
 </script>

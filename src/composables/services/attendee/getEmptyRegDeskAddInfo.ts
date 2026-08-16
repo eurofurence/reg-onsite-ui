@@ -6,6 +6,7 @@ const emptySponsorDeskAddInfo: ApiRegDeskAddInfo = {
   checkin_by: "",
   car_plate: "",
   has_room_key: false,
+  badgePrintHistory: [],
 };
 
 export function getEmptyRegDeskAddInfo(): ApiRegDeskAddInfo {

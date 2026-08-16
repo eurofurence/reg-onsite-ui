@@ -3,11 +3,18 @@ import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
 import type { ConcreteGoodieValue } from "@/config/convention";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 
+export interface ItemPaymentSettings {
+  enabled: boolean;
+  grossPriceCents: number;
+  vatRate: number;
+}
+
 export interface SponsorDeskConfigRecord {
   availableItems?: ConcreteGoodieValue[];
   soldItems?: ConcreteGoodieValue[];
   sumupMapping?: Record<string, string>;
   inventoryCounts?: Record<string, number>;
+  itemPayments?: Record<string, ItemPaymentSettings>;
 }
 
 const CONFIG_REG = 0 as RegNumber;

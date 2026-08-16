@@ -73,6 +73,7 @@
     :visible="true"
     @update:visible="printRequestRef = null"
     :attendee="printRequestRef.attendee"
+    :toastService="toastService"
   />
   <PaymentMethodDialog
     v-if="paymentRequestRef"

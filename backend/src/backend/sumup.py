@@ -3,10 +3,13 @@ import uuid
 from typing import Annotated
 
 import httpx
-from fastapi import APIRouter, Body, HTTPException, Security
+from fastapi import APIRouter, Body, Cookie, HTTPException, Security
+from pydantic import BaseModel
 
-from backend.auth import verify_admin
+from backend.attendee import get_payment_summary
+from backend.auth import proxy_headers, verify_admin, verify_not_revoked
 from backend.env_defaults import getenv
+from backend.payment import initiate_payment
 
 router = APIRouter(prefix="/api/v1")
 
@@ -183,3 +186,238 @@ async def get_product_counts_status(
     if _job is None:
         raise HTTPException(status_code=404, detail="job not found")
     return _job
+
+
+@router.get("/sumup/readers")
+async def list_readers(
+    claims: Annotated[dict, Security(verify_admin)],
+) -> dict:
+    headers = {"Authorization": f"Bearer {_access_token}"}
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.get(
+            f"https://api.sumup.com/v0.1/merchants/{_merchant_code}/readers",
+            headers=headers,
+        )
+    resp.raise_for_status()
+    return resp.json()
+
+
+class ReaderCheckoutRequest(BaseModel):
+    attendee_id: int
+
+
+# Reader-terminal checkout jobs, keyed by our own job id. Each job polls a
+# single SumUp checkout to completion and, once paid, records the payment
+# as cash in the payment service — unlike the single global product-count
+# _job above, checkouts happen concurrently per attendee.
+_reader_jobs: dict[str, dict] = {}
+
+_READER_CHECKOUT_POLL_SECONDS = 2
+_READER_CHECKOUT_TIMEOUT_SECONDS = 90
+
+
+async def _poll_reader_checkout(job: dict, headers: dict) -> None:
+    checkout_id = job["checkout_id"]
+    sumup_headers = {"Authorization": f"Bearer {_access_token}"}
+    elapsed = 0
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            while elapsed < _READER_CHECKOUT_TIMEOUT_SECONDS:
+                resp = await client.get(
+                    f"https://api.sumup.com/v0.1/checkouts/{checkout_id}",
+                    headers=sumup_headers,
+                )
+                resp.raise_for_status()
+                status = resp.json().get("status")
+
+                if status == "PAID":
+                    upstream = await initiate_payment(
+                        client, job["attendee_id"], "cash", headers,
+                    )
+                    if upstream.status_code != 200:
+                        job["status"] = "error"
+                        job["error"] = "failed to record cash payment"
+                        return
+                    job["cash_transaction"] = upstream.json()
+                    job["status"] = "done"
+                    return
+
+                if status in ("FAILED", "EXPIRED"):
+                    job["status"] = "error"
+                    job["error"] = f"SumUp checkout {status.lower()}"
+                    return
+
+                await asyncio.sleep(_READER_CHECKOUT_POLL_SECONDS)
+                elapsed += _READER_CHECKOUT_POLL_SECONDS
+
+            job["status"] = "error"
+            job["error"] = "timed out waiting for terminal"
+        except Exception as e:
+            job["status"] = "error"
+            job["error"] = str(e)
+
+
+@router.post("/sumup/readers/{reader_id}/checkout")
+async def start_reader_checkout(
+    reader_id: str,
+    request: ReaderCheckoutRequest,
+    claims: Annotated[dict, Security(verify_admin)],
+    not_revoked: Annotated[None, Security(verify_not_revoked)],
+    JWT: Annotated[str | None, Cookie()] = None,
+    AUTH: Annotated[str | None, Cookie()] = None,
+) -> dict:
+    headers = proxy_headers(JWT, AUTH)
+    async with httpx.AsyncClient(timeout=30) as client:
+        attendee = await get_payment_summary(client, request.attendee_id, headers)
+        amount_cents = attendee["payment_balance"]
+        if amount_cents <= 0:
+            raise HTTPException(status_code=400, detail="attendee has no outstanding balance")
+
+        name = " ".join(
+            part for part in (attendee.get("first_name"), attendee.get("last_name")) if part
+        )
+        description = f"Reg desk payment for {name} (#{request.attendee_id})" if name \
+            else f"Reg desk payment for attendee #{request.attendee_id}"
+
+        sumup_headers = {"Authorization": f"Bearer {_access_token}"}
+        resp = await client.post(
+            f"https://api.sumup.com/v0.1/merchants/{_merchant_code}/readers/{reader_id}/checkout",
+            headers=sumup_headers,
+            json={
+                "total_amount": {
+                    "currency": "EUR",
+                    "minor_unit": 2,
+                    "value": amount_cents,
+                },
+                "description": description,
+            },
+        )
+    resp.raise_for_status()
+    checkout_id = resp.json()["data"]["checkout_id"]
+
+    job_id = uuid.uuid4().hex
+    job = {
+        "id": job_id,
+        "status": "polling",
+        "attendee_id": request.attendee_id,
+        "checkout_id": checkout_id,
+        "cash_transaction": None,
+        "error": None,
+    }
+    _reader_jobs[job_id] = job
+    asyncio.create_task(_poll_reader_checkout(job, headers))
+    return {"job_id": job_id}
+
+
+@router.get("/sumup/readers/checkout-job/{job_id}")
+async def get_reader_checkout_status(
+    job_id: str,
+    claims: Annotated[dict, Security(verify_admin)],
+) -> dict:
+    job = _reader_jobs.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    return job
+
+
+class CatalogItemRequest(BaseModel):
+    name: str
+    description: str = ""
+    gross_price_cents: int
+    vat_rate: float = 0.0
+    quantity: int = 1
+
+
+class ItemCheckoutRequest(BaseModel):
+    items: list[CatalogItemRequest]
+    attendee_context: str | None = None
+
+
+async def _poll_item_checkout(job: dict) -> None:
+    checkout_id = job["checkout_id"]
+    sumup_headers = {"Authorization": f"Bearer {_access_token}"}
+    elapsed = 0
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            while elapsed < _READER_CHECKOUT_TIMEOUT_SECONDS:
+                resp = await client.get(
+                    f"https://api.sumup.com/v0.1/checkouts/{checkout_id}",
+                    headers=sumup_headers,
+                )
+                resp.raise_for_status()
+                status = resp.json().get("status")
+
+                if status == "PAID":
+                    job["status"] = "done"
+                    return
+
+                if status in ("FAILED", "EXPIRED"):
+                    job["status"] = "error"
+                    job["error"] = f"SumUp checkout {status.lower()}"
+                    return
+
+                await asyncio.sleep(_READER_CHECKOUT_POLL_SECONDS)
+                elapsed += _READER_CHECKOUT_POLL_SECONDS
+
+            job["status"] = "error"
+            job["error"] = "timed out waiting for terminal"
+        except Exception as e:
+            job["status"] = "error"
+            job["error"] = str(e)
+
+
+@router.post("/sumup/readers/{reader_id}/item-checkout")
+async def start_item_checkout(
+    reader_id: str,
+    request: ItemCheckoutRequest,
+    claims: Annotated[dict, Security(verify_admin)],
+) -> dict:
+    if not request.items:
+        raise HTTPException(status_code=400, detail="no items given")
+
+    amount_cents = sum(item.gross_price_cents * item.quantity for item in request.items)
+    if amount_cents <= 0:
+        raise HTTPException(status_code=400, detail="total amount must be positive")
+
+    lines = []
+    for item in request.items:
+        label = f"{item.quantity}x {item.name}" if item.quantity != 1 else item.name
+        if item.description:
+            label += f" ({item.description})"
+        if item.vat_rate:
+            label += f" [incl. {item.vat_rate:.0%} VAT]"
+        lines.append(label)
+    description = "; ".join(lines)
+    if request.attendee_context:
+        description = f"{request.attendee_context}: {description}"
+    description = description[:500]
+
+    sumup_headers = {"Authorization": f"Bearer {_access_token}"}
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            f"https://api.sumup.com/v0.1/merchants/{_merchant_code}/readers/{reader_id}/checkout",
+            headers=sumup_headers,
+            json={
+                "total_amount": {
+                    "currency": "EUR",
+                    "minor_unit": 2,
+                    "value": amount_cents,
+                },
+                "description": description,
+            },
+        )
+    resp.raise_for_status()
+    checkout_id = resp.json()["data"]["checkout_id"]
+
+    job_id = uuid.uuid4().hex
+    job = {
+        "id": job_id,
+        "status": "polling",
+        "items": [item.model_dump() for item in request.items],
+        "amount_cents": amount_cents,
+        "checkout_id": checkout_id,
+        "error": None,
+    }
+    _reader_jobs[job_id] = job
+    asyncio.create_task(_poll_item_checkout(job))
+    return {"job_id": job_id}

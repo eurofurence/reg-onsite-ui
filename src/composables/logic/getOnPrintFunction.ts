@@ -2,6 +2,7 @@ import { resolveBadgeTypeForAttendee } from "@/composables/badge/resolveBadgeTyp
 import { resolveBadgeType } from "@/composables/badge/badgeTypeInheritance";
 import { buildFieldValuesForAttendee } from "@/composables/badge/buildFieldValues";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
+import { recordBadgePrintHistory } from "@/composables/logic/recordBadgePrintHistory";
 import { printSingleBadge } from "@/composables/print/printSingleBadge";
 import { badgeMappingRef, badgeTypesRef, ensureBadgeConfigLoaded } from "@/composables/services/badgeConfigStore";
 import type { OnsiteToastService } from "@/composables/services/toastService";
@@ -59,6 +60,12 @@ export function getOnPrintFunction(
         });
         return;
       }
+      await recordBadgePrintHistory(
+        toastService,
+        regNumber,
+        badgeType,
+        fieldValues
+      );
       toastService.add({
         severity: ToastSeverity.info,
         summary: `Printed badge for attendee ${regNumber}`,

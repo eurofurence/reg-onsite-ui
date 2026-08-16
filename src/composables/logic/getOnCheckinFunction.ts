@@ -1,4 +1,5 @@
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
+import { getEmptyRegDeskAddInfo } from "@/composables/services/attendee/getEmptyRegDeskAddInfo";
 import { attendeeService } from "@/composables/services/attendeeService";
 import type { OnsiteToastService } from "@/composables/services/toastService";
 import { authState } from "@/composables/state/authState";
@@ -34,6 +35,11 @@ export function getOnCheckinFunction(
     );
     if (checkinFailed) return;
     let auditRecordFailed = false;
+    const currentAddInfo =
+      (await attendeeService.addInfos.getRegDeskDeskAddInfo(
+        (info) => { auditRecordFailed = true; baseErrorHandler(info); },
+        regNumber
+      )) ?? getEmptyRegDeskAddInfo();
     await attendeeService.addInfos.putRegDeskDeskAddInfo(
       (info) => { auditRecordFailed = true; baseErrorHandler(info); },
       regNumber,
@@ -42,6 +48,7 @@ export function getOnCheckinFunction(
         checkin_time: new Date().toISOString(),
         has_room_key: false, // FIXME
         car_plate: "", // FIXME
+        badgePrintHistory: currentAddInfo.badgePrintHistory,
       }
     );
     const updatedAttendee: TransformedAttendeeInfo | null =

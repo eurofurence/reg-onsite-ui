@@ -1,7 +1,7 @@
 from typing import Annotated, Optional
 
 import httpx
-from fastapi import APIRouter, Cookie, Security
+from fastapi import APIRouter, Cookie, HTTPException, Security
 from pydantic import BaseModel
 
 from backend.auth import check_upstream, proxy_headers, verify_admin
@@ -10,6 +10,24 @@ from backend.env_defaults import getenv
 router = APIRouter(prefix="/api/v1")
 
 _attendee_service_url: str = getenv("ATTENDEE_SERVICE_URL")
+
+
+async def get_payment_summary(
+    client: httpx.AsyncClient, attendee_id: int, headers: dict,
+) -> dict:
+    resp = await client.post(
+        f"{_attendee_service_url}/api/rest/v1/attendees/find",
+        json={
+            "match_any": [{"ids": [attendee_id]}],
+            "fill_fields": ["payment_balance", "first_name", "last_name"],
+        },
+        headers=headers,
+    )
+    check_upstream(resp)
+    attendees: list[dict] = resp.json().get("attendees") or []
+    if not attendees:
+        raise HTTPException(status_code=404, detail="attendee not found")
+    return attendees[0]
 
 
 @router.get("/attendees/{attendee_id}/check-in")

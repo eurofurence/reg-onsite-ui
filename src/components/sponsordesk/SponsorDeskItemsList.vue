@@ -16,6 +16,13 @@
         @onShowCommentField="showCommentField"
       />
       <Button
+        v-if="hasPayableItems"
+        class="h-10"
+        icon="pi pi-credit-card"
+        label="Pay for Items"
+        @click="payDialogVisible = true"
+      />
+      <Button
         class="h-10 w-24"
         label="Save"
         @click="saveItems"
@@ -23,6 +30,12 @@
         :disabled="!isDirty"
       />
     </template>
+    <PayForItemsDialog
+      v-model:visible="payDialogVisible"
+      :attendeeInfo="transformedAttendeeInfoRef"
+      :toastService="toastService"
+      :onPaid="onItemsPaid"
+    />
     <div class="flex flex-col gap-3 mt-3">
       <Message
         :severity="MessageSeverity.error"
@@ -67,14 +80,19 @@
 import Comments from "@/components/common/field/Comments.vue";
 import Items from "@/components/common/field/Items.vue";
 import TagControl from "@/components/common/TagControl.vue";
+import PayForItemsDialog from "@/components/sponsordesk/PayForItemsDialog.vue";
 import SponsorDeskAvailableItemsButton from "@/components/sponsordesk/SponsorDeskAvailableItemsButton.vue";
+import { getSponsorDeskConfig } from "@/composables/api/attsrv/additional-info/getSponsorDeskConfig";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { getSubsetList } from "@/composables/collection_tools/subsets/getSubsetList";
 import { deepCopy } from "@/composables/deepCopy";
 import { isDirty } from "@/composables/dirty/isDirty";
 import { generateId } from "@/composables/generateId";
 import { useAvailableItems } from "@/composables/items/useAvailableItems";
+import { getAbstractFromConcreteItems } from "@/composables/items/getAbstractFromConcreteItems";
 import { getConcreteItemsEntitlement } from "@/composables/items/getConcreteItemsEntitlement";
+import { getConcreteItemsForGoodie } from "@/composables/items/getConcreteItemsForGoodie";
+import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import { attendeeService } from "@/composables/services/attendeeService";
 import {
@@ -100,7 +118,7 @@ import Message from "@/volt/Message.vue";
 import Panel from "@/volt/Panel.vue";
 import Toast from "@/volt/Toast.vue";
 import type { ModelRef } from "vue";
-import { ref, useId, watch, type Ref } from "vue";
+import { computed, onMounted, ref, useId, watch, type Ref } from "vue";
 
 const transformedAttendeeInfoRef: ModelRef<TransformedAttendeeInfo> =
   defineModel<TransformedAttendeeInfo>({
@@ -128,6 +146,41 @@ const sponsorDeskSettings = useAvailableItems(props.deskItemSubset, getErrorHand
 
 const savingItemsFlag: Ref<boolean> = ref<boolean>(false);
 const forceCommentField: Ref<RegNumber | null> = ref<RegNumber | null>(null);
+const payDialogVisible: Ref<boolean> = ref<boolean>(false);
+
+function onItemsPaid(items: ConcreteGoodieValue[]): void {
+  apiSDAddInfoRef.value.issuedItems = [
+    ...new Set([...items, ...apiSDAddInfoRef.value.issuedItems]),
+  ];
+}
+
+// Concrete items currently rendered in the "Issued Items" list below, computed
+// the same way Items.vue derives its rows — used only to decide whether the
+// "Pay for Items" button should show at all.
+const listedConcreteItems = computed<ConcreteGoodieValue[]>(() => {
+  const relevantConcreteItems = getConcreteItemsEntitlement(
+    transformedAttendeeInfoRef.value,
+    apiSDAddInfoRef.value
+  );
+  const relevantAbstractItemList = getAbstractFromConcreteItems(relevantConcreteItems);
+  const enabledAbstractItemList = getSubsetList(relevantAbstractItemList, props.deskItemSubset) || [];
+  return getGoodieItemsSubset(enabledAbstractItemList).flatMap(getConcreteItemsForGoodie);
+});
+
+const payableItemKeys: Ref<Set<string>> = ref(new Set());
+
+onMounted(async () => {
+  const config = await getSponsorDeskConfig(getErrorHandlerFunction(toastService));
+  payableItemKeys.value = new Set(
+    Object.entries(config?.itemPayments ?? {})
+      .filter(([, settings]) => settings.enabled)
+      .map(([item]) => item)
+  );
+});
+
+const hasPayableItems = computed<boolean>(() =>
+  listedConcreteItems.value.some((item) => payableItemKeys.value.has(item))
+);
 
 function showCommentField() {
   forceCommentField.value = transformedAttendeeInfoRef.value.id;

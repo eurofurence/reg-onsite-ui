@@ -118,6 +118,17 @@ async def _find_tentative_transaction(
     return None
 
 
+async def initiate_payment(
+    client: httpx.AsyncClient, attendee_id: int, method: str, headers: dict,
+) -> httpx.Response:
+    url = f"{_service_url}/api/rest/v1/transactions/initiate-payment"
+    return await client.post(
+        url,
+        json={"debitor_id": attendee_id, "method": method},
+        headers=headers,
+    )
+
+
 @router.post("/attendees/{attendee_id}/payment")
 async def init_payment(
     attendee_id: int,
@@ -141,12 +152,7 @@ async def init_payment(
                     media_type="application/json",
                 )
 
-        url = f"{_service_url}/api/rest/v1/transactions/initiate-payment"
-        upstream = await client.post(
-            url,
-            json={"debitor_id": attendee_id, "method": request.method},
-            headers=headers,
-        )
+        upstream = await initiate_payment(client, attendee_id, request.method, headers)
 
     return Response(
         content=upstream.content,
