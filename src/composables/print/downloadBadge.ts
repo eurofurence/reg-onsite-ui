@@ -1,8 +1,10 @@
 import { fontFamilyNameFor, renderBadgeSvg, renderBadgeSvgForPdf } from '@/composables/print/badgeHtml'
 import type { TextFieldLayout } from '@/composables/print/badgeHtml'
+import { getCardFootprint } from '@/composables/print/cardFootprint'
 import { buildOutlinedTextField } from '@/composables/print/textOutline'
 import { printSettingsRef } from '@/composables/services/badgeConfigStore'
 import type { BadgeType } from '@/types/badgeType'
+import { getOrientedPageDimensionsMm } from '@/types/printSettings'
 import { jsPDF } from 'jspdf'
 import 'svg2pdf.js'
 
@@ -86,6 +88,61 @@ export async function downloadBadgeSvg(
   downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${filenameBase}.svg`)
 }
 
+async function addBadgePage(
+  doc: jsPDF,
+  resolvedBadgeType: BadgeType,
+  svg: string,
+  textFieldLayouts: TextFieldLayout[],
+  rotationDeg: number,
+) {
+  const printSettings = printSettingsRef.value
+  const svgElement = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement
+  await registerCustomFonts(doc, resolvedBadgeType, svgElement, textFieldLayouts)
+
+  const { imgLeftMm, imgTopMm } = getCardFootprint(
+    printSettings.cardXMm,
+    printSettings.cardYMm,
+    printSettings.cardWidthMm,
+    printSettings.cardHeightMm,
+    printSettings.cardRotationDeg,
+  )
+
+  doc.saveGraphicsState()
+  if (printSettings.cardBorderRadiusMm > 0) {
+    doc.roundedRect(
+      imgLeftMm,
+      imgTopMm,
+      printSettings.cardWidthMm,
+      printSettings.cardHeightMm,
+      printSettings.cardBorderRadiusMm,
+      printSettings.cardBorderRadiusMm,
+      null,
+    ).clip()
+  }
+  if (rotationDeg !== 0) {
+    const centerX = imgLeftMm + printSettings.cardWidthMm / 2
+    const centerY = imgTopMm + printSettings.cardHeightMm / 2
+    doc.saveGraphicsState()
+    doc.setCurrentTransformationMatrix(doc.Matrix(1, 0, 0, 1, centerX, centerY))
+    doc.setCurrentTransformationMatrix(
+      doc.Matrix(
+        Math.cos((rotationDeg * Math.PI) / 180),
+        Math.sin((rotationDeg * Math.PI) / 180),
+        -Math.sin((rotationDeg * Math.PI) / 180),
+        Math.cos((rotationDeg * Math.PI) / 180),
+        0,
+        0,
+      ),
+    )
+    doc.setCurrentTransformationMatrix(doc.Matrix(1, 0, 0, 1, -centerX, -centerY))
+  }
+  await doc.svg(svgElement, { x: imgLeftMm, y: imgTopMm, width: printSettings.cardWidthMm, height: printSettings.cardHeightMm })
+  if (rotationDeg !== 0) {
+    doc.restoreGraphicsState()
+  }
+  doc.restoreGraphicsState()
+}
+
 export async function downloadBadgePdf(
   resolvedBadgeType: BadgeType,
   fieldValues: Record<string, string>,
@@ -93,14 +150,20 @@ export async function downloadBadgePdf(
 ) {
   const printSettings = printSettingsRef.value
   const { svg, textFieldLayouts } = await renderBadgeSvgForPdf(resolvedBadgeType, fieldValues, printSettings.cardWidthMm, printSettings.cardHeightMm, printSettings.dpi)
-  const svgElement = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement
+  const pageDimensions = getOrientedPageDimensionsMm(printSettings)
 
   const doc = new jsPDF({
-    orientation: printSettings.cardWidthMm > printSettings.cardHeightMm ? 'landscape' : 'portrait',
+    orientation: pageDimensions.width > pageDimensions.height ? 'landscape' : 'portrait',
     unit: 'mm',
-    format: [printSettings.cardWidthMm, printSettings.cardHeightMm],
+    format: [pageDimensions.width, pageDimensions.height],
   })
-  await registerCustomFonts(doc, resolvedBadgeType, svgElement, textFieldLayouts)
-  await doc.svg(svgElement, { x: 0, y: 0, width: printSettings.cardWidthMm, height: printSettings.cardHeightMm })
+
+  await addBadgePage(doc, resolvedBadgeType, svg, textFieldLayouts, printSettings.cardRotationDeg)
+  if (printSettings.doubleSided) {
+    const backRotationDeg = printSettings.cardRotationDeg + (printSettings.backSideRotated180 ? 180 : 0)
+    doc.addPage([pageDimensions.width, pageDimensions.height], pageDimensions.width > pageDimensions.height ? 'landscape' : 'portrait')
+    await addBadgePage(doc, resolvedBadgeType, svg, textFieldLayouts, backRotationDeg)
+  }
+
   doc.save(`${filenameBase}.pdf`)
 }
