@@ -58,10 +58,14 @@ export async function findCachedBadgeMediaUrls(
   sourceUrls: string[],
 ): Promise<Map<string, string>> {
   const trimmedUrls = sourceUrls.map((sourceUrl) => sourceUrl.trim()).filter(Boolean)
-  const hashes = await Promise.all(trimmedUrls.map((sourceUrl) => sha256Hex(sourceUrl)))
+  const hashedUrls = await Promise.all(
+    trimmedUrls.map(async (sourceUrl) => ({
+      sourceUrl,
+      hash: await sha256Hex(sourceUrl),
+    })),
+  )
   const hashToUrls = new Map<string, string[]>()
-  trimmedUrls.forEach((sourceUrl, index) => {
-    const hash = hashes[index]
+  hashedUrls.forEach(({ sourceUrl, hash }) => {
     const urls = hashToUrls.get(hash) ?? []
     urls.push(sourceUrl)
     hashToUrls.set(hash, urls)
