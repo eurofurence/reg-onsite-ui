@@ -60,6 +60,14 @@
       />
       <template v-if="rows.length > 0">
         <Button
+          icon="pi pi-verified"
+          :label="`Auto Resolve — ${ambiguousCount}`"
+          @click="autoResolve"
+          severity="secondary"
+          outlined
+          :disabled="ambiguousCount === 0"
+        />
+        <Button
           icon="pi pi-copy"
           :label="`Copy CSV (reg;item) — ${checkedRows.length}`"
           @click="copyCSV"
@@ -140,6 +148,23 @@
             </span>
           </template>
         </Column>
+        <Column header="Packages">
+          <template #body="{ data }">
+            <span class="text-xs">{{ data.resolvedMatch?.packages.join(', ') ?? '' }}</span>
+          </template>
+        </Column>
+        <Column header="Flags">
+          <template #body="{ data }">
+            <span class="text-xs">{{ data.resolvedMatch?.flags.join(', ') ?? '' }}</span>
+          </template>
+        </Column>
+        <Column header="All Candidates">
+          <template #body="{ data }">
+            <span v-if="data.result.matches.length > 1" class="text-xs text-surface-400">
+              {{ data.result.matches.map((match: AttendeeMatch) => candidateSummary(match)).join(' | ') }}
+            </span>
+          </template>
+        </Column>
         <Column style="width: 4rem">
           <template #body="{ data }">
             <button
@@ -179,7 +204,7 @@
               <div v-for="match in data.result.matches" :key="match.id" class="flex items-center gap-2">
                 <RadioButton v-model="data.resolvedMatch" :value="match" :inputId="`cand-${data.key}-${match.id}`" @update:modelValue="selectCandidate(data, match)" />
                 <label :for="`cand-${data.key}-${match.id}`" class="text-xs cursor-pointer">
-                  {{ match.id }} — {{ match.nickname ?? '' }} ({{ match.firstName }} {{ match.lastName }}, {{ match.email }}, {{ match.idpId ?? '—' }})
+                  {{ match.id }} — {{ candidateSummary(match) }}
                 </label>
               </div>
               <div class="flex items-center gap-2">
@@ -392,7 +417,7 @@ function inputFieldValue(input: LookupRow, field: string): string {
 }
 
 // Mismatch warning helpers — highlight when a matched field differs from what was pasted in
-const MATCH_COMPARE_FIELDS = ["nickname", "firstName", "lastName", "email", "idpId"] as const;
+const MATCH_COMPARE_FIELDS = ["nickname", "firstName", "lastName", "email", "idpId", "telegram"] as const;
 
 function normalize(s: string): string {
   return s.toLowerCase().replace(/\s+/g, "");
@@ -403,6 +428,19 @@ function fieldMismatch(row: ResultRow, field: (typeof MATCH_COMPARE_FIELDS)[numb
   const matched = row.resolvedMatch?.[field];
   if (!input || !matched) return false;
   return normalize(input) !== normalize(matched);
+}
+
+function candidateSummary(match: AttendeeMatch): string {
+  return `${match.nickname ?? ''} (${match.firstName} ${match.lastName}, ${match.email}, `
+    + `idp: ${match.idpId ?? '—'}, telegram: ${match.telegram ?? '—'}, `
+    + `pkgs: ${match.packages.join(', ') || '—'}, flags: ${match.flags.join(', ') || '—'})`;
+}
+
+// Auto Resolve — for every ambiguous row, pick the first matching candidate
+function autoResolve(): void {
+  for (const row of reviewRows.value) {
+    if (row.status === "ambiguous") selectCandidate(row, row.result.matches[0] ?? null);
+  }
 }
 
 // Export
@@ -437,11 +475,15 @@ function exportCSV(): void {
     ...mappedFields.value.map(fieldLabel),
     "Matched Reg ID",
     ...MATCH_COMPARE_FIELDS.map(field => `Matched ${fieldLabel(field)}`),
+    "Matched Packages",
+    "Matched Flags",
   ];
   const csvRows = checkedRows.value.map(row => [
     ...mappedFields.value.map(field => inputFieldValue(row.result.input, field)),
     String(row.resolvedMatch?.id ?? ""),
     ...MATCH_COMPARE_FIELDS.map(field => row.resolvedMatch?.[field] ?? ""),
+    row.resolvedMatch?.packages.join(", ") ?? "",
+    row.resolvedMatch?.flags.join(", ") ?? "",
   ]);
   const csv = [headers, ...csvRows].map(row => row.map(csvCell).join(";")).join("\n");
   downloadCSV(csv, "attendee-lookup.csv");

@@ -102,7 +102,10 @@ async def attendee_lookup(
             f"{_attendee_service_url}/api/rest/v1/attendees/find",
             json={
                 "match_any": [{"nickname": "*"}],
-                "fill_fields": ["id", "nickname", "first_name", "last_name", "email", "identity_subject"],
+                "fill_fields": [
+                    "id", "nickname", "first_name", "last_name", "email",
+                    "identity_subject", "telegram", "packages_list", "flags_list",
+                ],
             },
             headers=proxy_headers(JWT, AUTH),
         )
@@ -175,6 +178,12 @@ async def attendee_lookup(
                 "lastName": candidate.get("last_name"),
                 "email": candidate.get("email"),
                 "idpId": candidate.get("identity_subject"),
+                "telegram": candidate.get("telegram"),
+                "packages": [
+                    pkg["name"]
+                    for pkg in (candidate.get("packages_list") or [])
+                ],
+                "flags": list(candidate.get("flags_list") or []),
             }
             for candidate in candidates.values()
         ]

@@ -65,7 +65,7 @@ import ItemCheckResults, { type CheckItemGroup, type CheckRegRow, type CheckResu
 import type { InputConfig } from "@/components/items/ItemAssignInputArea.vue";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { getGroupMembers } from "@/composables/api/backend/getGroupMembers";
-import { getGoodieLevelPaymentDates } from "@/composables/api/backend/getGoodieLevelPaymentDates";
+import { getPackagePayments } from "@/composables/api/backend/getPackagePayments";
 import { isFromSizeItem, resolveFromSizeItem } from "@/composables/items/fromSizeUtils";
 import { getItemDisplayLabel } from "@/composables/items/getItemDisplayLabel";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
@@ -319,12 +319,20 @@ async function checkRegistrations(): Promise<void> {
       } else if (filter === "firstNByReg") {
         regNumbers = matching.sort((a, b) => (a.id as number) - (b.id as number)).slice(0, ic.goodieLevelFilterN ?? 10).map((a) => a.id as RegNumber);
       } else {
+        const packageNameByLevel = new Map<string, string>(
+          getConventionSetup().metadata.forGoodiesLevels.list
+            .filter((level) => levels.includes(level.value))
+            .map((level) => [level.value, Object.keys(level.search.packages)[0]!])
+        );
         const paymentDateMap = new Map<RegNumber, string | null>();
-        for (let i = 0; i < levels.length; i++) {
-          checkProgress.value = { label: `Loading payment dates… (${i + 1}/${levels.length})`, current: i, total: levels.length };
-          const dates = await getGoodieLevelPaymentDates(errorHandler, levels[i]!);
-          if (dates) for (const [reg, date] of dates) if (!paymentDateMap.has(reg)) paymentDateMap.set(reg, date);
-          checkProgress.value = { label: `Loading payment dates… (${i + 1}/${levels.length})`, current: i + 1, total: levels.length };
+        for (let i = 0; i < matching.length; i++) {
+          const attendee = matching[i]!;
+          checkProgress.value = { label: `Loading payment dates… (${i + 1}/${matching.length})`, current: i, total: matching.length };
+          const packageName = packageNameByLevel.get(attendee.transGoodieChoice as string);
+          const packages = packageName ? await getPackagePayments(errorHandler, attendee.id as RegNumber) : undefined;
+          const paidAt = packages?.find((pkg) => pkg.name === packageName)?.fully_paid_at ?? null;
+          paymentDateMap.set(attendee.id as RegNumber, paidAt);
+          checkProgress.value = { label: `Loading payment dates… (${i + 1}/${matching.length})`, current: i + 1, total: matching.length };
         }
         if (filter === "upToPaymentDate") {
           const cutoff = ic.goodieLevelFilterDate ? endOfDayHamburg(new Date(ic.goodieLevelFilterDate)) : null;

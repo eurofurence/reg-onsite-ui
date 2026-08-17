@@ -23,6 +23,9 @@ export interface AttendeeMatch {
   lastName: string | null;
   email: string | null;
   idpId: string | null;
+  telegram: string | null;
+  packages: string[];
+  flags: string[];
 }
 
 export interface LookupResult {
