@@ -9,6 +9,7 @@ import type { RestErrorHandler } from '@/composables/api/base/restErrorWrapper'
 import { resolveBadgeType } from '@/composables/badge/badgeTypeInheritance'
 import { resolveBadgeMappingForAttendee } from '@/composables/badge/resolveBadgeTypeForAttendee'
 import { useAttendeeDataOptions } from '@/composables/filter/useAttendeeDataOptions'
+import { downloadCSV } from '@/composables/logic/downloadCSV'
 import { downloadBlob } from '@/composables/print/downloadBadge'
 import type { BadgeExportEntry, BatchItemFailure } from '@/composables/print/downloadBadgeBatch'
 import { BatchCancelledError, downloadBadgesPdf, renderBadgeSvgs, saveBadgesZip } from '@/composables/print/downloadBadgeBatch'
@@ -354,13 +355,7 @@ async function copyRows() {
 }
 
 function downloadRows() {
-  const blob = new Blob([rowsToCsv()], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = 'print-rows.csv'
-  link.click()
-  URL.revokeObjectURL(url)
+  downloadCSV(rowsToCsv(), 'print-rows.csv')
 }
 
 function buildExportEntries(): BadgeExportEntry[] {

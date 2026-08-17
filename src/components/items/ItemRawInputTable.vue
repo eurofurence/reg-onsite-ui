@@ -72,7 +72,7 @@ function getLabel(itemValue: string): string {
 function parseText(text: string): RawRow[] {
   return text
     .split(/\r?\n/)
-    .map((line) => line.split("\t"))
+    .map((line) => (line.includes("\t") ? line.split("\t") : line.split(";")))
     .filter((cols) => cols.length >= 2)
     .map((cols) => ({ regNum: (cols[0] ?? "").trim(), itemValue: (cols[1] ?? "").trim() }))
     .filter((r) => r.regNum || r.itemValue);

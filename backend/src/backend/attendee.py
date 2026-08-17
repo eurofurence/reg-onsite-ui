@@ -86,6 +86,8 @@ class AttendeeRow(BaseModel):
 
 class AttendeeLookupRequest(BaseModel):
     rows: list[AttendeeRow]
+    requiredPackages: list[str] = []
+    requiredFlags: list[str] = []
 
 
 @router.post("/attendees/match")
@@ -106,6 +108,15 @@ async def attendee_lookup(
         )
     check_upstream(resp)
     attendees = resp.json().get("attendees") or []
+
+    if request.requiredPackages or request.requiredFlags:
+        required_packages = set(request.requiredPackages)
+        required_flags = set(request.requiredFlags)
+        attendees = [
+            a for a in attendees
+            if required_packages <= {pkg["name"] for pkg in (a.get("packages_list") or [])}
+            and required_flags <= set(a.get("flags_list") or [])
+        ]
 
     by_reg = {str(a["id"]): a for a in attendees if a.get("id") is not None}
     by_nickname = {(a.get("nickname") or "").strip().lower(): a for a in attendees if a.get("nickname")}

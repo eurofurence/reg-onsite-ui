@@ -129,11 +129,15 @@ export function buildItemTree(
   attendeeInfos: TransformedAttendeeInfo[],
   soldCount: Record<string, number> = {},
   inventoryCount: Record<string, number> = {},
+  hideZeroActivity = true,
+  hideNotCurrentIteration = true,
 ): GoodieTreeNode[] {
   const counts = accumulateItemCounts(infosMap, attendeeInfos, soldCount, inventoryCount);
-  return getConventionSetup()
-    .metadata.forAbstractGoodies.list.map((g: GoodieConfig) => goodieConfigToTreeNode(g, counts))
-    .filter((n) => (n.data.issuedCount ?? 0) + (n.data.reservedCount ?? 0) + (n.data.entitledCount ?? 0) > 0);
+  const conventionSetup = getConventionSetup();
+  return conventionSetup.metadata.forAbstractGoodies.list
+    .filter((g: GoodieConfig) => !hideNotCurrentIteration || g.value in conventionSetup.currentGoodiesRecord)
+    .map((g: GoodieConfig) => goodieConfigToTreeNode(g, counts))
+    .filter((n) => !hideZeroActivity || (n.data.issuedCount ?? 0) + (n.data.reservedCount ?? 0) + (n.data.entitledCount ?? 0) > 0);
 }
 
 export function flattenLeafNodes(nodes: GoodieTreeNode[]): GoodieTreeNode[] {

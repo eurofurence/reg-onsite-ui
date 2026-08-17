@@ -34,18 +34,27 @@ export interface LookupResult {
 
 interface LookupResponse { results: LookupResult[]; }
 
-async function fetchAttendeeLookup(rows: LookupRow[]): FetchResultPromise<LookupResponse, ApiError> {
-  const response = await postApi("onsite/api/v1/attendees/match", { rows });
+export interface LookupFilter {
+  requiredPackages?: string[];
+  requiredFlags?: string[];
+}
+
+async function fetchAttendeeLookup(
+  rows: LookupRow[],
+  filter: LookupFilter,
+): FetchResultPromise<LookupResponse, ApiError> {
+  const response = await postApi("onsite/api/v1/attendees/match", { rows, ...filter });
   return fetchResultWrapper<LookupResponse>(response);
 }
 
 export async function postAttendeeLookup(
   errorHandler: RestErrorHandler,
   rows: LookupRow[],
+  filter: LookupFilter = {},
 ): Promise<LookupResult[] | undefined> {
   const result = await restErrorWrapper<LookupResponse>(
     "Backend Service",
-    () => fetchAttendeeLookup(rows),
+    () => fetchAttendeeLookup(rows, filter),
     errorHandler,
   );
   return result?.results;

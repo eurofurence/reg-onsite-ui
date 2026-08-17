@@ -1,8 +1,13 @@
 <template>
   <div class="flex flex-col gap-4 pt-4">
+    <div class="flex items-center gap-4 justify-center flex-wrap">
+      <LabeledToggleSwitch label="Hide items with zero activity" v-model="hideZeroActivity" />
+      <LabeledToggleSwitch label="Hide items not in current iteration" v-model="hideNotCurrentIteration" />
+    </div>
+
     <div class="flex items-center gap-2 justify-center">
       <span v-if="!loading" class="text-sm text-surface-400">
-        {{ itemTreeNodes.length }} item type(s) with activity
+        {{ itemTreeNodes.length }} item type(s)
       </span>
       <Button
         @click="refresh"
@@ -68,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import LabeledToggleSwitch from "@/components/common/LabeledToggleSwitch.vue";
 import GoodieTreeTable, { type ColumnDef, type FlatRow } from "@/components/items/GoodieTreeTable.vue";
 import ItemInventoryDialog from "@/components/items/ItemInventoryDialog.vue";
 import ItemFrequencyChart from "@/components/statistics/ItemFrequencyChart.vue";
@@ -95,6 +101,8 @@ const loading: Ref<boolean> = ref(true);
 const infosMap: Ref<Map<RegNumber, ApiSponsorDeskAddInfo>> = ref(new Map());
 const attendeeInfosList: Ref<TransformedAttendeeInfo[]> = ref([]);
 const configCounts: Ref<SponsorDeskConfigCounts> = ref({ soldCount: {}, inventoryCount: {} });
+const hideZeroActivity = ref(true);
+const hideNotCurrentIteration = ref(true);
 
 async function refresh(): Promise<void> {
   loading.value = true;
@@ -115,7 +123,14 @@ onMounted(async () => {
 });
 
 const itemTreeNodes = computed<GoodieTreeNode[]>(() =>
-  buildItemTree(infosMap.value, attendeeInfosList.value, configCounts.value.soldCount, configCounts.value.inventoryCount)
+  buildItemTree(
+    infosMap.value,
+    attendeeInfosList.value,
+    configCounts.value.soldCount,
+    configCounts.value.inventoryCount,
+    hideZeroActivity.value,
+    hideNotCurrentIteration.value,
+  )
 );
 
 const columns: ColumnDef[] = [

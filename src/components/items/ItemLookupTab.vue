@@ -9,6 +9,14 @@
       <span v-if="rawData.length > 0" class="text-xs text-surface-400">{{ rawData.length }} row(s), {{ numColumns }} column(s)</span>
     </div>
 
+    <!-- Filter -->
+    <div class="flex gap-2 items-center flex-wrap">
+      <label class="text-xs text-surface-500" for="required-packages">Required Packages</label>
+      <InputText id="required-packages" v-model="requiredPackagesText" placeholder="e.g. sponsor, dealer" class="text-xs w-56" />
+      <label class="text-xs text-surface-500" for="required-flags">Required Flags</label>
+      <InputText id="required-flags" v-model="requiredFlagsText" placeholder="e.g. hc, ev" class="text-xs w-56" />
+    </div>
+
     <!-- Column mapping + data preview -->
     <div v-if="rawData.length > 0" class="flex flex-col gap-2">
       <div class="text-xs text-surface-500 font-medium">Assign columns</div>
@@ -63,6 +71,14 @@
           icon="pi pi-copy"
           :label="`Copy Reg IDs — ${checkedRows.length}`"
           @click="copyRegIds"
+          severity="secondary"
+          outlined
+          :disabled="checkedRows.length === 0"
+        />
+        <Button
+          icon="pi pi-external-link"
+          :label="`Export CSV — ${checkedRows.length}`"
+          @click="exportCSV"
           severity="secondary"
           outlined
           :disabled="checkedRows.length === 0"
@@ -192,9 +208,11 @@ import { postAttendeeLookup, type AttendeeMatch, type LookupResult, type LookupR
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import type { OnsiteToastService } from "@/composables/services/toastService";
 import { ToastSeverity } from "@/types/internal/primevue";
+import { downloadCSV } from "@/composables/logic/downloadCSV";
 import Button from "@/volt/Button.vue";
 import Checkbox from "@/volt/Checkbox.vue";
 import DataTable from "@/volt/DataTable.vue";
+import InputText from "@/volt/InputText.vue";
 import RadioButton from "@/volt/RadioButton.vue";
 import Select from "@/volt/Select.vue";
 import Tag from "@/volt/Tag.vue";
@@ -257,6 +275,14 @@ function addRawRow(): void {
   rawData.value = [...rawData.value, Array(numColumns.value).fill("")];
 }
 
+// Package/flag filter persisted across sessions
+const requiredPackagesText = useLocalStorage("item-lookup-required-packages", "");
+const requiredFlagsText = useLocalStorage("item-lookup-required-flags", "");
+
+function parseCodes(text: string): string[] {
+  return text.split(",").map(code => code.trim()).filter(code => code.length > 0);
+}
+
 function removeRawRow(index: number): void {
   rawData.value = rawData.value.filter((_, i) => i !== index);
 }
@@ -299,7 +325,10 @@ async function doLookup(): Promise<void> {
     }
     return entry;
   });
-  const res = await postAttendeeLookup(errorHandler, lookupRows);
+  const res = await postAttendeeLookup(errorHandler, lookupRows, {
+    requiredPackages: parseCodes(requiredPackagesText.value),
+    requiredFlags: parseCodes(requiredFlagsText.value),
+  });
   loading.value = false;
   if (res !== undefined) {
     rows.value = res.map(result => {
@@ -397,5 +426,25 @@ async function copyRegIds(): Promise<void> {
     .join(", ");
   await navigator.clipboard.writeText(ids);
   props.toastService.add({ severity: ToastSeverity.info, summary: "Copied to clipboard", life: 2000 });
+}
+
+function csvCell(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+function exportCSV(): void {
+  const headers = [
+    ...mappedFields.value.map(fieldLabel),
+    "Matched Reg ID",
+    ...MATCH_COMPARE_FIELDS.map(field => `Matched ${fieldLabel(field)}`),
+  ];
+  const csvRows = checkedRows.value.map(row => [
+    ...mappedFields.value.map(field => inputFieldValue(row.result.input, field)),
+    String(row.resolvedMatch?.id ?? ""),
+    ...MATCH_COMPARE_FIELDS.map(field => row.resolvedMatch?.[field] ?? ""),
+  ]);
+  const csv = [headers, ...csvRows].map(row => row.map(csvCell).join(";")).join("\n");
+  downloadCSV(csv, "attendee-lookup.csv");
+  props.toastService.add({ severity: ToastSeverity.info, summary: "CSV downloaded", life: 2000 });
 }
 </script>

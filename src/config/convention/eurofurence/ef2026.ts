@@ -48,6 +48,7 @@ export const enum AbstractEFGoodieWithoutVariants2026 {
   staff_pin_bag_dance_competition_2026 = "staff_pin_bag_dance_competition_2026",
   staff_pin_bag_dances_2026 = "staff_pin_bag_dances_2026",
   staff_pin_bag_dead_dog_party_2026 = "staff_pin_bag_dead_dog_party_2026",
+  staff_pin_bag_dealers_den_2026 = "staff_pin_bag_dealers_den_2026",
   staff_pin_bag_funding_and_cooperations_2026 = "staff_pin_bag_funding_and_cooperations_2026",
   staff_pin_bag_fursuit_support_2026 = "staff_pin_bag_fursuit_support_2026",
   staff_pin_bag_furry_tails_theatre_2026 = "staff_pin_bag_furry_tails_theatre_2026",
@@ -65,6 +66,7 @@ export const enum AbstractEFGoodieWithoutVariants2026 {
   staff_pin_bag_people_and_culture_2026 = "staff_pin_bag_people_and_culture_2026",
   staff_pin_bag_photography_2026 = "staff_pin_bag_photography_2026",
   staff_pin_bag_press_and_media_relations_2026 = "staff_pin_bag_press_and_media_relations_2026",
+  staff_pin_bag_production_management_2026 = "staff_pin_bag_production_management_2026",
   staff_pin_bag_programming_2026 = "staff_pin_bag_programming_2026",
   staff_pin_bag_registration_2026 = "staff_pin_bag_registration_2026",
   staff_pin_bag_registration_software_development_2026 = "staff_pin_bag_registration_software_development_2026",
@@ -211,6 +213,9 @@ export const metadataRecordForGoodies2026: MetadataRecord<EFGoodieConfig2026> =
     [AbstractEFGoodieWithoutVariants2026.staff_pin_bag_dead_dog_party_2026]: {
       label: "Staff Pin Bag: Dead Dog Party",
     },
+    [AbstractEFGoodieWithoutVariants2026.staff_pin_bag_dealers_den_2026]: {
+      label: "Staff Pin Bag: Dealers Den",
+    },
     [AbstractEFGoodieWithoutVariants2026.staff_pin_bag_funding_and_cooperations_2026]: {
       label: "Staff Pin Bag: Funding and Cooperations",
     },
@@ -261,6 +266,9 @@ export const metadataRecordForGoodies2026: MetadataRecord<EFGoodieConfig2026> =
     },
     [AbstractEFGoodieWithoutVariants2026.staff_pin_bag_press_and_media_relations_2026]: {
       label: "Staff Pin Bag: Press and Media Relations",
+    },
+    [AbstractEFGoodieWithoutVariants2026.staff_pin_bag_production_management_2026]: {
+      label: "Staff Pin Bag: Production Management",
     },
     [AbstractEFGoodieWithoutVariants2026.staff_pin_bag_programming_2026]: {
       label: "Staff Pin Bag: Programming",
