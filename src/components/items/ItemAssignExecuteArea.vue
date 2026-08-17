@@ -68,6 +68,7 @@ import { getGroupMembers } from "@/composables/api/backend/getGroupMembers";
 import { getPackagePayments } from "@/composables/api/backend/getPackagePayments";
 import { isFromSizeItem, resolveFromSizeItem } from "@/composables/items/fromSizeUtils";
 import { getItemDisplayLabel } from "@/composables/items/getItemDisplayLabel";
+import { usePaymentDateCache } from "@/composables/items/paymentDateCache";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import { downloadJSON } from "@/composables/logic/downloadJSON";
 import type { IdpGroupId } from "@/types/external/authsrv/frontenduserinfo";
@@ -99,6 +100,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const errorHandler = getErrorHandlerFunction(props.toastService);
+const paymentDateCache = usePaymentDateCache();
 
 const loading: Ref<boolean> = ref(false);
 const checkLoading: Ref<boolean> = ref(false);
@@ -322,16 +324,24 @@ async function checkRegistrations(): Promise<void> {
         const packageNameByLevel = new Map<string, string>(
           getConventionSetup().metadata.forGoodiesLevels.list
             .filter((level) => levels.includes(level.value))
-            .map((level) => [level.value, Object.keys(level.search.packages)[0]!])
+            .map((level) => [level.value, Object.keys(level.search.packages ?? {})[0]!])
         );
         const paymentDateMap = new Map<RegNumber, string | null>();
         for (let i = 0; i < matching.length; i++) {
           const attendee = matching[i]!;
           checkProgress.value = { label: `Loading payment dates… (${i + 1}/${matching.length})`, current: i, total: matching.length };
           const packageName = packageNameByLevel.get(attendee.transGoodieChoice as string);
-          const packages = packageName ? await getPackagePayments(errorHandler, attendee.id as RegNumber) : undefined;
-          const paidAt = packages?.find((pkg) => pkg.name === packageName)?.fully_paid_at ?? null;
-          paymentDateMap.set(attendee.id as RegNumber, paidAt);
+          const regNum = attendee.id as RegNumber;
+          const cached = packageName ? paymentDateCache.getPaymentDate(regNum, packageName) : undefined;
+          let paidAt: string | null;
+          if (cached !== undefined) {
+            paidAt = cached;
+          } else {
+            const packages = packageName ? await getPackagePayments(errorHandler, regNum) : undefined;
+            paidAt = packages?.find((pkg) => pkg.name === packageName)?.fully_paid_at ?? null;
+            if (packageName) paymentDateCache.setPaymentDate(regNum, packageName, paidAt);
+          }
+          paymentDateMap.set(regNum, paidAt);
           checkProgress.value = { label: `Loading payment dates… (${i + 1}/${matching.length})`, current: i + 1, total: matching.length };
         }
         if (filter === "upToPaymentDate") {

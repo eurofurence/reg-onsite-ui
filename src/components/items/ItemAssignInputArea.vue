@@ -28,6 +28,7 @@
             :conRoles="conRoles"
           />
         </div>
+        <ItemPaymentDateCachePanel v-if="targetType === 'goodieLevel'" :toastService="props.toastService" />
       </template>
 
       <template v-else>
@@ -38,10 +39,12 @@
 </template>
 
 <script setup lang="ts">
+import ItemPaymentDateCachePanel from "@/components/items/ItemPaymentDateCachePanel.vue";
 import ItemRawInputTable, { type RawRow } from "@/components/items/ItemRawInputTable.vue";
 import ItemSourcePanel from "@/components/items/ItemSourcePanel.vue";
 import ItemTargetPanel from "@/components/items/ItemTargetPanel.vue";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
+import type { OnsiteToastService } from "@/composables/services/toastService";
 import type { ConcreteGoodieValue } from "@/config/convention";
 import Fieldset from "@/volt/Fieldset.vue";
 import SelectButton from "@/volt/SelectButton.vue";
@@ -65,6 +68,9 @@ export interface InputConfig {
   idpGroupsInput: string;
   idpToken: string;
 }
+
+interface Props { toastService: OnsiteToastService; }
+const props = defineProps<Props>();
 
 const inputModeOptions = [
   { label: "Standard", value: "standard" },

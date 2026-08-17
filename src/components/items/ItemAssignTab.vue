@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4 pt-4">
 
-    <ItemAssignInputArea ref="inputAreaRef" />
+    <ItemAssignInputArea ref="inputAreaRef" :toastService="props.toastService" />
 
     <ItemOperationPanel
       v-model:assignmentMode="assignmentMode"
