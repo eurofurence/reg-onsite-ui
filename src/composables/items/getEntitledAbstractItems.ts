@@ -3,7 +3,6 @@ import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import type { AbstractGoodieValue } from "@/config/convention";
 import type {
   FlagApiValue,
-  PackageApiValue,
   PackageCountType,
   RegNumber,
 } from "@/types/external/attsrv/attendees/attendee";
@@ -13,22 +12,20 @@ export function getEntitledAbstractItems(
   flags_list: FlagApiValue[],
   reg_id: RegNumber
 ): AbstractGoodieValue[] {
-  const packages_list: PackageApiValue[] = package_count_list.map(
-    (item: PackageCountType) => item.name
+  const itemsForPackages: AbstractGoodieValue[] = package_count_list.flatMap(
+    (item: PackageCountType) => {
+      const itemsForThisPackage: AbstractGoodieValue[] =
+        concatenateListsForMatchingKeys(
+          [item.name],
+          getConventionSetup().goodies.forPackage
+        );
+      return Array(Math.max(0, item.count)).fill(itemsForThisPackage).flat();
+    }
   );
-  const itemsForPackages: AbstractGoodieValue[] =
-    concatenateListsForMatchingKeys(
-      packages_list,
-      getConventionSetup().goodies.forPackage
-    );
-  const itemsForFlags: AbstractGoodieValue[] = [
-    ...new Set(
-      concatenateListsForMatchingKeys(
-        flags_list,
-        getConventionSetup().goodies.forFlag
-      )
-    ),
-  ];
+  const itemsForFlags: AbstractGoodieValue[] = concatenateListsForMatchingKeys(
+    flags_list,
+    getConventionSetup().goodies.forFlag
+  );
   const itemsForRegNumber: AbstractGoodieValue[] =
     concatenateListsForMatchingKeys(
       [reg_id.toString()],

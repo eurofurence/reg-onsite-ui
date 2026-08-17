@@ -191,9 +191,9 @@ async function pollCheckoutJob(jobId: string): Promise<void> {
     });
     return;
   }
-  const paidItems = rows.value
-    .filter((row) => getQuantity(row.item) > 0)
-    .map((row) => row.item);
+  const paidItems = rows.value.flatMap((row) =>
+    Array(getQuantity(row.item)).fill(row.item)
+  );
   props.onPaid(paidItems);
   props.toastService.add({ severity: ToastSeverity.info, summary: "Payment completed", life: 2000 });
   visible.value = false;

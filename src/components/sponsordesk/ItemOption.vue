@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+import { findNthOccurrenceIndex } from "@/composables/items/findNthOccurrenceIndex";
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import type {
   AbstractGoodieWithVariantsValue,
@@ -29,18 +30,25 @@ import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type { LabeledValue } from "@/types/internal/infos";
 import type { ModelRef } from "vue";
 
-function checkConcreteItem(referenceList: ConcreteGoodieValue[]): boolean {
-  return referenceList.includes(
+function isReserved(): boolean {
+  const idx = findNthOccurrenceIndex(
+    props.reservedConcreteGoodies,
+    props.goodieConfig,
+    props.unitIndex
+  );
+  if (idx === -1) {
+    return false;
+  }
+  return (
+    props.reservedConcreteGoodies[idx] ===
     getConcreteItemValue(props.goodieConfig, modelValue.value)
   );
 }
 
-function isReserved(): boolean {
-  return checkConcreteItem(props.reservedConcreteGoodies);
-}
-
 function isAvailableItem(): boolean {
-  return checkConcreteItem(props.availableConcreteGoodies);
+  return props.availableConcreteGoodies.includes(
+    getConcreteItemValue(props.goodieConfig, modelValue.value)
+  );
 }
 
 function isDefault(): boolean {
@@ -61,6 +69,7 @@ function isDefault(): boolean {
 
 interface Props {
   goodieConfig: GoodieConfig;
+  unitIndex: number;
   defaultValue: DefaultVariantValues;
   issuedConcreteGoodies: ConcreteGoodieValue[];
   reservedConcreteGoodies: ConcreteGoodieValue[];

@@ -6,12 +6,13 @@
       :id="componentId"
     >
       <div
-        v-for="goodieConfig of goodieConfigListRef"
-        :key="goodieConfig.value"
+        v-for="row of itemRowsRef"
+        :key="row.key"
       >
         <SponsorDeskItemElement
           :itemGroupId="itemGroupId"
-          :goodieConfig="goodieConfig"
+          :goodieConfig="row.goodieConfig"
+          :unitIndex="row.unitIndex"
           v-model="apiSDAddInfoRef.issuedItems"
           v-model:reservedItems="apiSDAddInfoRef.reservedItems"
           v-model:defaultVariantValues="defaultVariantValuesRef"
@@ -19,7 +20,7 @@
         />
       </div>
     </div>
-    <div v-if="goodieConfigListRef.length === 0">Nothing to issue...</div>
+    <div v-if="itemRowsRef.length === 0">Nothing to issue...</div>
   </div>
 </template>
 
@@ -35,14 +36,21 @@ import SponsorDeskItemElement from "@/components/sponsordesk/SponsorDeskItemElem
 import { getSubsetList } from "@/composables/collection_tools/subsets/getSubsetList";
 import { generateId } from "@/composables/generateId";
 import { getAbstractFromConcreteItems } from "@/composables/items/getAbstractFromConcreteItems";
+import { getConcreteItemsForGoodie } from "@/composables/items/getConcreteItemsForGoodie";
 import { getDefaultVariantValues } from "@/composables/items/getDefaultVariantValues";
 import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
 import { getConcreteItemsEntitlement } from "@/composables/items/getConcreteItemsEntitlement";
-import type { AbstractGoodieValue, GoodieConfig } from "@/config/convention";
+import type { AbstractGoodieValue, ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
 import { computed, useId, type ComputedRef } from "vue";
+
+interface ItemRowDescriptor {
+  key: string;
+  goodieConfig: GoodieConfig;
+  unitIndex: number;
+}
 
 const goodieConfigListRef: ComputedRef<GoodieConfig[]> = computed<
   GoodieConfig[]
@@ -55,6 +63,36 @@ const goodieConfigListRef: ComputedRef<GoodieConfig[]> = computed<
   const enabledAbstractItemList: AbstractGoodieValue[] =
     getSubsetList(relevantAbstractItemList, props.deskItemSubset) || [];
   return getGoodieItemsSubset(enabledAbstractItemList);
+});
+
+const itemRowsRef: ComputedRef<ItemRowDescriptor[]> = computed<
+  ItemRowDescriptor[]
+>(() => {
+  const relevantConcreteItems = getConcreteItemsEntitlement(
+    attendeeInfoRef.value,
+    apiSDAddInfoRef.value
+  );
+  return goodieConfigListRef.value.flatMap((goodieConfig: GoodieConfig) => {
+    const concreteKeysForThisGoodie = new Set(
+      getConcreteItemsForGoodie(goodieConfig)
+    );
+    const countIn = (list: ConcreteGoodieValue[]): number =>
+      list.filter((value: ConcreteGoodieValue) =>
+        concreteKeysForThisGoodie.has(value)
+      ).length;
+    const entitledCount = countIn(relevantConcreteItems);
+    const issuedCount = countIn(apiSDAddInfoRef.value.issuedItems);
+    const reservedCount = countIn(apiSDAddInfoRef.value.reservedItems);
+    const rowCount = Math.max(entitledCount, issuedCount, reservedCount, 1);
+    return Array.from(
+      { length: rowCount },
+      (_, unitIndex: number): ItemRowDescriptor => ({
+        key: `${goodieConfig.value}:${unitIndex}`,
+        goodieConfig,
+        unitIndex,
+      })
+    );
+  });
 });
 
 const defaultVariantValuesRef: ComputedRef<DefaultVariantValues> =

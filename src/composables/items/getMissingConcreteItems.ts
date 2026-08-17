@@ -16,6 +16,16 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type { LabeledValue } from "@/types/internal/infos";
 
+function countByKey(
+  items: AbstractGoodieValue[]
+): Map<AbstractGoodieValue, number> {
+  const counts = new Map<AbstractGoodieValue, number>();
+  for (const item of items) {
+    counts.set(item, (counts.get(item) ?? 0) + 1);
+  }
+  return counts;
+}
+
 function getLabeledValue(
   defaultVariantValues: DefaultVariantValues,
   abstractGoodieValue: AbstractGoodieValue
@@ -50,10 +60,16 @@ export function getMissingConcreteItems(
       attendee.flags_list || [],
       attendee.id || (0 as RegNumber)
     );
-  const missingAbstractItems = entitledAbstractItemsFromAttendeeInfo.filter(
-    (abstractItemFromAttendeeInfo: AbstractGoodieValue) =>
-      !recordedAbstractItemsFromSponsorInfo.includes(abstractItemFromAttendeeInfo)
-  );
+  const recordedCounts = countByKey(recordedAbstractItemsFromSponsorInfo);
+  const entitledCounts = countByKey(entitledAbstractItemsFromAttendeeInfo);
+  const missingAbstractItems: AbstractGoodieValue[] = [];
+  for (const [abstractItem, entitledCount] of entitledCounts) {
+    const recordedCount = recordedCounts.get(abstractItem) ?? 0;
+    const shortfall = entitledCount - recordedCount;
+    for (let index = 0; index < shortfall; index++) {
+      missingAbstractItems.push(abstractItem);
+    }
+  }
   const defaultVariantValues: DefaultVariantValues = getDefaultVariantValues(
     attendee,
     apiSponsorDeskAddInfo

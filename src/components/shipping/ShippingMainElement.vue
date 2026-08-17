@@ -62,7 +62,7 @@ import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerF
 import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
 import { deepCopy } from "@/composables/deepCopy";
 import { generateId } from "@/composables/generateId";
-import { getConcreteItemsEntitlement } from "@/composables/items/getConcreteItemsEntitlement";
+import { getMissingConcreteItems } from "@/composables/items/getMissingConcreteItems";
 import { getEmptySponsorDeskAddInfo } from "@/composables/services/attendee/getEmptySponsorDeskAddInfo";
 import { attendeeService } from "@/composables/services/attendeeService";
 import {
@@ -116,15 +116,7 @@ async function determineMissingItems(
     storedAttendeeItemInfoTmp = getEmptySponsorDeskAddInfo();
   }
   const attendeeItemInfo: ApiSponsorDeskAddInfo = storedAttendeeItemInfoTmp; // Just for the linter
-  {
-    const entitledItems: ConcreteGoodieValue[] = getConcreteItemsEntitlement(
-      attendeeInfo,
-      attendeeItemInfo
-    );
-    return entitledItems.filter(
-      (item) => !attendeeItemInfo.issuedItems.includes(item)
-    );
-  }
+  return getMissingConcreteItems(attendeeInfo, attendeeItemInfo);
 }
 
 // Fills in contact fields that are still blank in an existing shipping

@@ -114,11 +114,14 @@ const ItemList = defineComponent({
   },
 });
 
+// modelValue holds one entry per SELECTED source array index (indices into
+// props.addInfo[props.field]), not the selected item values - this is what
+// lets two rows for the same duplicated item be checked independently.
 const SourceItemList = defineComponent({
   props: {
     addInfo: { type: Object as () => ApiSponsorDeskAddInfo | null, default: null },
     field: { type: String as () => AddInfoField, required: true },
-    modelValue: { type: Array as () => ConcreteGoodieValue[], required: true },
+    modelValue: { type: Array as () => number[], required: true },
   },
   emits: ["update:modelValue"],
   setup(props, { emit }) {
@@ -127,9 +130,9 @@ const SourceItemList = defineComponent({
       const items: ConcreteGoodieValue[] = props.addInfo[props.field] ?? [];
       if (items.length === 0) return h("div", { class: "text-surface-400 text-sm" }, "None");
       return h("div", { class: "flex flex-col gap-1.5" },
-        items.map((item) => {
-          const checked = props.modelValue.includes(item);
-          const id = `src-${props.field}-${item}`;
+        items.map((item, index) => {
+          const checked = props.modelValue.includes(index);
+          const id = `src-${props.field}-${index}`;
           return h("div", { class: "flex items-start gap-2" }, [
             h("input", {
               type: "checkbox",
@@ -138,8 +141,8 @@ const SourceItemList = defineComponent({
               class: "mt-0.5 cursor-pointer",
               onChange: () => {
                 const next = checked
-                  ? props.modelValue.filter((v) => v !== item)
-                  : [...props.modelValue, item];
+                  ? props.modelValue.filter((v) => v !== index)
+                  : [...props.modelValue, index];
                 emit("update:modelValue", next);
               },
             }),
@@ -174,9 +177,9 @@ const sourceLoading: Ref<boolean> = ref(false);
 const targetLoading: Ref<boolean> = ref(false);
 const transferLoading: Ref<boolean> = ref(false);
 
-const selectedFromReserved: Ref<ConcreteGoodieValue[]> = ref([]);
-const selectedFromPast: Ref<ConcreteGoodieValue[]> = ref([]);
-const selectedFromIssued: Ref<ConcreteGoodieValue[]> = ref([]);
+const selectedFromReserved: Ref<number[]> = ref([]);
+const selectedFromPast: Ref<number[]> = ref([]);
+const selectedFromIssued: Ref<number[]> = ref([]);
 const targetTransferField: Ref<"reservedItems" | "pastItems" | "issuedItems"> = ref("reservedItems");
 
 const anySelected = computed(() =>
@@ -239,8 +242,14 @@ async function searchTarget(): Promise<void> {
 
 function sameItems(a: ConcreteGoodieValue[], b: ConcreteGoodieValue[]): boolean {
   if (a.length !== b.length) return false;
-  const bSet = new Set(b);
-  return a.every((item) => bSet.has(item));
+  const bCounts = new Map<ConcreteGoodieValue, number>();
+  for (const item of b) bCounts.set(item, (bCounts.get(item) ?? 0) + 1);
+  for (const item of a) {
+    const remaining = bCounts.get(item) ?? 0;
+    if (remaining <= 0) return false;
+    bCounts.set(item, remaining - 1);
+  }
+  return true;
 }
 
 function addInfoUnchangedSince(
@@ -281,24 +290,32 @@ async function executeTransfer(): Promise<void> {
     return;
   }
 
-  const fromReserved = selectedFromReserved.value;
-  const fromPast = selectedFromPast.value;
-  const fromIssued = selectedFromIssued.value;
-  const allSelected = [...fromReserved, ...fromPast, ...fromIssued];
-
   const updatedSource: ApiSponsorDeskAddInfo = deepCopy(currentSrcInfo);
   const updatedTarget: ApiSponsorDeskAddInfo = deepCopy(currentTgtInfo);
 
-  updatedSource.reservedItems = updatedSource.reservedItems.filter((i) => !fromReserved.includes(i));
-  updatedSource.pastItems = updatedSource.pastItems.filter((i) => !fromPast.includes(i));
-  updatedSource.issuedItems = updatedSource.issuedItems.filter((i) => !fromIssued.includes(i));
+  // Pull the selected items out by index (highest first, so removing one
+  // selected index doesn't shift the position of another) so duplicated
+  // items can be transferred individually without disturbing unselected
+  // copies of the same item.
+  function takeSelected(field: AddInfoField, selectedIndices: number[]): ConcreteGoodieValue[] {
+    const source = updatedSource[field];
+    const taken: ConcreteGoodieValue[] = [];
+    for (const index of [...selectedIndices].sort((a, b) => b - a)) {
+      const item = source[index];
+      if (item === undefined) continue;
+      taken.push(item);
+      source.splice(index, 1);
+    }
+    return taken;
+  }
+
+  const takenFromReserved = takeSelected("reservedItems", selectedFromReserved.value);
+  const takenFromPast = takeSelected("pastItems", selectedFromPast.value);
+  const takenFromIssued = takeSelected("issuedItems", selectedFromIssued.value);
+  const allSelected = [...takenFromReserved, ...takenFromPast, ...takenFromIssued];
 
   const destField = targetTransferField.value;
-  for (const item of allSelected) {
-    if (!updatedTarget[destField].includes(item)) {
-      updatedTarget[destField].push(item);
-    }
-  }
+  updatedTarget[destField].push(...allSelected);
 
   const [srcResult, tgtResult] = await Promise.all([
     attendeeService.addInfos.putSponsorDeskAddInfo(errorHandler, srcRegNum, updatedSource),

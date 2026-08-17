@@ -85,6 +85,7 @@ import SponsorDeskAvailableItemsButton from "@/components/sponsordesk/SponsorDes
 import { getSponsorDeskConfig } from "@/composables/api/attsrv/additional-info/getSponsorDeskConfig";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { getSubsetList } from "@/composables/collection_tools/subsets/getSubsetList";
+import { subtractMultiset } from "@/composables/collection_tools/subtractMultiset";
 import { deepCopy } from "@/composables/deepCopy";
 import { isDirty } from "@/composables/dirty/isDirty";
 import { generateId } from "@/composables/generateId";
@@ -150,7 +151,8 @@ const payDialogVisible: Ref<boolean> = ref<boolean>(false);
 
 function onItemsPaid(items: ConcreteGoodieValue[]): void {
   apiSDAddInfoRef.value.issuedItems = [
-    ...new Set([...items, ...apiSDAddInfoRef.value.issuedItems]),
+    ...items,
+    ...apiSDAddInfoRef.value.issuedItems,
   ];
 }
 
@@ -252,13 +254,14 @@ async function selectAvailable(): Promise<any> {
     concreteItems,
     sponsorDeskSettings.value.available
   );
-  const keepIssuedItems: ConcreteGoodieValue[] = [
-    ...new Set([
-      ...(availableRelevantItems || []),
-      ...apiSDAddInfoRef.value.issuedItems,
-    ]),
+  const newlyNeededItems: ConcreteGoodieValue[] = subtractMultiset(
+    availableRelevantItems || [],
+    apiSDAddInfoRef.value.issuedItems
+  );
+  apiSDAddInfoRef.value.issuedItems = [
+    ...apiSDAddInfoRef.value.issuedItems,
+    ...newlyNeededItems,
   ];
-  apiSDAddInfoRef.value.issuedItems = keepIssuedItems;
 }
 
 async function onKeyA(_event: KeyboardServiceEvent): Promise<boolean> {

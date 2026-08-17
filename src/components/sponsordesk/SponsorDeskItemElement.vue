@@ -3,12 +3,13 @@
     <div class="flex flex-grow items-center h-12">
       <div class="items-checkbox">
         <Checkbox
-          v-model="selectedConcreteGoodieValueListRef"
+          :modelValue="isCheckedRef"
+          @update:modelValue="toggleChecked"
+          binary
           class="w-10 h-10"
           pt:root:class="w-10 h-10"
           pt:box:class="w-10 h-10 transform scale-110"
           :name="props.itemGroupId"
-          :value="getLocalConcreteGoodieValue(selectedVariantRef)"
           :inputId="labelId"
           :disabled="isCheckboxDisabled()"
         />
@@ -23,6 +24,7 @@
             <ItemOption
               v-model="props.goodieConfig"
               :goodieConfig="props.goodieConfig"
+              :unitIndex="props.unitIndex"
               :defaultValue="defaultVariantValuesRef"
               :issuedConcreteGoodies="selectedConcreteGoodieValueListRef"
               :reservedConcreteGoodies="reservedConcreteGoodieValueListRef"
@@ -48,6 +50,7 @@
             <ItemOption
               v-model="slotProps.value"
               :goodieConfig="props.goodieConfig"
+              :unitIndex="props.unitIndex"
               :defaultValue="defaultVariantValuesRef"
               :issuedConcreteGoodies="selectedConcreteGoodieValueListRef"
               :reservedConcreteGoodies="reservedConcreteGoodieValueListRef"
@@ -62,6 +65,7 @@
           <ItemOption
             v-model="slotProps.option"
             :goodieConfig="props.goodieConfig"
+            :unitIndex="props.unitIndex"
             :defaultValue="defaultVariantValuesRef"
             :issuedConcreteGoodies="selectedConcreteGoodieValueListRef"
             :reservedConcreteGoodies="reservedConcreteGoodieValueListRef"
@@ -77,6 +81,7 @@
 import { fieldTextCSS } from "@/components/common/field/common/common";
 import ItemOption from "@/components/sponsordesk/ItemOption.vue";
 import { generateId } from "@/composables/generateId";
+import { findNthOccurrenceIndex } from "@/composables/items/findNthOccurrenceIndex";
 import { getConcreteItemValue } from "@/composables/items/getConcreteItemValue";
 import { getDefaultVariantValuesValue } from "@/composables/items/getDefaultVariantValuesValue";
 import type { ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
@@ -87,7 +92,7 @@ import type { FontSize } from "@/types/internal/system/theme";
 import Checkbox from "@/volt/Checkbox.vue";
 import Select from "@/volt/Select.vue";
 import type { SelectChangeEvent } from "primevue/select";
-import { type ModelRef, ref, type Ref, useId, watch } from "vue";
+import { computed, type ComputedRef, type ModelRef, ref, type Ref, useId, watch } from "vue";
 
 function getSelectHeight(): string {
   if (!props.goodieConfig?.variants) {
@@ -106,21 +111,49 @@ function isCheckboxDisabled(): boolean {
 }
 
 function onVariantChange(_event: SelectChangeEvent): void {
-  const concreteValue: ConcreteGoodieValue = getLocalConcreteGoodieValue(
+  const list = selectedConcreteGoodieValueListRef.value;
+  const idx = findNthOccurrenceIndex(list, props.goodieConfig, props.unitIndex);
+  if (idx === -1) {
+    // Row isn't checked yet - the new variant takes effect once it is.
+    return;
+  }
+  const newConcreteValue: ConcreteGoodieValue = getLocalConcreteGoodieValue(
     selectedVariantRef.value
   );
-  // Remove any existing concrete values belonging to this abstract item
-  const concreteValueList = selectedConcreteGoodieValueListRef.value.filter(
-    (value: ConcreteGoodieValue) =>
-      !value.startsWith(`${props.goodieConfig.value}_`)
-  );
-  // If the list is shorter after the removal - add the new concrete value back
-  const hasSelectedVariant =
-    selectedConcreteGoodieValueListRef.value.length != concreteValueList.length;
-  if (hasSelectedVariant) {
-    concreteValueList.push(concreteValue);
+  const newList = [...list];
+  newList[idx] = newConcreteValue;
+  selectedConcreteGoodieValueListRef.value = newList;
+}
+
+const isCheckedRef: ComputedRef<boolean> = computed<boolean>(
+  () =>
+    findNthOccurrenceIndex(
+      selectedConcreteGoodieValueListRef.value,
+      props.goodieConfig,
+      props.unitIndex
+    ) !== -1
+);
+
+function toggleChecked(checked: boolean): void {
+  const list = selectedConcreteGoodieValueListRef.value;
+  const idx = findNthOccurrenceIndex(list, props.goodieConfig, props.unitIndex);
+  if (checked) {
+    if (idx !== -1) {
+      return;
+    }
+    selectedConcreteGoodieValueListRef.value = [
+      ...list,
+      getLocalConcreteGoodieValue(selectedVariantRef.value),
+    ];
+  } else {
+    if (idx === -1) {
+      return;
+    }
+    selectedConcreteGoodieValueListRef.value = [
+      ...list.slice(0, idx),
+      ...list.slice(idx + 1),
+    ];
   }
-  selectedConcreteGoodieValueListRef.value = concreteValueList;
 }
 
 function getLocalConcreteGoodieValue<VariantType>(
@@ -152,6 +185,7 @@ const sponsorDeskSettingsRef: ModelRef<SponsorDeskSettings> =
 interface Props {
   itemGroupId: string;
   goodieConfig: GoodieConfig;
+  unitIndex: number;
 }
 const props: Props = defineProps<Props>();
 
@@ -168,13 +202,22 @@ function lookupVariant<VariantValueType extends string>(
   // Variant
   const completeVariantList: LabeledValue<VariantValueType>[] = props
     .goodieConfig?.variants as LabeledValue<VariantValueType>[];
-  // Variant is encoded in issued item list
-  const variantEntry: LabeledValue<VariantValueType> | undefined =
-    completeVariantList?.find((variant: LabeledValue<VariantValueType>) =>
-      selectedValueList.includes(getLocalConcreteGoodieValue(variant))
-    );
-  if (variantEntry !== undefined) {
-    return variantEntry;
+  // Variant is encoded in this row's occurrence of the issued item list
+  const idx = findNthOccurrenceIndex(
+    selectedValueList,
+    props.goodieConfig,
+    props.unitIndex
+  );
+  if (idx !== -1) {
+    const concreteValue = selectedValueList[idx];
+    const variantEntry: LabeledValue<VariantValueType> | undefined =
+      completeVariantList?.find(
+        (variant: LabeledValue<VariantValueType>) =>
+          getLocalConcreteGoodieValue(variant) === concreteValue
+      );
+    if (variantEntry !== undefined) {
+      return variantEntry;
+    }
   }
   // Variant is given in defaultVariantValue (and not yet issued)
   const defaultVariantValuesValue: string | null | undefined =

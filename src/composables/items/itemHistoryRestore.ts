@@ -114,16 +114,28 @@ export interface AttendeeHistoryStep {
 
 const DIFF_FIELDS = ["pastItems", "reservedItems", "issuedItems"] as const;
 
+function countByItem(items: ConcreteGoodieValue[]): Map<ConcreteGoodieValue, number> {
+  const counts = new Map<ConcreteGoodieValue, number>();
+  for (const item of items) counts.set(item, (counts.get(item) ?? 0) + 1);
+  return counts;
+}
+
 function diffItemList(
   before: ConcreteGoodieValue[],
   after: ConcreteGoodieValue[],
 ): { added: ConcreteGoodieValue[]; removed: ConcreteGoodieValue[] } {
-  const beforeSet = new Set(before);
-  const afterSet = new Set(after);
-  return {
-    added: after.filter((item) => !beforeSet.has(item)),
-    removed: before.filter((item) => !afterSet.has(item)),
-  };
+  const beforeCounts = countByItem(before);
+  const afterCounts = countByItem(after);
+  const added: ConcreteGoodieValue[] = [];
+  const removed: ConcreteGoodieValue[] = [];
+  const allItems = new Set([...beforeCounts.keys(), ...afterCounts.keys()]);
+  for (const item of allItems) {
+    const beforeCount = beforeCounts.get(item) ?? 0;
+    const afterCount = afterCounts.get(item) ?? 0;
+    for (let index = 0; index < afterCount - beforeCount; index++) added.push(item);
+    for (let index = 0; index < beforeCount - afterCount; index++) removed.push(item);
+  }
+  return { added, removed };
 }
 
 export function buildAttendeeHistorySteps(addInfo: ApiSponsorDeskAddInfo): AttendeeHistoryStep[] {
