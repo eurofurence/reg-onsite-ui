@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import RetryFailedDialog from '@/components/badge/RetryFailedDialog.vue'
 import SearchFieldAttendance from '@/components/common/attendee_table/SearchFieldAttendance.vue'
 import SearchFieldBirthday from '@/components/common/attendee_table/SearchFieldBirthday.vue'
 import SearchFieldCountry from '@/components/common/attendee_table/SearchFieldCountry.vue'
@@ -14,6 +13,7 @@ import { downloadBlob } from '@/composables/print/downloadBadge'
 import type { BadgeExportEntry, BatchItemFailure } from '@/composables/print/downloadBadgeBatch'
 import { BatchCancelledError, downloadBadgesPdf, renderBadgeSvgs, saveBadgesZip } from '@/composables/print/downloadBadgeBatch'
 import { PrintCancelledError, printBadgePagesChunked } from '@/composables/print/printFrame'
+import RetryFailedDialog from '@/components/common/RetryFailedDialog.vue'
 import { attendeeService } from '@/composables/services/attendeeService'
 import { badgeMappingRef, badgeTypesRef, printSettingsRef } from '@/composables/services/badgeConfigStore'
 import { localPrintRowStore } from '@/composables/services/printRowStore'
@@ -520,7 +520,15 @@ async function exportPdf() {
 
 <template>
   <div class="flex flex-col gap-6 p-8">
-    <RetryFailedDialog ref="retryFailedDialog" />
+    <RetryFailedDialog
+      ref="retryFailedDialog"
+      message="The following badge(s) could not be rendered:"
+      itemLabelSingular="badge"
+      itemLabelPlural="badges"
+      :itemKey="(entry: BadgeExportEntry) => entry.filenameBase"
+    >
+      <template #item="{ item }">{{ item.filenameBase }}</template>
+    </RetryFailedDialog>
     <Fieldset legend="Fill from Filter" toggleable collapsed>
       <div class="flex flex-col gap-3">
         <div class="flex flex-wrap gap-3">

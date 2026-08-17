@@ -38,7 +38,20 @@ async function confirmLogoutOnce(): Promise<boolean> {
   return await pendingConfirmLogout;
 }
 
-export async function smartFetch(
+const RETRYABLE_STATUS = 503;
+const MAX_RETRIES = 3;
+const BASE_DELAYS_MS = [500, 1000, 2000];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function delayWithJitter(baseMs: number): number {
+  const jitter = baseMs * 0.3 * (Math.random() * 2 - 1);
+  return baseMs + jitter;
+}
+
+async function fetchOnce(
   fetchUrl: URL,
   fetchParameters: RequestInit
 ): Promise<Response> {
@@ -52,4 +65,23 @@ export async function smartFetch(
   }
   // Try again if relogin succeeded
   return await fetch(fetchUrl, fetchParameters);
+}
+
+export async function smartFetch(
+  fetchUrl: URL,
+  fetchParameters: RequestInit
+): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const response = await fetchOnce(fetchUrl, fetchParameters);
+      if (response.status !== RETRYABLE_STATUS || attempt >= MAX_RETRIES) {
+        return response;
+      }
+    } catch (error) {
+      if (attempt >= MAX_RETRIES) {
+        throw error;
+      }
+    }
+    await sleep(delayWithJitter(BASE_DELAYS_MS[attempt]!));
+  }
 }

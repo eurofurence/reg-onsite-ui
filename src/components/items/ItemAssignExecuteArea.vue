@@ -48,10 +48,19 @@
     </div>
 
     <ItemCheckResults :checkResults="checkResults" />
+
+    <RetryFailedDialog
+      ref="retryFailedDialog"
+      message="Items could not be assigned for the following reg number(s) — likely due to a persistent error or ongoing throttling:"
+      itemLabelSingular="reg number"
+      itemLabelPlural="reg numbers"
+      :itemKey="(regNum: RegNumber) => regNum"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import RetryFailedDialog from "@/components/common/RetryFailedDialog.vue";
 import ItemCheckResults, { type CheckItemGroup, type CheckRegRow, type CheckResults } from "@/components/items/ItemCheckResults.vue";
 import type { InputConfig } from "@/components/items/ItemAssignInputArea.vue";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
@@ -72,7 +81,7 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import { ToastSeverity } from "@/types/internal/primevue";
 import Button from "@/volt/Button.vue";
 import ProgressBar from "@/volt/ProgressBar.vue";
-import { computed, ref, watch, type Ref } from "vue";
+import { computed, ref, useTemplateRef, watch, type Ref } from "vue";
 
 type AssignmentMode = "add" | "set" | "remove";
 
@@ -98,6 +107,7 @@ const checkedRegNumbers = ref<RegNumber[] | null>(null);
 const rawCheckedPairs = ref<Array<{ regNum: RegNumber; item: ConcreteGoodieValue }> | null>(null);
 const assignProgress = ref<{ current: number; total: number } | null>(null);
 const checkResults: Ref<CheckResults | null> = ref(null);
+const retryFailedDialog = useTemplateRef("retryFailedDialog");
 
 const canAssign = computed(() => {
   const ic = props.inputConfig;
@@ -154,43 +164,39 @@ function computeItemDelta(list: ConcreteGoodieValue[], item: ConcreteGoodieValue
   return { currentCount, newCount };
 }
 
-type AssignOutcome = "assigned" | "unresolved" | "failed";
+type AssignOutcome = "assigned" | "failed";
 
-interface AssignResult {
-  outcome: AssignOutcome;
-  appliedCounts: Map<ConcreteGoodieValue, number>;
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function assignToRegNumber(regNum: RegNumber, items: ConcreteGoodieValue[], field: "reservedItems" | "pastItems" | "issuedItems", mode: AssignmentMode, count: number, tshirtSize?: string | null): Promise<AssignResult> {
+async function assignToRegNumber(regNum: RegNumber, targetCounts: Map<ConcreteGoodieValue, number>, field: "reservedItems" | "pastItems" | "issuedItems"): Promise<AssignOutcome> {
   const existing = await attendeeService.addInfos.getSponsorDeskAddInfo(errorHandler, regNum);
-  if (existing === undefined) return { outcome: "failed", appliedCounts: new Map() };
+  if (existing === undefined) return "failed";
   const addInfo: ApiSponsorDeskAddInfo = { ...getEmptySponsorDeskAddInfo(), ...existing };
   let changed = false;
-  let hadUnresolvedFromSizeItem = false;
-  const resolvedItems = items.flatMap((item) => {
-    if (isFromSizeItem(item)) {
-      const r = resolveFromSizeItem(item, tshirtSize);
-      if (!r) { hadUnresolvedFromSizeItem = true; return []; }
-      return [r as ConcreteGoodieValue];
-    }
-    return [item];
-  });
-  for (const item of resolvedItems) {
+  for (const [item, targetCount] of targetCounts) {
     const list = addInfo[field];
     const currentCount = list.filter((i) => i === item).length;
-    if (mode === "add") { for (let i = 0; i < count; i++) list.push(item); changed = true; }
-    else if (mode === "set") {
-      if (currentCount !== count) { addInfo[field] = list.filter((i) => i !== item); for (let i = 0; i < count; i++) addInfo[field].push(item); changed = true; }
-    } else {
-      const toRemove = Math.min(count, currentCount);
-      if (toRemove > 0) { let rem = toRemove; addInfo[field] = list.filter((i) => { if (i === item && rem > 0) { rem--; return false; } return true; }); changed = true; }
+    if (currentCount !== targetCount) {
+      addInfo[field] = list.filter((i) => i !== item);
+      for (let i = 0; i < targetCount; i++) addInfo[field].push(item);
+      changed = true;
     }
   }
-  const appliedCounts = new Map<ConcreteGoodieValue, number>();
-  for (const item of resolvedItems) appliedCounts.set(item, addInfo[field].filter((i) => i === item).length);
-  if (!changed) return { outcome: hadUnresolvedFromSizeItem ? "unresolved" : "assigned", appliedCounts };
-  const putResult = (await attendeeService.addInfos.putSponsorDeskAddInfo(errorHandler, regNum, addInfo)) !== undefined ? "assigned" : "failed";
-  return { outcome: putResult, appliedCounts };
+  if (!changed) return "assigned";
+  return (await attendeeService.addInfos.putSponsorDeskAddInfo(errorHandler, regNum, addInfo)) !== undefined ? "assigned" : "failed";
+}
+
+const ASSIGN_RETRY_ATTEMPTS = 3;
+const ASSIGN_RETRY_DELAY_MS = 300;
+
+async function assignToRegNumberWithRetry(regNum: RegNumber, targetCounts: Map<ConcreteGoodieValue, number>, field: "reservedItems" | "pastItems" | "issuedItems"): Promise<AssignOutcome> {
+  for (let attempt = 1; ; attempt++) {
+    const outcome = await assignToRegNumber(regNum, targetCounts, field);
+    if (outcome === "assigned" || attempt >= ASSIGN_RETRY_ATTEMPTS) return outcome;
+    await sleep(ASSIGN_RETRY_DELAY_MS);
+  }
 }
 
 async function checkRegistrations(): Promise<void> {
@@ -380,31 +386,29 @@ async function checkRegistrations(): Promise<void> {
   checkLoading.value = false;
 }
 
-function reportAssignmentResult(successCount: number, failCount: number, unresolvedCount: number, divergedCount: number) {
-  if (failCount === 0 && unresolvedCount === 0 && divergedCount === 0) {
+function reportAssignmentResult(successCount: number, failCount: number) {
+  if (failCount === 0) {
     return { severity: ToastSeverity.success, summary: "Assignment complete", detail: `Items assigned to ${successCount} attendee(s).`, life: 6000 };
   }
-  const parts = [`${successCount} succeeded`];
-  if (unresolvedCount > 0) parts.push(`${unresolvedCount} skipped (no matching t-shirt size)`);
-  if (failCount > 0) parts.push(`${failCount} failed`);
-  if (divergedCount > 0) parts.push(`${divergedCount} applied a different count than previewed (data changed since Check)`);
+  const parts = [`${successCount} succeeded`, `${failCount} failed`];
   return { severity: ToastSeverity.warn, summary: "Assignment partially complete", detail: parts.join(", ") + ".", life: 8000 };
 }
 
-function buildExpectedNewCounts(results: CheckResults): Map<string, number> {
-  const expected = new Map<string, number>();
+function buildTargetCountsByRegNumber(results: CheckResults): Map<RegNumber, Map<ConcreteGoodieValue, number>> {
+  const targets = new Map<RegNumber, Map<ConcreteGoodieValue, number>>();
   for (const group of results.groups) {
     for (const row of group.rows) {
       const item = row.resolvedItem ?? group.item;
-      expected.set(`${row.regNum}:${item}`, row.newCount);
+      const forReg = targets.get(row.regNum) ?? new Map<ConcreteGoodieValue, number>();
+      forReg.set(item, row.newCount);
+      targets.set(row.regNum, forReg);
     }
   }
-  return expected;
+  return targets;
 }
 
 async function executeAssign(): Promise<void> {
   if (!canAssign.value || !checkResults.value) return;
-  const ic = props.inputConfig;
   const oc = props.operationConfig;
   loading.value = true;
 
@@ -421,77 +425,38 @@ async function executeAssign(): Promise<void> {
     life: 10000,
   });
 
-  const expectedNewCounts = buildExpectedNewCounts(checkResults.value);
+  const targetCountsByRegNumber = buildTargetCountsByRegNumber(checkResults.value);
+  let attemptRegNumbers = [...targetCountsByRegNumber.keys()];
+  const totalCount = attemptRegNumbers.length;
 
-  if (ic.inputMode === "raw") {
-    const pairs = rawCheckedPairs.value!;
-    const regNumbers = [...new Set(pairs.map((p) => p.regNum))];
-
-    const regToItems = new Map<RegNumber, ConcreteGoodieValue[]>();
-    for (const pair of pairs) {
-      const list = regToItems.get(pair.regNum) ?? [];
-      list.push(pair.item);
-      regToItems.set(pair.regNum, list);
-    }
-
-    const needsSizes = pairs.some((p) => isFromSizeItem(p.item));
-    const attendeeSizeMap = new Map<RegNumber, string | null>();
-    if (needsSizes) {
-      const all = await attendeeService.getAllAttendees(errorHandler);
-      for (const a of all ?? []) { if (a.id !== null) attendeeSizeMap.set(a.id, a.tshirt_size ?? null); }
-    }
-
-    let successCount = 0, failCount = 0, unresolvedCount = 0, divergedCount = 0;
-    assignProgress.value = { current: 0, total: regNumbers.length };
-    for (const regNum of regNumbers) {
-      const items = regToItems.get(regNum) ?? [];
-      const { outcome, appliedCounts } = await assignToRegNumber(regNum, items, oc.targetField, oc.assignmentMode, oc.itemCount ?? 1, needsSizes ? (attendeeSizeMap.get(regNum) ?? null) : null);
-      if (outcome === "assigned") {
-        successCount++;
-        for (const [item, appliedCount] of appliedCounts) {
-          const expected = expectedNewCounts.get(`${regNum}:${item}`);
-          if (expected !== undefined && expected !== appliedCount) divergedCount++;
-        }
-      }
-      else if (outcome === "unresolved") unresolvedCount++;
-      else failCount++;
+  let successCount = 0, cancelled = false;
+  assignProgress.value = { current: 0, total: totalCount };
+  for (;;) {
+    const stillFailing: RegNumber[] = [];
+    for (const regNum of attemptRegNumbers) {
+      const targetCounts = targetCountsByRegNumber.get(regNum)!;
+      const outcome = await assignToRegNumberWithRetry(regNum, targetCounts, oc.targetField);
+      if (outcome === "assigned") successCount++;
+      else stillFailing.push(regNum);
       assignProgress.value!.current++;
     }
-    assignProgress.value = null;
-    loading.value = false;
-
-    props.toastService.add(reportAssignmentResult(successCount, failCount, unresolvedCount, divergedCount));
-    return;
+    if (stillFailing.length === 0) break;
+    const decision = await retryFailedDialog.value!.confirmRetry(stillFailing);
+    if (decision === "cancel") { cancelled = true; break; }
+    if (decision === "skip") break;
+    attemptRegNumbers = stillFailing;
+    assignProgress.value = { current: totalCount - stillFailing.length, total: totalCount };
   }
-
-  // Standard mode
-  const regNumbers = checkedRegNumbers.value!;
-  const needsSizes = ic.activeItems.some(isFromSizeItem);
-  const attendeeSizeMap = new Map<RegNumber, string | null>();
-  if (needsSizes) {
-    const all = await attendeeService.getAllAttendees(errorHandler);
-    for (const a of all ?? []) { if (a.id !== null) attendeeSizeMap.set(a.id, a.tshirt_size ?? null); }
-  }
-
-  let successCount = 0, failCount = 0, unresolvedCount = 0, divergedCount = 0;
-  assignProgress.value = { current: 0, total: regNumbers.length };
-  for (const regNum of regNumbers) {
-    const { outcome, appliedCounts } = await assignToRegNumber(regNum, ic.activeItems, oc.targetField, oc.assignmentMode, oc.itemCount ?? 1, needsSizes ? (attendeeSizeMap.get(regNum) ?? null) : null);
-    if (outcome === "assigned") {
-      successCount++;
-      for (const [item, appliedCount] of appliedCounts) {
-        const expected = expectedNewCounts.get(`${regNum}:${item}`);
-        if (expected !== undefined && expected !== appliedCount) divergedCount++;
-      }
-    }
-    else if (outcome === "unresolved") unresolvedCount++;
-    else failCount++;
-    assignProgress.value!.current++;
-  }
+  const failCount = cancelled ? 0 : totalCount - successCount;
   assignProgress.value = null;
   loading.value = false;
 
-  props.toastService.add(reportAssignmentResult(successCount, failCount, unresolvedCount, divergedCount));
+  if (cancelled) {
+    props.toastService.add({ severity: ToastSeverity.warn, summary: "Assignment cancelled", detail: `${successCount} attendee(s) were already updated before cancelling.`, life: 8000 });
+    return;
+  }
+
+  props.toastService.add(reportAssignmentResult(successCount, failCount));
 }
 
 watch(
