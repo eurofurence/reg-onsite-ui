@@ -62,6 +62,7 @@
 <script setup lang="ts">
 import RetryFailedDialog from "@/components/common/RetryFailedDialog.vue";
 import ItemCheckResults, { type CheckItemGroup, type CheckRegRow, type CheckResults } from "@/components/items/ItemCheckResults.vue";
+import type { UnchangedRegRow } from "@/components/items/UnchangedRegsDialog.vue";
 import type { InputConfig } from "@/components/items/ItemAssignInputArea.vue";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { getGroupMembers } from "@/composables/api/backend/getGroupMembers";
@@ -246,6 +247,8 @@ async function checkRegistrations(): Promise<void> {
 
     const resolvedPairs: Array<{ regNum: RegNumber; item: ConcreteGoodieValue }> = [];
     const groups: CheckItemGroup[] = [];
+    const affectedRegNums = new Set<RegNumber>();
+    const unchangedCountsByRegNum = new Map<RegNumber, Array<{ item: ConcreteGoodieValue; currentCount: number }>>();
 
     for (const [item, itemRegNums] of itemToRegNums) {
       const rows: CheckRegRow[] = [];
@@ -269,14 +272,30 @@ async function checkRegistrations(): Promise<void> {
             currentCount, newCount, delta,
             resolvedItem: effectiveItem !== item ? effectiveItem : undefined,
           });
+          affectedRegNums.add(regNum);
+        } else {
+          const counts = unchangedCountsByRegNum.get(regNum) ?? [];
+          counts.push({ item: effectiveItem, currentCount });
+          unchangedCountsByRegNum.set(regNum, counts);
         }
         resolvedPairs.push({ regNum, item });
       }
       if (rows.length > 0) groups.push({ item, label: getItemDisplayLabel(item), rows });
     }
 
+    const unchangedRows: UnchangedRegRow[] = regNumbers.filter((regNum) => !affectedRegNums.has(regNum)).map((regNum) => {
+      const attendee = attendeeMap.get(regNum);
+      return {
+        regNum,
+        nickname: attendee?.nickname ?? String(regNum),
+        goodieLevel: (attendee?.transGoodieChoice != null ? goodieLevelLabels.get(attendee.transGoodieChoice) : undefined) ?? attendee?.transGoodieChoice ?? "",
+        role: (attendee?.transConRole != null ? roleLabels.get(attendee.transConRole) : undefined) ?? attendee?.transConRole ?? "",
+        currentCounts: unchangedCountsByRegNum.get(regNum) ?? [],
+      };
+    });
+
     rawCheckedPairs.value = resolvedPairs;
-    checkResults.value = { targetRegCount: regNumbers.length, groups };
+    checkResults.value = { targetRegCount: regNumbers.length, groups, unchangedRows };
     checkProgress.value = null;
     checkLoading.value = false;
     return;
@@ -372,6 +391,8 @@ async function checkRegistrations(): Promise<void> {
   const roleLabels = new Map(setup.metadata.forConRole.list.map((e) => [e.value, e.label]));
 
   const groups: CheckItemGroup[] = [];
+  const affectedRegNums = new Set<RegNumber>();
+  const unchangedCountsByRegNum = new Map<RegNumber, Array<{ item: ConcreteGoodieValue; currentCount: number }>>();
   for (const item of ic.activeItems) {
     const rows: CheckRegRow[] = [];
     for (const regNum of regNumbers) {
@@ -394,12 +415,28 @@ async function checkRegistrations(): Promise<void> {
           currentCount, newCount, delta,
           resolvedItem: effectiveItem !== item ? effectiveItem : undefined,
         });
+        affectedRegNums.add(regNum);
+      } else {
+        const counts = unchangedCountsByRegNum.get(regNum) ?? [];
+        counts.push({ item: effectiveItem, currentCount });
+        unchangedCountsByRegNum.set(regNum, counts);
       }
     }
     if (rows.length > 0) groups.push({ item, label: getItemDisplayLabel(item), rows });
   }
 
-  checkResults.value = { targetRegCount: regNumbers.length, groups };
+  const unchangedRows: UnchangedRegRow[] = regNumbers.filter((regNum) => !affectedRegNums.has(regNum)).map((regNum) => {
+    const attendee = attendeeMap.get(regNum);
+    return {
+      regNum,
+      nickname: attendee?.nickname ?? String(regNum),
+      goodieLevel: (attendee?.transGoodieChoice != null ? goodieLevelLabels.get(attendee.transGoodieChoice) : undefined) ?? attendee?.transGoodieChoice ?? "",
+      role: (attendee?.transConRole != null ? roleLabels.get(attendee.transConRole) : undefined) ?? attendee?.transConRole ?? "",
+      currentCounts: unchangedCountsByRegNum.get(regNum) ?? [],
+    };
+  });
+
+  checkResults.value = { targetRegCount: regNumbers.length, groups, unchangedRows };
   checkProgress.value = null;
   checkLoading.value = false;
 }

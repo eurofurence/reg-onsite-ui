@@ -477,6 +477,7 @@ function exportCSV(): void {
     ...MATCH_COMPARE_FIELDS.map(field => `Matched ${fieldLabel(field)}`),
     "Matched Packages",
     "Matched Flags",
+    "All Candidates",
   ];
   const csvRows = checkedRows.value.map(row => [
     ...mappedFields.value.map(field => inputFieldValue(row.result.input, field)),
@@ -484,6 +485,7 @@ function exportCSV(): void {
     ...MATCH_COMPARE_FIELDS.map(field => row.resolvedMatch?.[field] ?? ""),
     row.resolvedMatch?.packages.join(", ") ?? "",
     row.resolvedMatch?.flags.join(", ") ?? "",
+    row.result.matches.length > 1 ? row.result.matches.map(candidateSummary).join(" | ") : "",
   ]);
   const csv = [headers, ...csvRows].map(row => row.map(csvCell).join(";")).join("\n");
   downloadCSV(csv, "attendee-lookup.csv");

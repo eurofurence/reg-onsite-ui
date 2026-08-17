@@ -2,7 +2,13 @@
   <div v-if="props.checkResults" class="flex flex-col gap-2">
     <div class="flex items-center gap-2 text-sm font-semibold">
       <i class="pi pi-info-circle text-blue-500" />
-      {{ totalAffectedRegsCount }} of {{ props.checkResults.targetRegCount }} targeted reg(s) will be changed
+      <span v-if="props.checkResults.unchangedRows.length > 0">
+        {{ totalAffectedRegsCount }} of {{ props.checkResults.targetRegCount }} targeted reg(s) will be changed
+        (<button class="underline hover:no-underline" @click="unchangedDialogVisible = true">{{ props.checkResults.unchangedRows.length }} unchanged</button>)
+      </span>
+      <span v-else>
+        {{ totalAffectedRegsCount }} of {{ props.checkResults.targetRegCount }} targeted reg(s) will be changed
+      </span>
     </div>
     <div
       v-for="group in props.checkResults.groups"
@@ -41,6 +47,8 @@
         </Column>
       </DataTable>
     </div>
+
+    <UnchangedRegsDialog v-model:visible="unchangedDialogVisible" :rows="props.checkResults.unchangedRows" />
   </div>
 </template>
 
@@ -49,6 +57,7 @@ import type { ConcreteGoodieValue } from "@/config/convention";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import { Column } from "primevue";
 import DataTable from "@/volt/DataTable.vue";
+import UnchangedRegsDialog, { type UnchangedRegRow } from "@/components/items/UnchangedRegsDialog.vue";
 import { computed, ref, watch, type Ref } from "vue";
 
 export interface CheckRegRow {
@@ -62,12 +71,13 @@ export interface CheckRegRow {
   resolvedItem?: ConcreteGoodieValue;
 }
 export interface CheckItemGroup { item: ConcreteGoodieValue; label: string; rows: CheckRegRow[]; }
-export interface CheckResults { targetRegCount: number; groups: CheckItemGroup[]; }
+export interface CheckResults { targetRegCount: number; groups: CheckItemGroup[]; unchangedRows: UnchangedRegRow[]; }
 
 interface Props { checkResults: CheckResults | null; }
 const props = defineProps<Props>();
 
 const expandedItems: Ref<Record<string, boolean>> = ref({});
+const unchangedDialogVisible = ref(false);
 
 watch(() => props.checkResults, () => { expandedItems.value = {}; });
 
