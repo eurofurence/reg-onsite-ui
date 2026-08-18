@@ -81,9 +81,7 @@ const itemRowsRef: ComputedRef<ItemRowDescriptor[]> = computed<
         concreteKeysForThisGoodie.has(value)
       ).length;
     const entitledCount = countIn(relevantConcreteItems);
-    const issuedCount = countIn(apiSDAddInfoRef.value.issuedItems);
-    const reservedCount = countIn(apiSDAddInfoRef.value.reservedItems);
-    const rowCount = Math.max(entitledCount, issuedCount, reservedCount, 1);
+    const rowCount = Math.max(entitledCount, 1);
     return Array.from(
       { length: rowCount },
       (_, unitIndex: number): ItemRowDescriptor => ({
