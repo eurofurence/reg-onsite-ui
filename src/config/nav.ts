@@ -31,6 +31,7 @@ export const navConfig: NavFieldset[] = [
       {
         label: "Badge Management",
         icon: "pi pi-credit-card",
+        authGroups: [AuthGroups.admin, AuthGroups.director],
         link: { kind: "internal", path: "/badge" },
       },
     ],

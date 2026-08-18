@@ -34,10 +34,12 @@ import {
 } from "@/config/convention/eurofurence/ef2026";
 import efLogoUrl from "@/config/convention/eurofurence/ef_logo.png";
 import { efPrimaryColors } from "@/config/convention/eurofurence/theme";
+import { defaultEnvironment } from "@/config/environment";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { IdpGroupId } from "@/types/external/authsrv/frontenduserinfo";
 import type { AgeInYears } from "@/types/internal/attendee";
 import type { ConventionSettings } from "@/types/internal/convention";
+import { EnvName } from "@/types/internal/env";
 
 // first entry is the current iteration
 const efIterations = [
@@ -72,8 +74,9 @@ export const conventionSettingsForEF: ConventionSettings<EFGoodieConfig> = {
   metadata: conventionSharedMetadata,
   auth: {
     admin: [
-      "OE7QZN2RQX9KWML4", // Registration Test - Admin
-      "54ZYODX1G2K1M76N", // Registration Live - Admin
+      defaultEnvironment.envName === EnvName.prod
+        ? "54ZYODX1G2K1M76N" // Registration Live - Admin
+        : "OE7QZN2RQX9KWML4", // Registration Test - Admin
     ] as IdpGroupId[],
     staff: [
       "54ZYODX15G2K1M76", // Staff

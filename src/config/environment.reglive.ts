@@ -2,7 +2,7 @@ import { AuthGroups } from "@/types/internal/convention";
 import { EnvName, type EnvironmentSettings } from "@/types/internal/env";
 
 export const defaultEnvironment: EnvironmentSettings = {
-  envName: EnvName.dev,
+  envName: EnvName.prod,
   apiBaseUrl: new URL(import.meta.env.VITE_API_BASE_URL),
   externalFieldsets: [
     {
