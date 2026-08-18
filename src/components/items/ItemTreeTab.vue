@@ -107,7 +107,7 @@ const hideNotCurrentIteration = ref(true);
 async function refresh(): Promise<void> {
   loading.value = true;
   const [allAttendees, allAddInfos, counts] = await Promise.all([
-    attendeeService.getAllAttendees(errorHandler),
+    attendeeService.getAllAttendees(errorHandler, true),
     attendeeService.addInfos.getAllSponsorDeskAddInfos(errorHandler),
     getSponsorDeskConfigCounts(errorHandler),
   ]);

@@ -1,6 +1,12 @@
 <template>
-  <div v-if="(autoCompleteDataRef?.length || -1) > 0">
+  <div class="relative">
+    <i
+      v-tooltip.bottom="isExact ? 'Exact match (↵ to switch)' : 'Contains (↵ for exact match)'"
+      :class="['pi absolute top-1/2 -mt-2 leading-none start-2 z-1 cursor-pointer', isExact ? 'pi-equals text-primary' : 'pi-search text-surface-400']"
+      @click="onEnter"
+    />
     <AutoComplete
+      v-if="(autoCompleteDataRef?.length || -1) > 0"
       v-model="modelValueRef"
       @item-select="onItemSelect"
       @keydown.enter.prevent.stop="onEnter"
@@ -8,14 +14,15 @@
       :placeholder="props.placeholder"
       :suggestions="suggestionsRef"
       @complete="doComplete"
+      pt:pcInputText:root="ps-7"
     />
-  </div>
-  <div v-else>
     <InputText
+      v-else
       v-model="modelValueRef"
       @keydown.enter.prevent.stop="onEnter"
       class="search-column-filter"
       :placeholder="placeholder"
+      pt:root="ps-7"
     />
   </div>
 </template>
@@ -23,6 +30,7 @@
 <script setup lang="ts">
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { FilterElementProps } from "@/types/internal/component/table";
+import { debounceLeading } from "@/composables/debounce";
 import AutoComplete from "@/volt/AutoComplete.vue";
 import InputText from "@/volt/InputText.vue";
 import type { AutoCompleteCompleteEvent } from "primevue/autocomplete";
@@ -34,9 +42,11 @@ function onItemSelect(): void {
   matchModeRef.value = "equals";
 }
 
-function onEnter(): void {
+const isExact = computed(() => matchModeRef.value === "equals");
+
+const onEnter = debounceLeading((): void => {
   matchModeRef.value = matchModeRef.value === "equals" ? "contains" : "equals";
-}
+});
 
 const computedAutoCompleteDataRef: ComputedRef<[string, string][]> = computed<
   [string, string][]

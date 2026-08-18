@@ -17,8 +17,9 @@
           <InputNumber
             v-if="getQuantity(row.item) > 0"
             :modelValue="getQuantity(row.item)"
-            @update:modelValue="(value: number | null) => setQuantity(row.item, value ?? 1)"
-            :min="1"
+            @update:modelValue="(value: number | null) => setQuantity(row.item, value ?? 0)"
+            :min="0"
+            :max="entitledCounts[row.item] ?? 1"
             showButtons
             buttonLayout="horizontal"
             inputClass="w-14 text-center"
@@ -78,6 +79,7 @@ interface Props {
   attendeeInfo: TransformedAttendeeInfo;
   toastService: OnsiteToastService;
   onPaid: (items: ConcreteGoodieValue[]) => void;
+  entitledItems: ConcreteGoodieValue[];
 }
 const props = defineProps<Props>();
 const visible: Ref<boolean> = defineModel<boolean>("visible", { required: true });
@@ -94,19 +96,32 @@ const loading: Ref<boolean> = ref(true);
 const rows: Ref<PayableRow[]> = ref([]);
 const quantities: Ref<Record<string, number>> = ref({});
 
+const entitledCounts = computed<Record<string, number>>(() => {
+  const counts: Record<string, number> = {};
+  for (const item of props.entitledItems) {
+    counts[item] = (counts[item] ?? 0) + 1;
+  }
+  return counts;
+});
+
 async function loadPayableItems(): Promise<void> {
   loading.value = true;
   const config = await getSponsorDeskConfig(errorHandler);
   const itemPayments = config?.itemPayments ?? {};
+  const counts = entitledCounts.value;
   rows.value = Object.entries(itemPayments)
-    .filter(([, settings]) => settings.enabled)
+    .filter(([item, settings]) => settings.enabled && (counts[item] ?? 0) > 0)
     .map(([item, settings]) => ({
       item: item as ConcreteGoodieValue,
       label: getItemDisplayLabel(item as ConcreteGoodieValue),
       settings,
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
-  quantities.value = {};
+  const initial: Record<string, number> = {};
+  for (const row of rows.value) {
+    initial[row.item] = counts[row.item] ?? 1;
+  }
+  quantities.value = initial;
   loading.value = false;
 }
 
@@ -123,7 +138,7 @@ function getQuantity(item: string): number {
 }
 
 function setChecked(item: string, checked: boolean): void {
-  quantities.value = { ...quantities.value, [item]: checked ? 1 : 0 };
+  quantities.value = { ...quantities.value, [item]: checked ? (entitledCounts.value[item] ?? 1) : 0 };
 }
 
 function setQuantity(item: string, quantity: number): void {

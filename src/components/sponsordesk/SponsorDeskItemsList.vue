@@ -35,6 +35,7 @@
       :attendeeInfo="transformedAttendeeInfoRef"
       :toastService="toastService"
       :onPaid="onItemsPaid"
+      :entitledItems="listedConcreteItems"
     />
     <div class="flex flex-col gap-3 mt-3">
       <Message
@@ -55,6 +56,7 @@
       </Message>
       <div class="issued-items text-2xl">
         <Items
+          ref="itemsRef"
           v-model="transformedAttendeeInfoRef"
           v-model:apiSDAddInfo="apiSDAddInfoRef"
           v-model:sponsorDeskSettings="sponsorDeskSettings"
@@ -86,7 +88,6 @@ import SponsorDeskAvailableItemsButton from "@/components/sponsordesk/SponsorDes
 import { getSponsorDeskConfig } from "@/composables/api/attsrv/additional-info/getSponsorDeskConfig";
 import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
 import { getSubsetList } from "@/composables/collection_tools/subsets/getSubsetList";
-import { subtractMultiset } from "@/composables/collection_tools/subtractMultiset";
 import { deepCopy } from "@/composables/deepCopy";
 import { isDirty } from "@/composables/dirty/isDirty";
 import { generateId } from "@/composables/generateId";
@@ -120,7 +121,7 @@ import Message from "@/volt/Message.vue";
 import Panel from "@/volt/Panel.vue";
 import Toast from "@/volt/Toast.vue";
 import type { ModelRef } from "vue";
-import { computed, onMounted, ref, useId, watch, type Ref } from "vue";
+import { computed, onMounted, ref, useId, useTemplateRef, watch, type Ref } from "vue";
 
 const transformedAttendeeInfoRef: ModelRef<TransformedAttendeeInfo> =
   defineModel<TransformedAttendeeInfo>({
@@ -145,6 +146,7 @@ const componentId: string = generateId(useId());
 const toastService: OnsiteToastService = new OnsiteToastService(componentId);
 
 const sponsorDeskSettings = useAvailableItems(props.deskItemSubset, getErrorHandlerFunction(toastService));
+const itemsRef = useTemplateRef<InstanceType<typeof Items>>("itemsRef");
 
 const savingItemsFlag: Ref<boolean> = ref<boolean>(false);
 const forceCommentField: Ref<RegNumber | null> = ref<RegNumber | null>(null);
@@ -246,30 +248,8 @@ keyboardService.registerShortcuts(
   onKeyS
 );
 
-async function selectAvailable(): Promise<any> {
-  const concreteItems: ConcreteGoodieValue[] = getConcreteItemsEntitlement(
-    transformedAttendeeInfoRef.value,
-    apiSDAddInfoRef.value
-  );
-  const availableRelevantItems: ConcreteGoodieValue[] | null = getSubsetList(
-    concreteItems,
-    sponsorDeskSettings.value.available
-  );
-  // Subtract all already-recorded items (issued, past, reserved) to avoid
-  // adding duplicates that would inflate the row count.
-  const alreadyRecorded: ConcreteGoodieValue[] = [
-    ...apiSDAddInfoRef.value.issuedItems,
-    ...apiSDAddInfoRef.value.pastItems,
-    ...apiSDAddInfoRef.value.reservedItems,
-  ];
-  const newlyNeededItems: ConcreteGoodieValue[] = subtractMultiset(
-    availableRelevantItems || [],
-    alreadyRecorded
-  );
-  apiSDAddInfoRef.value.issuedItems = [
-    ...apiSDAddInfoRef.value.issuedItems,
-    ...newlyNeededItems,
-  ];
+function selectAvailable(): void {
+  itemsRef.value?.selectAllAvailable();
 }
 
 async function onKeyA(_event: KeyboardServiceEvent): Promise<boolean> {

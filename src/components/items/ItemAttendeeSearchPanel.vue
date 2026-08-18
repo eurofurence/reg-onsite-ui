@@ -7,10 +7,10 @@
           placeholder="Reg number"
           :useGrouping="false"
           class="w-40"
-          @keydown.enter="$emit('search')"
+          @keydown.enter="onSearch"
         />
         <Button
-          @click="$emit('search')"
+          @click="onSearch"
           :loading="props.loading"
           icon="pi pi-search"
           label="Search"
@@ -30,6 +30,7 @@
 
 <script setup lang="ts">
 import SponsorDeskUserInfo from "@/components/sponsordesk/SponsorDeskUserInfo.vue";
+import { debounceLeading } from "@/composables/debounce";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import Button from "@/volt/Button.vue";
 import Fieldset from "@/volt/Fieldset.vue";
@@ -46,7 +47,11 @@ const props = defineProps<Props>();
 
 const regNum = defineModel<number | null>("regNum", { required: true });
 
-defineEmits<{ search: [] }>();
+const emit = defineEmits<{ search: [] }>();
+
+const onSearch = debounceLeading(() => {
+  emit("search");
+});
 
 const attendeeModel = computed<TransformedAttendeeInfo>({
   get: () => props.attendee!,

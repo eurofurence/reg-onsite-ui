@@ -25,6 +25,7 @@
 
 <script setup lang="ts">
 import { FilterMatchMode } from "@primevue/core/api";
+import { debounceLeading } from "@/composables/debounce";
 import { doResetFilters } from "@/composables/filter/doResetFilters";
 import type { AttendeeDataOptions } from "@/types/internal/system/regdesk";
 import InputText from "@/volt/InputText.vue";
@@ -51,12 +52,12 @@ function onEscape() {
   doResetFilters(dataOptionsRef);
 }
 
-function onEnter() {
+const onEnter = debounceLeading(() => {
   const raw = dataOptionsRef.value.filterConfig.filterValues.global.value?.trim() ?? "";
   const num = Number(raw);
   if (raw && Number.isInteger(num) && num > 0) {
     emit("onSelectByNumber", num);
   }
   toggleMatchMode();
-}
+});
 </script>

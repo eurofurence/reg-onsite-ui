@@ -254,6 +254,22 @@ watch(
   }
 );
 
+function checkIfAvailable(): void {
+  if (isCheckedRef.value) return;
+  const concreteValue = getLocalConcreteGoodieValue(selectedVariantRef.value);
+  if (!sponsorDeskSettingsRef.value.available.includes(concreteValue)) return;
+  toggleChecked(true);
+}
+
+function getAvailableItemToAdd(): ConcreteGoodieValue | null {
+  if (isCheckedRef.value) return null;
+  const concreteValue = getLocalConcreteGoodieValue(selectedVariantRef.value);
+  if (!sponsorDeskSettingsRef.value.available.includes(concreteValue)) return null;
+  return concreteValue;
+}
+
+defineExpose({ checkIfAvailable, getAvailableItemToAdd });
+
 const componentId: string = generateId(useId());
 const labelId: string = `itemLabelId${componentId}`;
 </script>

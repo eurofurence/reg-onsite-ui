@@ -3,7 +3,8 @@ import type { RestErrorHandler } from "@/composables/api/base/restErrorWrapper";
 import type { ApiAttendeeInfo } from "@/types/external/attsrv/attendees/attendee";
 
 export async function getAllAttendees(
-  errorHandler: RestErrorHandler
+  errorHandler: RestErrorHandler,
+  useAdminApi?: boolean
 ): Promise<ApiAttendeeInfo[] | undefined> {
-  return getAttendees(errorHandler, [{ nickname: "*" }]);
+  return getAttendees(errorHandler, [{ nickname: "*" }], useAdminApi);
 }

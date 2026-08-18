@@ -30,31 +30,38 @@ function parseDateElement(
   return [doStop, `${parsedValue}`, includeDash];
 }
 
-function getBirthdayFilterStringInternal(value: string): string | null {
+export type BirthdayFilterResult = {
+  value: string;
+  matchMode: "startsWith" | "equals";
+};
+
+function getBirthdayFilterStringInternal(
+  value: string
+): BirthdayFilterResult | null {
   const [year, month, day]: string[] = value.split("-");
   let result: string | null = null;
 
   const [yearStop, yearParsed, _yearIncludeDash]: ParseDateElementResult =
     parseDateElement(year, "y");
   if (yearParsed === null) {
-    return result;
+    return null;
   }
   result = yearParsed;
   if (yearStop) {
-    return result;
+    return { value: result, matchMode: "startsWith" };
   }
 
   const [monthStop, monthParsed, monthIncludeDash]: ParseDateElementResult =
     parseDateElement(month, "m");
   if (monthParsed === null) {
-    return result;
+    return { value: result, matchMode: "startsWith" };
   }
   result += `-${monthParsed}`;
   if (monthStop) {
     if (monthIncludeDash) {
       result += "-";
     }
-    return result;
+    return { value: result, matchMode: "startsWith" };
   }
 
   const [, dayParsed, dayIncludeDash]: ParseDateElementResult =
@@ -63,29 +70,29 @@ function getBirthdayFilterStringInternal(value: string): string | null {
     if (monthIncludeDash) {
       result += "-";
     }
-    return result;
+    return { value: result, matchMode: "startsWith" };
   }
   result += `-${dayParsed}`;
-  if (dayIncludeDash) {
-    result += "-";
-  }
-  return result;
+  const matchMode = dayIncludeDash ? "equals" : "startsWith";
+  return { value: result, matchMode };
 }
 
 export function getBirthdayFilterString(
   rawFilterString: string
-): string | null {
-  let result: string | null = null;
+): BirthdayFilterResult | null {
+  let internal: BirthdayFilterResult | null = null;
   if (rawFilterString.endsWith("-") || rawFilterString.endsWith("-0")) {
-    result =
-      getBirthdayFilterStringInternal(
-        stripCharacterFromRight(rawFilterString, "-")
-      ) + "-";
+    internal = getBirthdayFilterStringInternal(
+      stripCharacterFromRight(rawFilterString, "-")
+    );
+    if (internal) {
+      internal = { value: internal.value + "-", matchMode: "startsWith" };
+    }
   } else {
-    result = getBirthdayFilterStringInternal(rawFilterString);
+    internal = getBirthdayFilterStringInternal(rawFilterString);
   }
-  if (result) {
-    return result.replace("--", "-");
+  if (internal) {
+    return { value: internal.value.replace("--", "-"), matchMode: internal.matchMode };
   }
-  return result;
+  return null;
 }

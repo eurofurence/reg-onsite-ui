@@ -98,7 +98,7 @@ async function runFetch(force: boolean): Promise<void> {
   fetchLoading.value = true;
   fetchProgress.value = { current: 0, total: 1 };
 
-  const attendees = await attendeeService.getAllAttendees(errorHandler);
+  const attendees = await attendeeService.getAllAttendees(errorHandler, true);
   if (!attendees) { fetchLoading.value = false; fetchProgress.value = null; return; }
 
   const packageNameByLevel = new Map<string, string>(

@@ -5,10 +5,12 @@ import type { ApiAttendeeInfo } from "@/types/external/attsrv/attendees/attendee
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 export async function getAllAttendeesTrans(
-  errorHandler: RestErrorHandler
+  errorHandler: RestErrorHandler,
+  useAdminApi?: boolean
 ): Promise<TransformedAttendeeInfo[] | undefined> {
   const result: ApiAttendeeInfo[] | undefined = await getAllAttendees(
-    errorHandler
+    errorHandler,
+    useAdminApi
   );
   if (result) {
     return result.map(transformAttendee);

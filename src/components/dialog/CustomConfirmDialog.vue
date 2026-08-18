@@ -21,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+import { debounceLeading } from "@/composables/debounce";
 import {
   keyboardService,
   ShortcutEvent,
@@ -50,14 +51,14 @@ const emit: CallableFunction = defineEmits(["onAccept", "onClose"]);
 const isVisible: Ref<boolean> = ref(false);
 const lastResultRef: Ref<boolean | null> = ref(null);
 
-function onAccept() {
+const onAccept = debounceLeading(() => {
   if (props.willAccept && !props.willAccept()) {
     return;
   }
   lastResultRef.value = true;
   hideConfirmDialog();
   emit("onAccept");
-}
+});
 
 function onClose() {
   if (props.willClose && !props.willClose()) {

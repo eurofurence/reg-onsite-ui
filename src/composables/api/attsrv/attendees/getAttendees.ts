@@ -17,9 +17,10 @@ import { AuthGroups } from "@/types/internal/convention";
 import type { FetchResultPromise } from "@/types/internal/rest";
 
 export async function fetchAttendees(
-  match_any_params: ApiSearchType<PackageApiValue, FlagApiValue>[]
+  match_any_params: ApiSearchType<PackageApiValue, FlagApiValue>[],
+  useAdminApi?: boolean
 ): FetchResultPromise<ApiFindResponse, ApiError> {
-  const api: string = isInAnyGroup(AuthGroups.admin)
+  const api: string = useAdminApi && isInAnyGroup(AuthGroups.admin)
     ? `onsite/api/v1/attendees/search`
     : `attsrv/api/rest/v1/attendees/find`;
   const response: Response = await postApi(api, {
@@ -30,12 +31,13 @@ export async function fetchAttendees(
 
 export async function getAttendees(
   errorHandler: RestErrorHandler,
-  match_any_params: ApiSearchType<PackageApiValue, FlagApiValue>[]
+  match_any_params: ApiSearchType<PackageApiValue, FlagApiValue>[],
+  useAdminApi?: boolean
 ): Promise<ApiAttendeeInfo[] | undefined> {
   const response: ApiFindResponse | undefined =
     await restErrorWrapper<ApiFindResponse>(
       "Attendee Information Service",
-      () => fetchAttendees(match_any_params),
+      () => fetchAttendees(match_any_params, useAdminApi),
       errorHandler
     );
   return response?.attendees;

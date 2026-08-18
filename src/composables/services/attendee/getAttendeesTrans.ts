@@ -11,11 +11,13 @@ import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 
 export async function getAttendeesTrans(
   errorHandler: RestErrorHandler,
-  match_any_params: ApiSearchType<PackageApiValue, FlagApiValue>[]
+  match_any_params: ApiSearchType<PackageApiValue, FlagApiValue>[],
+  useAdminApi?: boolean
 ): Promise<TransformedAttendeeInfo[] | undefined> {
   const result: ApiAttendeeInfo[] | undefined = await getAttendees(
     errorHandler,
-    match_any_params
+    match_any_params,
+    useAdminApi
   );
   if (result) {
     return result.map(transformAttendee);

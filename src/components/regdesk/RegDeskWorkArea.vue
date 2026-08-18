@@ -99,6 +99,13 @@
                 @doLoad="$emit('triggerPreload', $event)"
               />
               <Button
+                class="h-12 aspect-square"
+                v-tooltip.bottom="'My past checkins'"
+                @click="myPastCheckinsVisible = true"
+              >
+                <i class="pi pi-history" />
+              </Button>
+              <Button
                 v-if="canExportCSV"
                 class="h-12 aspect-square"
                 v-tooltip.bottom="'Export as CSV'"
@@ -148,6 +155,7 @@
       :displayFilterHelp="displayOptionsRef.displayFilterHelp"
       :displayFilterSummary="displayOptionsRef.displayFilterSummary"
     />
+    <MyPastCheckinsDialog v-model:visible="myPastCheckinsVisible" />
   </div>
 </template>
 
@@ -157,6 +165,7 @@ import CustomConfirmDialog from "@/components/dialog/CustomConfirmDialog.vue";
 import CustomConfirmDialogHeader from "@/components/dialog/CustomConfirmDialogHeader.vue";
 import FilterHelp from "@/components/regdesk/FilterHelp.vue";
 import GlobalSearchField from "@/components/regdesk/GlobalSearchField.vue";
+import MyPastCheckinsDialog from "@/components/regdesk/MyPastCheckinsDialog.vue";
 import RegDeskCheckin from "@/components/regdesk/RegDeskCheckin.vue";
 import RegDeskSettingsButton from "@/components/regdesk/RegDeskSettingsButton.vue";
 import ResetFilterButton from "@/components/regdesk/ResetFilterButton.vue";
@@ -164,6 +173,7 @@ import SearchElementManual from "@/components/regdesk/search_element/SearchEleme
 import SearchElementOndemand from "@/components/regdesk/search_element/SearchElementOndemand.vue";
 import SearchElementPreload from "@/components/regdesk/search_element/SearchElementPreload.vue";
 import DisplayButton from "@/components/statistics/DisplayButton.vue";
+import { debounceLeading } from "@/composables/debounce";
 import { computeAttendeePlaceholder } from "@/composables/fields/computeAttendeePlaceholder";
 import { doResetFilters } from "@/composables/filter/doResetFilters";
 import { isInAnyGroup } from "@/composables/state/authState";
@@ -252,6 +262,7 @@ const transformedAttendeeListRef: ModelRef<TransformedAttendeeInfo[]> =
   });
 
 const previousSelectId: Ref<number | undefined> = ref(undefined);
+const myPastCheckinsVisible: Ref<boolean> = ref(false);
 
 const activeColumnsRef: ComputedRef<ColumnDefinition[]> = computed(() =>
   getActiveColumnDefinitionList(displayOptionsRef.value.displayColumns)
@@ -296,6 +307,7 @@ function selectByRegNumber(id: number): void {
   const match = transformedAttendeeListRef.value.find((a) => a.id === id);
   if (match) {
     selectedAttendeeRef.value = match;
+    getInputElement(globaSearchInputId).blur();
   }
 }
 
@@ -329,18 +341,43 @@ const dialog = useTemplateRef<typeof CustomConfirmDialog>(
   `confirmDialog${componentId}`
 );
 
-async function onEnter(event: KeyboardServiceEvent): Promise<boolean> {
-  if (event.currentScope === ShortcutScope.dialog_checkin) {
-    if (selectedAttendeeRef.value?.status !== AttendeeApiStatus.paid) {
-      return false;
+const onEnterDebounced = debounceLeading(
+  async (event: KeyboardServiceEvent): Promise<boolean> => {
+    if (event.currentScope === ShortcutScope.dialog_checkin) {
+      if (selectedAttendeeRef.value?.status !== AttendeeApiStatus.paid) {
+        return false;
+      }
+      if (!dialog.value) {
+        return false;
+      }
+      if (dialog.value.isAlreadyOpen()) {
+        return false;
+      }
+      await dialog.value?.showConfirmDialogBlocking();
+      return true;
     }
-    if (!dialog.value) {
-      return false;
-    }
-    if (dialog.value.isAlreadyOpen()) {
-      return false;
-    }
-    await dialog.value?.showConfirmDialogBlocking();
+    return false;
+  }
+);
+const onEnter = async (event: KeyboardServiceEvent): Promise<boolean> => {
+  return (await onEnterDebounced(event)) ?? false;
+};
+
+keyboardService.registerShortcuts(
+  ShortcutScope.regdesk,
+  ShortcutEvent.keydown,
+  ShortcutKey.enter,
+  onEnter
+);
+
+async function onAltNumber(event: KeyboardServiceEvent): Promise<boolean> {
+  if (event.currentScope !== ShortcutScope.regdesk) {
+    return false;
+  }
+  const index = Number(event.event.key) - 1;
+  const attendee = transformedAttendeeListRef.value[index];
+  if (attendee) {
+    selectedAttendeeRef.value = attendee;
     return true;
   }
   return false;
@@ -349,8 +386,9 @@ async function onEnter(event: KeyboardServiceEvent): Promise<boolean> {
 keyboardService.registerShortcuts(
   ShortcutScope.regdesk,
   ShortcutEvent.keydown,
-  ShortcutKey.enter,
-  onEnter
+  ShortcutKey.number,
+  onAltNumber,
+  true
 );
 
 const selectedAttendeePlaceholerAdapterRef: WritableComputedRef<TransformedAttendeeInfo> =

@@ -6,10 +6,11 @@
       :id="componentId"
     >
       <div
-        v-for="row of itemRowsRef"
+        v-for="(row, index) of itemRowsRef"
         :key="row.key"
       >
         <SponsorDeskItemElement
+          :ref="(el) => setItemRef(index, el)"
           :itemGroupId="itemGroupId"
           :goodieConfig="row.goodieConfig"
           :unitIndex="row.unitIndex"
@@ -47,7 +48,7 @@ import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
-import { computed, useId, type ComputedRef } from "vue";
+import { computed, ref, useId, type ComputedRef, type Ref } from "vue";
 
 interface ItemRowDescriptor {
   key: string;
@@ -131,6 +132,30 @@ interface Props {
 const props: Props = defineProps<Props>();
 const componentId: string = generateId(useId());
 const itemGroupId: string = `itemGroup${componentId}`;
+
+const itemRefs: Ref<(InstanceType<typeof SponsorDeskItemElement> | null)[]> = ref([]);
+
+function setItemRef(index: number, el: any): void {
+  itemRefs.value[index] = el;
+}
+
+function selectAllAvailable(): void {
+  const itemsToAdd: ConcreteGoodieValue[] = [];
+  for (const itemRef of itemRefs.value) {
+    const item = itemRef?.getAvailableItemToAdd();
+    if (item != null) {
+      itemsToAdd.push(item);
+    }
+  }
+  if (itemsToAdd.length > 0) {
+    apiSDAddInfoRef.value.issuedItems = [
+      ...apiSDAddInfoRef.value.issuedItems,
+      ...itemsToAdd,
+    ];
+  }
+}
+
+defineExpose({ selectAllAvailable });
 </script>
 
 <style lang="css">

@@ -226,7 +226,7 @@ async function checkRegistrations(): Promise<void> {
     checkProgress.value = { label: "Loading item data…", current: 0, total: 1 };
 
     const [attendeesForMap, allAddInfos] = await Promise.all([
-      attendeeService.getAllAttendees(errorHandler),
+      attendeeService.getAllAttendees(errorHandler, true),
       attendeeService.addInfos.getAllSponsorDeskAddInfos(errorHandler),
     ]);
     if (!allAddInfos) { checkLoading.value = false; checkProgress.value = null; return; }
@@ -329,7 +329,7 @@ async function checkRegistrations(): Promise<void> {
     regNumbers = [...memberMap.keys()];
   } else {
     checkProgress.value = { label: "Loading attendees…", current: 0, total: 1 };
-    resolvedAttendees = await attendeeService.getAllAttendees(errorHandler) ?? null;
+    resolvedAttendees = await attendeeService.getAllAttendees(errorHandler, true) ?? null;
     if (!resolvedAttendees) { checkLoading.value = false; checkProgress.value = null; return; }
     if (ic.targetType === "goodieLevel") {
       const levels = ic.selectedGoodieLevels;
@@ -380,7 +380,7 @@ async function checkRegistrations(): Promise<void> {
   checkProgress.value = { label: "Loading item data…", current: 0, total: 1 };
 
   const [attendeesForMap, allAddInfos] = await Promise.all([
-    resolvedAttendees ? Promise.resolve(resolvedAttendees) : attendeeService.getAllAttendees(errorHandler),
+    resolvedAttendees ? Promise.resolve(resolvedAttendees) : attendeeService.getAllAttendees(errorHandler, true),
     attendeeService.addInfos.getAllSponsorDeskAddInfos(errorHandler),
   ]);
   if (!allAddInfos) { checkLoading.value = false; checkProgress.value = null; return; }

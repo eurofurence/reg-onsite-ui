@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import KeyPad from "@/components/common/input/KeyPad.vue";
+import { debounceLeading } from "@/composables/debounce";
 import { generateId } from "@/composables/generateId";
 import { getInputElement } from "@/composables/getInputElement";
 import {
@@ -83,14 +84,14 @@ async function resetRegNumber(): Promise<void> {
   emit("numberSubmit", null);
 }
 
-async function onNumberSubmit(): Promise<void> {
+const onNumberSubmit = debounceLeading(async (): Promise<void> => {
   resetOnNextNumber.value = true;
   const inputElement: HTMLInputElement = getInputElement(inputElementId);
   inputElement.blur();
   const number: RegNumber | null =
     (Number.parseInt(inputElement.value) as RegNumber) || null;
   emit("numberSubmit", number);
-}
+});
 
 function isShortcutActive(event: KeyboardServiceEvent): boolean {
   return (

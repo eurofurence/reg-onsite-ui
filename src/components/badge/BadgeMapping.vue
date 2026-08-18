@@ -2,6 +2,7 @@
 import AutoComplete from '@/volt/AutoComplete.vue'
 import Button from '@/volt/Button.vue'
 import Select from '@/volt/Select.vue'
+import { debounceLeading } from '@/composables/debounce'
 import { computed, ref, watch } from 'vue'
 import type { RestErrorHandler } from '@/composables/api/base/restErrorWrapper'
 import { badgeMappingRef, badgeTypesRef, saveBadgeConfig } from '@/composables/services/badgeConfigStore'
@@ -24,7 +25,7 @@ watch(mapping, () => {
 const validPackages = getValidBadgeMappingPackages()
 const validFlags = getValidBadgeMappingFlags()
 
-function addPackage() {
+const addPackage = debounceLeading(() => {
   const parts = newPackageValue.value.split(',').map(v => v.trim()).filter(Boolean)
   if (!parts.length) return
   const combined = parts.sort((a, b) => a.localeCompare(b)).join(',')
@@ -32,9 +33,9 @@ function addPackage() {
   if (!validPackages.includes(combined)) return
   mapping.value.packages.push(combined)
   newPackageValue.value = ''
-}
+})
 
-function addFlag() {
+const addFlag = debounceLeading(() => {
   const parts = newFlagValue.value.split(',').map(v => v.trim()).filter(Boolean)
   if (!parts.length) return
   const combined = parts.sort((a, b) => a.localeCompare(b)).join(',')
@@ -42,7 +43,7 @@ function addFlag() {
   if (!parts.every(p => validFlags.includes(p))) return
   mapping.value.flags.push(combined)
   newFlagValue.value = ''
-}
+})
 
 function onPackageComplete(event: AutoCompleteCompleteEvent) {
   const q = event.query.toLowerCase()

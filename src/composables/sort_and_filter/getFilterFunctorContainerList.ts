@@ -335,17 +335,21 @@ export function getFilterFunctorContainerList<
     }
     if (cmpType === FilterCmpType.birthday) {
       // Compare birthday within the field
-      addValueFilter(params, "transBirthday", false, {
-        value: getBirthdayFilterString(filter.birthday.value || ""),
-        matchMode: "startsWith",
-      });
+      const birthdayFilter = getBirthdayFilterString(
+        filter.birthday.value || ""
+      );
+      if (birthdayFilter) {
+        addValueFilter(params, "transBirthday", false, birthdayFilter);
+      }
     }
     if (cmpType === FilterCmpType.birthday && isActiveGlobalColumn) {
       // Compare birthday from the global search
-      addValueFilter(params, "transBirthday", true, {
-        value: getBirthdayFilterString(filter.global.value || ""),
-        matchMode: "startsWith",
-      });
+      const globalBirthdayFilter = getBirthdayFilterString(
+        filter.global.value || ""
+      );
+      if (globalBirthdayFilter) {
+        addValueFilter(params, "transBirthday", true, globalBirthdayFilter);
+      }
     }
   });
   return result;
