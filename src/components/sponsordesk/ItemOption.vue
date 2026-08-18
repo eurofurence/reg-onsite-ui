@@ -1,13 +1,14 @@
 <template>
   <i v-if="isDefault()" class="pi pi-shopping-cart" v-tooltip="'Selected'" />
   <i v-if="isReserved()" class="pi pi-bookmark-fill" v-tooltip="'Reserved'" />
+  <i v-if="isPayable()" class="pi pi-credit-card" v-tooltip="'Requires payment'" />
   <i
     v-if="!isAvailableItem()"
     class="pi pi-exclamation-circle"
     v-tooltip="'Out of stock'"
   />
   <i
-    v-if="!isDefault() && !isReserved() && isAvailableItem()"
+    v-if="!isDefault() && !isReserved() && !isPayable() && isAvailableItem()"
     class="invisible pi pi-circle"
   />
   <span
@@ -67,6 +68,14 @@ function isDefault(): boolean {
   );
 }
 
+function isPayable(): boolean {
+  if (!props.payableItemKeys) {
+    return false;
+  }
+  const concreteValue = getConcreteItemValue(props.goodieConfig, modelValue.value);
+  return props.payableItemKeys.has(concreteValue);
+}
+
 interface Props {
   goodieConfig: GoodieConfig;
   unitIndex: number;
@@ -74,6 +83,7 @@ interface Props {
   issuedConcreteGoodies: ConcreteGoodieValue[];
   reservedConcreteGoodies: ConcreteGoodieValue[];
   availableConcreteGoodies: ConcreteGoodieValue[];
+  payableItemKeys?: Set<string>;
 }
 const props: Props = defineProps<Props>();
 

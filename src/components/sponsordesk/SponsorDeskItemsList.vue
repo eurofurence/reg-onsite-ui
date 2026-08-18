@@ -59,6 +59,7 @@
           v-model:apiSDAddInfo="apiSDAddInfoRef"
           v-model:sponsorDeskSettings="sponsorDeskSettings"
           :deskItemSubset="props.deskItemSubset"
+          :payableItemKeys="payableItemKeys"
         />
       </div>
       <Comments

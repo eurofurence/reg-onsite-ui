@@ -17,6 +17,7 @@
           v-model:reservedItems="apiSDAddInfoRef.reservedItems"
           v-model:defaultVariantValues="defaultVariantValuesRef"
           v-model:sponsorDeskSettings="sponsorDeskSettingsRef"
+          :payableItemKeys="props.payableItemKeys"
         />
       </div>
     </div>
@@ -116,6 +117,7 @@ const sponsorDeskSettingsRef: ModelRef<SponsorDeskSettings> =
 
 interface Props {
   deskItemSubset: AbstractGoodieValue[];
+  payableItemKeys?: Set<string>;
 }
 const props: Props = defineProps<Props>();
 const componentId: string = generateId(useId());

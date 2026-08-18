@@ -29,6 +29,7 @@
               :issuedConcreteGoodies="selectedConcreteGoodieValueListRef"
               :reservedConcreteGoodies="reservedConcreteGoodieValueListRef"
               :availableConcreteGoodies="sponsorDeskSettingsRef.available"
+              :payableItemKeys="props.payableItemKeys"
             />
           </span>
         </label>
@@ -55,6 +56,7 @@
               :issuedConcreteGoodies="selectedConcreteGoodieValueListRef"
               :reservedConcreteGoodies="reservedConcreteGoodieValueListRef"
               :availableConcreteGoodies="sponsorDeskSettingsRef.available"
+              :payableItemKeys="props.payableItemKeys"
             />
           </div>
           <div v-else>
@@ -70,6 +72,7 @@
             :issuedConcreteGoodies="selectedConcreteGoodieValueListRef"
             :reservedConcreteGoodies="reservedConcreteGoodieValueListRef"
             :availableConcreteGoodies="sponsorDeskSettingsRef.available"
+            :payableItemKeys="props.payableItemKeys"
           />
         </template>
       </Select>
@@ -186,6 +189,7 @@ interface Props {
   itemGroupId: string;
   goodieConfig: GoodieConfig;
   unitIndex: number;
+  payableItemKeys?: Set<string>;
 }
 const props: Props = defineProps<Props>();
 
