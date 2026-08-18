@@ -39,9 +39,11 @@ import { generateId } from "@/composables/generateId";
 import { getAbstractFromConcreteItems } from "@/composables/items/getAbstractFromConcreteItems";
 import { getConcreteItemsForGoodie } from "@/composables/items/getConcreteItemsForGoodie";
 import { getDefaultVariantValues } from "@/composables/items/getDefaultVariantValues";
+import { getEntitledAbstractItems } from "@/composables/items/getEntitledAbstractItems";
 import { getGoodieItemsSubset } from "@/composables/items/getGoodieItemsSubset";
 import { getConcreteItemsEntitlement } from "@/composables/items/getConcreteItemsEntitlement";
 import type { AbstractGoodieValue, ConcreteGoodieValue, GoodieConfig } from "@/config/convention";
+import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
 import type { DefaultVariantValues } from "@/types/internal/goodies";
 import type { SponsorDeskSettings } from "@/types/internal/system/sponsordesk";
@@ -69,20 +71,27 @@ const goodieConfigListRef: ComputedRef<GoodieConfig[]> = computed<
 const itemRowsRef: ComputedRef<ItemRowDescriptor[]> = computed<
   ItemRowDescriptor[]
 >(() => {
-  const relevantConcreteItems = getConcreteItemsEntitlement(
-    attendeeInfoRef.value,
-    apiSDAddInfoRef.value
+  const entitledAbstractItems = getEntitledAbstractItems(
+    attendeeInfoRef.value.packages_list || [],
+    attendeeInfoRef.value.flags_list || [],
+    attendeeInfoRef.value.id || (0 as RegNumber)
   );
   return goodieConfigListRef.value.flatMap((goodieConfig: GoodieConfig) => {
     const concreteKeysForThisGoodie = new Set(
       getConcreteItemsForGoodie(goodieConfig)
     );
-    const countIn = (list: ConcreteGoodieValue[]): number =>
+    const countConcrete = (list: ConcreteGoodieValue[]): number =>
       list.filter((value: ConcreteGoodieValue) =>
         concreteKeysForThisGoodie.has(value)
       ).length;
-    const entitledCount = countIn(relevantConcreteItems);
-    const rowCount = Math.max(entitledCount, 1);
+    // Setup + past are additive (both owed). Issued/reserved fulfill those slots
+    // but can exceed them — use max to avoid shrinking rows when items are checked.
+    const setupCount =
+      entitledAbstractItems.filter((v) => v === goodieConfig.value).length;
+    const pastCount = countConcrete(apiSDAddInfoRef.value.pastItems);
+    const issuedCount = countConcrete(apiSDAddInfoRef.value.issuedItems);
+    const reservedCount = countConcrete(apiSDAddInfoRef.value.reservedItems);
+    const rowCount = Math.max(setupCount + pastCount, issuedCount, reservedCount, 1);
     return Array.from(
       { length: rowCount },
       (_, unitIndex: number): ItemRowDescriptor => ({
