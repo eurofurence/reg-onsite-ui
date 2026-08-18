@@ -255,9 +255,16 @@ async function selectAvailable(): Promise<any> {
     concreteItems,
     sponsorDeskSettings.value.available
   );
+  // Subtract all already-recorded items (issued, past, reserved) to avoid
+  // adding duplicates that would inflate the row count.
+  const alreadyRecorded: ConcreteGoodieValue[] = [
+    ...apiSDAddInfoRef.value.issuedItems,
+    ...apiSDAddInfoRef.value.pastItems,
+    ...apiSDAddInfoRef.value.reservedItems,
+  ];
   const newlyNeededItems: ConcreteGoodieValue[] = subtractMultiset(
     availableRelevantItems || [],
-    apiSDAddInfoRef.value.issuedItems
+    alreadyRecorded
   );
   apiSDAddInfoRef.value.issuedItems = [
     ...apiSDAddInfoRef.value.issuedItems,
