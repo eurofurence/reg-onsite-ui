@@ -29,7 +29,8 @@ export function useAvailableItems(
   }
 
   async function save(available: ConcreteGoodieValue[]): Promise<void> {
-    const newConfig: SponsorDeskConfigRecord = { ...(cachedConfig ?? {}), availableItems: available };
+    const freshConfig = await getSponsorDeskConfig(errorHandler) ?? {};
+    const newConfig: SponsorDeskConfigRecord = { ...freshConfig, availableItems: available };
     const result = await putSponsorDeskConfig(errorHandler, newConfig);
     if (result !== undefined) cachedConfig = newConfig;
   }

@@ -210,9 +210,15 @@ onMounted(async () => {
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
-function scheduleSave(newConfig: SponsorDeskConfigRecord): void {
+function scheduleSave(): void {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
+    const freshConfig = await getSponsorDeskConfig(errorHandler) ?? {};
+    const newConfig: SponsorDeskConfigRecord = {
+      ...freshConfig,
+      inventoryCounts: inventoryCounts.value,
+      itemPayments: itemPayments.value,
+    };
     const result = await putSponsorDeskConfig(errorHandler, newConfig);
     if (result !== undefined) {
       cachedConfig = newConfig;
@@ -224,7 +230,7 @@ function scheduleSave(newConfig: SponsorDeskConfigRecord): void {
 
 function updateCount(item: string, count: number): void {
   inventoryCounts.value = { ...inventoryCounts.value, [item]: count };
-  scheduleSave({ ...cachedConfig, inventoryCounts: inventoryCounts.value });
+  scheduleSave();
 }
 
 const DEFAULT_VAT_RATE = 0.19;
@@ -238,7 +244,7 @@ const DEFAULT_PAYMENT_SETTINGS: ItemPaymentSettings = {
 function updatePaymentEnabled(item: string, enabled: boolean): void {
   const current = itemPayments.value[item] ?? DEFAULT_PAYMENT_SETTINGS;
   itemPayments.value = { ...itemPayments.value, [item]: { ...current, enabled } };
-  scheduleSave({ ...cachedConfig, itemPayments: itemPayments.value });
+  scheduleSave();
 }
 
 function updatePaymentField(
@@ -248,6 +254,6 @@ function updatePaymentField(
 ): void {
   const current = itemPayments.value[item] ?? DEFAULT_PAYMENT_SETTINGS;
   itemPayments.value = { ...itemPayments.value, [item]: { ...current, [field]: value } };
-  scheduleSave({ ...cachedConfig, itemPayments: itemPayments.value });
+  scheduleSave();
 }
 </script>

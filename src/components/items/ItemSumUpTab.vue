@@ -192,7 +192,8 @@ function updateMapping(productKey: string, value: string): void {
   mapping.value = { ...mapping.value, [productKey]: value };
   if (mappingTimer) clearTimeout(mappingTimer);
   mappingTimer = setTimeout(async () => {
-    const newConfig = { ...cachedConfig, sumupMapping: mapping.value };
+    const freshConfig = await getSponsorDeskConfig(errorHandler) ?? {};
+    const newConfig = { ...freshConfig, sumupMapping: mapping.value };
     const result = await putSponsorDeskConfig(errorHandler, newConfig);
     if (result !== undefined) cachedConfig = newConfig;
   }, 1000);
@@ -232,7 +233,8 @@ const saving = ref(false);
 
 async function saveSoldItems(): Promise<void> {
   saving.value = true;
-  const newConfig = { ...cachedConfig, soldItems: soldItemsPreview.value };
+  const freshConfig = await getSponsorDeskConfig(errorHandler) ?? {};
+  const newConfig = { ...freshConfig, soldItems: soldItemsPreview.value };
   const result = await putSponsorDeskConfig(errorHandler, newConfig);
   if (result !== undefined) cachedConfig = newConfig;
   saving.value = false;
