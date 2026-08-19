@@ -15,13 +15,11 @@ export function useAvailableItems(
   const defaultAvailable: ConcreteGoodieValue[] = getAllConcreteItems(getGoodieItemsSubset(deskItemSubset));
   const settings: Ref<SponsorDeskSettings> = ref({ available: defaultAvailable });
 
-  let cachedConfig: SponsorDeskConfigRecord | null = null;
   let saveTimer: ReturnType<typeof setTimeout> | null = null;
   let ignoreNextChange = false;
 
   async function load(): Promise<void> {
     const config = await getSponsorDeskConfig(errorHandler);
-    cachedConfig = config ?? {};
     if (config?.availableItems != null) {
       ignoreNextChange = true;
       settings.value = { available: config.availableItems };
@@ -31,8 +29,7 @@ export function useAvailableItems(
   async function save(available: ConcreteGoodieValue[]): Promise<void> {
     const freshConfig = await getSponsorDeskConfig(errorHandler) ?? {};
     const newConfig: SponsorDeskConfigRecord = { ...freshConfig, availableItems: available };
-    const result = await putSponsorDeskConfig(errorHandler, newConfig);
-    if (result !== undefined) cachedConfig = newConfig;
+    await putSponsorDeskConfig(errorHandler, newConfig);
   }
 
   load();
