@@ -105,7 +105,7 @@ export const conventionSettingsForEF: ConventionSettings<EFGoodieConfig> = {
   currentGoodiesRecord: metadataRecordForGoodies2026,
   inventory: {
     // the sponsordesk has at most the items for the super sponsors
-    sponsordesk: currentEFIteration.settings.goodies.forPackage.sponsor2 || [],
+    sponsordesk: currentEFIteration.settings.goodies.forPackage.sponsor2 || currentEFIteration.settings.goodies.forPackage.contributor || [],
     constore: Object.keys(efGoodiesRecord) as AbstractEFGoodieValue[],
   },
 };
