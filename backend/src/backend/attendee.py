@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated
 
 import httpx
 from fastapi import APIRouter, Cookie, HTTPException, Security
@@ -74,14 +74,14 @@ async def attendee_find(
 
 
 class AttendeeRow(BaseModel):
-    regId: Optional[str] = None
-    nickname: Optional[str] = None
-    firstName: Optional[str] = None
-    lastName: Optional[str] = None
-    fullName: Optional[str] = None
-    email: Optional[str] = None
-    idpId: Optional[str] = None
-    item: Optional[str] = None
+    regId: str | None = None
+    nickname: str | None = None
+    firstName: str | None = None
+    lastName: str | None = None
+    fullName: str | None = None
+    email: str | None = None
+    idpId: str | None = None
+    item: str | None = None
 
 
 class AttendeeLookupRequest(BaseModel):

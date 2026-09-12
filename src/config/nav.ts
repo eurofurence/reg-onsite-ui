@@ -67,6 +67,17 @@ export const navConfig: NavFieldset[] = [
     ],
   },
   {
+    legend: "Communication",
+    authGroups: [AuthGroups.admin],
+    items: [
+      {
+        label: "Mass Mail",
+        icon: "pi pi-envelope",
+        link: { kind: "internal", path: "/mails" },
+      },
+    ],
+  },
+  {
     legend: "Statistics",
     authGroups: [
       AuthGroups.dealersDen,

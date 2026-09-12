@@ -32,7 +32,23 @@ def proxy_headers(JWT: str | None, AUTH: str | None) -> dict:
 
 def check_upstream(resp: httpx.Response) -> None:
     if resp.status_code != 200:
-        raise HTTPException(status_code=resp.status_code, detail="upstream error")
+        body = resp.text[:500]
+        _logger.error(
+            "%s %s -> upstream error (status=%s): %s",
+            resp.request.method,
+            resp.request.url,
+            resp.status_code,
+            body,
+        )
+        detail: dict = {
+            "detail": "upstream error",
+            "upstream_status": resp.status_code,
+            "method": resp.request.method,
+            "url": str(resp.request.url),
+        }
+        if body:
+            detail["upstream_body"] = body
+        raise HTTPException(status_code=resp.status_code, detail=detail)
 
 
 def _decode_jwt(token: str) -> dict:

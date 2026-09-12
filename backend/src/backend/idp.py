@@ -3,7 +3,13 @@ from typing import Annotated
 import httpx
 from fastapi import APIRouter, Body, Cookie, Depends, Security
 
-from backend.auth import check_upstream, idp_url, proxy_headers, verify_admin, verify_jwt
+from backend.auth import (
+    check_upstream,
+    idp_url,
+    proxy_headers,
+    verify_admin,
+    verify_jwt,
+)
 from backend.env_defaults import getenv
 
 router = APIRouter(prefix="/api/v1")

@@ -50,12 +50,13 @@ export interface PackageCountType {
   count: number;
 }
 
-const enum OtherFlag {
+export const enum OtherFlag {
   anon = "anon",
   ev_member = "ev",
   hc = "hc",
   terms_accepted = "terms-accepted",
   skip_ban_check = "skip_ban_check",
+  nobulkmail = "nobulkmail",
 }
 type OtherFlagApiValues = `${OtherFlag}`;
 
