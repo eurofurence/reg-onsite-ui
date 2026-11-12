@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from backend import attendee, idp, mail, media, payment, sumup
+from backend import attendee, idp, mail, media, payment, shipping, sumup
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -36,6 +36,7 @@ app.include_router(idp.router)
 app.include_router(attendee.router)
 app.include_router(mail.router)
 app.include_router(media.router)
+app.include_router(shipping.router)
 
 
 @app.get("/")

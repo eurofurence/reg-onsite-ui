@@ -69,6 +69,7 @@
     :infosMap="infosMap"
     :neededReserveCount="dialogNeededReserveCount"
     :freeToSellCount="dialogFreeToSellCount"
+    :toastService="toastService"
   />
 </template>
 

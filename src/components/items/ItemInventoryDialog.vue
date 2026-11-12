@@ -4,7 +4,18 @@
       <p class="text-sm text-surface-400 m-0">
         Needed Reserve: {{ props.neededReserveCount }} &middot; Free to Sell: {{ props.freeToSellCount }}
       </p>
-      <Button icon="pi pi-external-link" label="Export CSV" severity="secondary" size="small" @click="exportAsCSV" />
+      <div class="flex items-center gap-2">
+        <Button icon="pi pi-external-link" label="Export CSV" severity="secondary" size="small" @click="exportAsCSV" />
+        <Button
+          icon="pi pi-truck"
+          label="Export for Shipping"
+          severity="secondary"
+          size="small"
+          :disabled="!isAdmin || exportInProgress"
+          :loading="exportInProgress"
+          @click="exportForShipping"
+        />
+      </div>
     </div>
     <DataTable
       :value="rows"
@@ -36,19 +47,26 @@
 </template>
 
 <script setup lang="ts">
+import { postShippingAddresses, type ShippingAddress } from "@/composables/api/backend/postShippingAddresses";
+import { getErrorHandlerFunction } from "@/composables/api/base/getErrorHandlerFunction";
+import { getCountryName } from "@/composables/fields/country/getCountryName";
 import { getConcreteItemsEntitlement } from "@/composables/items/getConcreteItemsEntitlement";
 import { getMissingConcreteItems } from "@/composables/items/getMissingConcreteItems";
 import { downloadCSV } from "@/composables/logic/downloadCSV";
 import { getConventionSetup } from "@/composables/logic/getConventionSetup";
 import { getEmptySponsorDeskAddInfo } from "@/composables/services/attendee/getEmptySponsorDeskAddInfo";
+import type { OnsiteToastService } from "@/composables/services/toastService";
+import { isInAnyGroup } from "@/composables/state/authState";
 import type { ApiSponsorDeskAddInfo } from "@/types/external/attsrv/additional-info/sponsordesk";
+import { ShippingEmailUse } from "@/types/external/attsrv/additional-info/shipping";
 import type { RegNumber } from "@/types/external/attsrv/attendees/attendee";
 import type { TransformedAttendeeInfo } from "@/types/internal/attendee";
+import { AuthGroups } from "@/types/internal/convention";
 import { Column } from "primevue";
 import Button from "@/volt/Button.vue";
 import DataTable from "@/volt/DataTable.vue";
 import Dialog from "@/volt/Dialog.vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 interface Props {
   title: string;
@@ -57,9 +75,14 @@ interface Props {
   infosMap: Map<RegNumber, ApiSponsorDeskAddInfo>;
   neededReserveCount: number;
   freeToSellCount: number;
+  toastService: OnsiteToastService;
 }
 const props = defineProps<Props>();
 const visible = defineModel<boolean>("visible", { required: true });
+
+const errorHandler = getErrorHandlerFunction(props.toastService);
+const isAdmin = computed(() => isInAnyGroup(AuthGroups.admin));
+const exportInProgress = ref(false);
 
 interface DialogRow {
   regNum: RegNumber;
@@ -126,5 +149,49 @@ function exportAsCSV(): void {
   ]);
   const csv = [headers, ...csvRows].map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(";")).join("\n");
   downloadCSV(csv, `${props.title}-attendees.csv`);
+}
+
+async function exportForShipping(): Promise<void> {
+  if (!isAdmin.value || rows.value.length === 0) {
+    return;
+  }
+  exportInProgress.value = true;
+  try {
+    const addresses = await postShippingAddresses(
+      errorHandler,
+      rows.value.map((row) => row.regNum)
+    );
+    if (addresses === undefined) {
+      return;
+    }
+    const addressesById = new Map<RegNumber, ShippingAddress>(
+      addresses.map((address) => [address.id, address])
+    );
+    const headers = ["Reg", "Nickname", "First Name", "Last Name", "Street", "ZIP", "City", "State", "Country", "T-Shirt Size", "T-Shirt Shape", "Comments", "Email", "Owed"];
+    const csvRows = rows.value.map((row) => {
+      const address = addressesById.get(row.regNum);
+      const email = address?.shipping_email === ShippingEmailUse.email_can_be_shared_with_logistics ? address.email : "";
+      return [
+        String(row.regNum),
+        address?.nickname || row.nickname,
+        address?.first_name ?? "",
+        address?.last_name ?? "",
+        address?.street ?? "",
+        address?.zip ?? "",
+        address?.city ?? "",
+        address?.state ?? "",
+        address?.country ? getCountryName(address.country) : "",
+        address?.tshirt_size ?? "",
+        address?.tshirt_shape ?? "",
+        address?.comments ?? "",
+        email,
+        String(row.missingCount),
+      ];
+    });
+    const csv = [headers, ...csvRows].map((csvRow) => csvRow.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(";")).join("\n");
+    downloadCSV(csv, `${props.title}-shipping.csv`);
+  } finally {
+    exportInProgress.value = false;
+  }
 }
 </script>
